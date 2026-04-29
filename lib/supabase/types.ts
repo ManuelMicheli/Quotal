@@ -2,7 +2,7 @@
  * Supabase database types — auto-generated.
  *
  * Generated from the live "Quotal" project schema (project ref:
- * frkngwpsctullsedhtbm) at the end of Phase 02. Regenerate after every
+ * frkngwpsctullsedhtbm) at the end of Phase 05. Regenerate after every
  * schema migration:
  *
  *   npx supabase gen types typescript --project-id frkngwpsctullsedhtbm \
@@ -199,12 +199,99 @@ export type Database = {
           },
         ]
       }
+      payment_sessions: {
+        Row: {
+          amount_cents: number
+          auto_renew: boolean
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          failure_reason: string | null
+          gym_id: string
+          id: string
+          member_id: string
+          payment_method: string | null
+          plan_id: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_setup_intent_id: string | null
+          token: string
+        }
+        Insert: {
+          amount_cents: number
+          auto_renew?: boolean
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          failure_reason?: string | null
+          gym_id: string
+          id?: string
+          member_id: string
+          payment_method?: string | null
+          plan_id: string
+          status: string
+          stripe_payment_intent_id?: string | null
+          stripe_setup_intent_id?: string | null
+          token: string
+        }
+        Update: {
+          amount_cents?: number
+          auto_renew?: boolean
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          failure_reason?: string | null
+          gym_id?: string
+          id?: string
+          member_id?: string
+          payment_method?: string | null
+          plan_id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_setup_intent_id?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_sessions_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_sessions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_cents: number
           created_at: string
           created_by: string | null
           currency: string
+          failed_at: string | null
           failure_reason: string | null
           gym_id: string
           id: string
@@ -227,6 +314,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          failed_at?: string | null
           failure_reason?: string | null
           gym_id: string
           id?: string
@@ -249,6 +337,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          failed_at?: string | null
           failure_reason?: string | null
           gym_id?: string
           id?: string
@@ -317,6 +406,7 @@ export type Database = {
           problematic_reason: string | null
           province: string | null
           role: string
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -338,6 +428,7 @@ export type Database = {
           problematic_reason?: string | null
           province?: string | null
           role: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -359,6 +450,7 @@ export type Database = {
           problematic_reason?: string | null
           province?: string | null
           role?: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -384,6 +476,7 @@ export type Database = {
           status: string
           stripe_mandate_id: string
           stripe_payment_method_id: string
+          stripe_setup_intent_id: string | null
           updated_at: string
         }
         Insert: {
@@ -398,6 +491,7 @@ export type Database = {
           status: string
           stripe_mandate_id: string
           stripe_payment_method_id: string
+          stripe_setup_intent_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -412,6 +506,7 @@ export type Database = {
           status?: string
           stripe_mandate_id?: string
           stripe_payment_method_id?: string
+          stripe_setup_intent_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -430,6 +525,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stripe_events_processed: {
+        Row: {
+          api_version: string | null
+          id: string
+          livemode: boolean
+          payload: Json | null
+          processed_at: string
+          type: string
+        }
+        Insert: {
+          api_version?: string | null
+          id: string
+          livemode?: boolean
+          payload?: Json | null
+          processed_at?: string
+          type: string
+        }
+        Update: {
+          api_version?: string | null
+          id?: string
+          livemode?: boolean
+          payload?: Json | null
+          processed_at?: string
+          type?: string
+        }
+        Relationships: []
       }
       subscription_plans: {
         Row: {
@@ -636,6 +758,34 @@ export type Database = {
       current_gym_id: { Args: never; Returns: string }
       generate_receipt_number: { Args: { p_gym_id: string }; Returns: string }
       is_owner_or_staff: { Args: never; Returns: boolean }
+      process_successful_payment: {
+        Args: {
+          p_amount_cents: number
+          p_auto_renew: boolean
+          p_payment_method: string
+          p_payment_session_id: string
+          p_stripe_charge_id: string
+          p_stripe_payment_intent_id: string
+        }
+        Returns: string
+      }
+      record_failed_payment: {
+        Args: {
+          p_amount_cents: number
+          p_failure_reason: string
+          p_payment_method: string
+          p_payment_session_id: string
+          p_stripe_payment_intent_id: string
+        }
+        Returns: string
+      }
+      record_refund: {
+        Args: {
+          p_amount_refunded_cents: number
+          p_stripe_payment_intent_id: string
+        }
+        Returns: string
+      }
       update_expired_subscriptions: { Args: never; Returns: undefined }
     }
     Enums: {

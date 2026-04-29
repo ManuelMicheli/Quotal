@@ -731,5 +731,42 @@ export async function getActiveSubscriptionPlans(): Promise<SubscriptionPlan[]> 
   return all.filter((p) => p.is_active)
 }
 
+// ---------------------------------------------------------------------------
+// Phase 05 — failed payments dashboard widget
+// ---------------------------------------------------------------------------
+
+export type FailedPaymentRow = Payment & { member: Profile | null }
+
+/**
+ * Recent payments with `status = 'failed'`. Used by the dashboard
+ * "Da gestire" card and the /pagamenti page Falliti tab.
+ */
+export async function getRecentFailedPayments(
+  options: { days?: number; limit?: number } = {},
+): Promise<FailedPaymentRow[]> {
+  const supabase = await createClient()
+  const days = options.days ?? 30
+  const limit = options.limit ?? 25
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*, member:profiles!payments_member_id_fkey(*)')
+    .eq('status', PAYMENT_STATUS.FAILED)
+    .gte('created_at', cutoff)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error || !data) {
+    if (error)
+      console.error(
+        '[queries/owner] getRecentFailedPayments failed:',
+        error.message,
+      )
+    return []
+  }
+  return data as FailedPaymentRow[]
+}
+
 // Re-export type for caller convenience.
 export type { Subscription, SubscriptionWithPlan }

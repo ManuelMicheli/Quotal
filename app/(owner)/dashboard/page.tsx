@@ -5,7 +5,7 @@
  * pass of parallel SELECTs — no client fetch. Animations are scoped to the
  * KPI cards (Framer Motion stagger).
  */
-import { ArrowRightIcon, PlusIcon } from 'lucide-react'
+import { AlertTriangleIcon, ArrowRightIcon, PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { ExportPaymentsButton } from '@/components/owner/export-payments-button'
@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   getDashboardKPIs,
   getExpiringSoon,
+  getRecentFailedPayments,
   getRecentPayments,
 } from '@/lib/queries/owner'
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/format'
@@ -47,10 +48,11 @@ function badgeForDays(days: number): { label: string; className: string } {
 }
 
 export default async function DashboardHomePage() {
-  const [kpis, expiring, recentPayments] = await Promise.all([
+  const [kpis, expiring, recentPayments, failedPayments] = await Promise.all([
     getDashboardKPIs(),
     getExpiringSoon(7),
     getRecentPayments(5),
+    getRecentFailedPayments({ days: 7, limit: 5 }),
   ])
 
   const isFirstTime = kpis.totalMembers === 0
@@ -228,6 +230,54 @@ export default async function DashboardHomePage() {
           </div>
         </Card>
       </section>
+
+      {failedPayments.length > 0 ? (
+        <section>
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangleIcon className="size-4" />
+                Da gestire — pagamenti falliti (ultimi 7 giorni)
+              </CardTitle>
+              <Badge variant="outline" className="border-destructive/40">
+                {failedPayments.length}
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <ul className="flex flex-col divide-y divide-border">
+                {failedPayments.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex flex-wrap items-center gap-3 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/dashboard/membri/${p.member_id}`}
+                        className="block truncate text-sm font-medium hover:underline"
+                      >
+                        {p.member?.full_name ?? '—'}
+                      </Link>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {formatRelativeDate(p.created_at)} ·{' '}
+                        {p.failure_reason ?? 'Errore generico'}
+                      </p>
+                    </div>
+                    <span className="font-mono text-sm font-medium tabular-nums">
+                      {formatCurrency(p.amount_cents)}
+                    </span>
+                    <PaymentMethodBadge method={p.payment_method} />
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/dashboard/membri/${p.member_id}`}>
+                        Apri
+                      </Link>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </section>
+      ) : null}
 
       {/* Quick actions */}
       <section className="flex flex-wrap items-center gap-2">

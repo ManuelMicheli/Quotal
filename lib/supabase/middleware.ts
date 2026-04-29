@@ -31,6 +31,11 @@ const PUBLIC_PATHS = [
   '/update-password',
   '/onboarding-titolare',
   '/auth/callback',
+  // Public payment flow (Phase 05). Token-gated server-side; gym members
+  // pay without ever logging in.
+  '/pay',
+  // Dev-only Stripe playground (only mounted when NODE_ENV=development).
+  '/dev',
 ] as const
 
 function isPublicPath(pathname: string): boolean {
