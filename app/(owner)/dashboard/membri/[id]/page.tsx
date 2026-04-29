@@ -12,10 +12,13 @@ import { notFound } from 'next/navigation'
 import { MemberActions } from '@/components/owner/member-actions'
 import { MemberForm } from '@/components/owner/member-form'
 import { PaymentMethodBadge } from '@/components/owner/payment-method-badge'
+import { RefundPaymentButton } from '@/components/owner/refund-payment-button'
+import { SendPayLinkDialog } from '@/components/owner/send-pay-link-dialog'
 import {
   PaymentStatusBadge,
   SubscriptionStatusBadge,
 } from '@/components/owner/subscription-status-badge'
+import { TriggerRenewalButton } from '@/components/owner/trigger-renewal-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -117,11 +120,20 @@ export default async function MemberDetailPage({
             </div>
           </div>
         </div>
-        <MemberActions
-          memberId={profile.id}
-          activeSubscription={active_subscription}
-          plans={plans}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <SendPayLinkDialog memberId={profile.id} plans={plans} />
+          {active_subscription &&
+          active_subscription.auto_renew &&
+          active_subscription.payment_method === 'sepa' &&
+          active_subscription.status === 'active' ? (
+            <TriggerRenewalButton subscriptionId={active_subscription.id} />
+          ) : null}
+          <MemberActions
+            memberId={profile.id}
+            activeSubscription={active_subscription}
+            plans={plans}
+          />
+        </div>
       </header>
 
       <Tabs defaultValue="overview" className="w-full">
@@ -293,6 +305,7 @@ export default async function MemberDetailPage({
                       <TableHead>Metodo</TableHead>
                       <TableHead>Stato</TableHead>
                       <TableHead>Ricevuta</TableHead>
+                      <TableHead className="text-right">Azioni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -311,6 +324,12 @@ export default async function MemberDetailPage({
                           <PaymentStatusBadge status={p.status} />
                         </TableCell>
                         <TableCell>{p.receipt_number ?? '—'}</TableCell>
+                        <TableCell className="text-right">
+                          {p.status === 'succeeded' &&
+                          p.stripe_payment_intent_id ? (
+                            <RefundPaymentButton paymentId={p.id} />
+                          ) : null}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
