@@ -1,9 +1,771 @@
 /**
- * Placeholder Supabase database types.
+ * Supabase database types — auto-generated.
  *
- * Will be replaced with the auto-generated types from `supabase gen types`
- * during Phase 02 once the schema is in place. Until then, `any` keeps the
- * client signatures workable without forcing a fake schema.
+ * Generated from the live "Quotal" project schema (project ref:
+ * frkngwpsctullsedhtbm) at the end of Phase 02. Regenerate after every
+ * schema migration:
+ *
+ *   npx supabase gen types typescript --project-id frkngwpsctullsedhtbm \
+ *     > lib/supabase/types.ts
+ *
+ * Or via the Supabase MCP tool `generate_typescript_types`. Do not edit by
+ * hand. Domain-level convenience types live in `lib/domain-types.ts`.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Database = any
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      access_logs: {
+        Row: {
+          accessed_at: string
+          badge_uid: string | null
+          denial_reason: string | null
+          device_id: string | null
+          granted: boolean
+          gym_id: string
+          id: string
+          member_id: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          accessed_at?: string
+          badge_uid?: string | null
+          denial_reason?: string | null
+          device_id?: string | null
+          granted: boolean
+          gym_id: string
+          id?: string
+          member_id?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          accessed_at?: string
+          badge_uid?: string | null
+          denial_reason?: string | null
+          device_id?: string | null
+          granted?: boolean
+          gym_id?: string
+          id?: string
+          member_id?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_logs_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_logs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gyms: {
+        Row: {
+          address: string | null
+          brand_color: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string
+          fiscal_code: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          settings: Json
+          slug: string
+          stripe_account_id: string | null
+          updated_at: string
+          vat_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          brand_color?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email: string
+          fiscal_code?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          settings?: Json
+          slug: string
+          stripe_account_id?: string | null
+          updated_at?: string
+          vat_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          brand_color?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string
+          fiscal_code?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          settings?: Json
+          slug?: string
+          stripe_account_id?: string | null
+          updated_at?: string
+          vat_number?: string | null
+        }
+        Relationships: []
+      }
+      notifications_sent: {
+        Row: {
+          channel: string
+          gym_id: string
+          id: string
+          member_id: string
+          metadata: Json | null
+          resend_message_id: string | null
+          sent_at: string
+          subscription_id: string | null
+          type: string
+        }
+        Insert: {
+          channel?: string
+          gym_id: string
+          id?: string
+          member_id: string
+          metadata?: Json | null
+          resend_message_id?: string | null
+          sent_at?: string
+          subscription_id?: string | null
+          type: string
+        }
+        Update: {
+          channel?: string
+          gym_id?: string
+          id?: string
+          member_id?: string
+          metadata?: Json | null
+          resend_message_id?: string | null
+          sent_at?: string
+          subscription_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_sent_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_sent_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_sent_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          failure_reason: string | null
+          gym_id: string
+          id: string
+          invoice_number: string | null
+          invoice_pdf_url: string | null
+          member_id: string
+          notes: string | null
+          paid_at: string | null
+          payment_method: string
+          receipt_number: string | null
+          receipt_pdf_url: string | null
+          status: string
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          failure_reason?: string | null
+          gym_id: string
+          id?: string
+          invoice_number?: string | null
+          invoice_pdf_url?: string | null
+          member_id: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method: string
+          receipt_number?: string | null
+          receipt_pdf_url?: string | null
+          status: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          failure_reason?: string | null
+          gym_id?: string
+          id?: string
+          invoice_number?: string | null
+          invoice_pdf_url?: string | null
+          member_id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string
+          receipt_number?: string | null
+          receipt_pdf_url?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          badge_uid: string | null
+          birth_date: string | null
+          city: string | null
+          created_at: string
+          email: string
+          fiscal_code: string | null
+          full_name: string
+          gym_id: string
+          id: string
+          is_problematic: boolean
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          problematic_reason: string | null
+          province: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          badge_uid?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          email: string
+          fiscal_code?: string | null
+          full_name: string
+          gym_id: string
+          id: string
+          is_problematic?: boolean
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          problematic_reason?: string | null
+          province?: string | null
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          badge_uid?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string
+          fiscal_code?: string | null
+          full_name?: string
+          gym_id?: string
+          id?: string
+          is_problematic?: boolean
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          problematic_reason?: string | null
+          province?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sepa_mandates: {
+        Row: {
+          bank_code: string | null
+          created_at: string
+          gym_id: string
+          iban_last4: string
+          id: string
+          member_id: string
+          revoked_at: string | null
+          signed_at: string | null
+          status: string
+          stripe_mandate_id: string
+          stripe_payment_method_id: string
+          updated_at: string
+        }
+        Insert: {
+          bank_code?: string | null
+          created_at?: string
+          gym_id: string
+          iban_last4: string
+          id?: string
+          member_id: string
+          revoked_at?: string | null
+          signed_at?: string | null
+          status: string
+          stripe_mandate_id: string
+          stripe_payment_method_id: string
+          updated_at?: string
+        }
+        Update: {
+          bank_code?: string | null
+          created_at?: string
+          gym_id?: string
+          iban_last4?: string
+          id?: string
+          member_id?: string
+          revoked_at?: string | null
+          signed_at?: string | null
+          status?: string
+          stripe_mandate_id?: string
+          stripe_payment_method_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sepa_mandates_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sepa_mandates_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_days: number
+          gym_id: string
+          id: string
+          is_active: boolean
+          name: string
+          price_cents: number
+          sort_order: number
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_days: number
+          gym_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price_cents: number
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          gym_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_cents?: number
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_plans_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_suspensions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          days_added_to_end_date: number | null
+          gym_id: string
+          id: string
+          member_id: string
+          reason: string | null
+          resumed_at: string | null
+          subscription_id: string
+          suspended_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          days_added_to_end_date?: number | null
+          gym_id: string
+          id?: string
+          member_id: string
+          reason?: string | null
+          resumed_at?: string | null
+          subscription_id: string
+          suspended_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          days_added_to_end_date?: number | null
+          gym_id?: string
+          id?: string
+          member_id?: string
+          reason?: string | null
+          resumed_at?: string | null
+          subscription_id?: string
+          suspended_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_suspensions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_suspensions_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_suspensions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_suspensions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          auto_renew: boolean
+          cancelled_at: string | null
+          cancelled_reason: string | null
+          created_at: string
+          end_date: string
+          gym_id: string
+          id: string
+          member_id: string
+          original_end_date: string
+          payment_method: string | null
+          plan_id: string
+          start_date: string
+          status: string
+          stripe_subscription_id: string | null
+          suspension_days_used: number
+          updated_at: string
+        }
+        Insert: {
+          auto_renew?: boolean
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          end_date: string
+          gym_id: string
+          id?: string
+          member_id: string
+          original_end_date: string
+          payment_method?: string | null
+          plan_id: string
+          start_date: string
+          status: string
+          stripe_subscription_id?: string | null
+          suspension_days_used?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_renew?: boolean
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          created_at?: string
+          end_date?: string
+          gym_id?: string
+          id?: string
+          member_id?: string
+          original_end_date?: string
+          payment_method?: string | null
+          plan_id?: string
+          start_date?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          suspension_days_used?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      current_gym_id: { Args: never; Returns: string }
+      generate_receipt_number: { Args: { p_gym_id: string }; Returns: string }
+      is_owner_or_staff: { Args: never; Returns: boolean }
+      update_expired_subscriptions: { Args: never; Returns: undefined }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
