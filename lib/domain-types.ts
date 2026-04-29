@@ -23,6 +23,8 @@ export type AccessLog = Database['public']['Tables']['access_logs']['Row']
 export type SepaMandate = Database['public']['Tables']['sepa_mandates']['Row']
 export type NotificationSent =
   Database['public']['Tables']['notifications_sent']['Row']
+export type DailyCloseReport =
+  Database['public']['Tables']['daily_close_reports']['Row']
 
 // -----------------------------------------------------------------------------
 // Composed types — convenient shapes for joined queries.

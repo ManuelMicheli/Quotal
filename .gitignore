@@ -45,3 +45,6 @@ next-env.d.ts
 .claude/
 .idea/
 .vscode/
+
+# local scratch / verification artifacts
+/tmp/

@@ -1,11 +1,14 @@
 'use server'
 
 /**
- * Server actions — payment flow (Phase 05).
+ * Server actions — payment flow (Phases 05 + 06).
  *
  * Three groups:
  *   - Owner-only: `createPaymentSessionAction`, `refundPaymentAction`,
- *     `triggerSepaRenewalAction` (manual auto-renew until cron in Phase 09).
+ *     `triggerSepaRenewalAction` (manual auto-renew until cron in Phase 09),
+ *     plus the Phase 06 cash flow: `registerCashPaymentAction`,
+ *     `refundCashPaymentAction`, `closeCashAction`,
+ *     `regenerateReceiptUrlAction`.
  *   - Public (token-gated): `initiateCardPaymentAction`,
  *     `initiateSepaSetupAction`, `confirmPaymentAction` — called from the
  *     `/pay/[token]` page on behalf of an unauthenticated visitor. The token
@@ -18,23 +21,34 @@ import { revalidatePath } from 'next/cache'
 import { requireOwnerOrStaff, requireProfile } from '@/lib/auth'
 import { env } from '@/lib/env'
 import {
+  createSignedReceiptUrl,
+  generateAndStoreReceipt,
+} from '@/lib/pdf/generate-receipt'
+import { generateAndStoreDailyReport } from '@/lib/pdf/generate-daily-report'
+import {
   generatePaymentSessionToken,
   getOrCreateStripeCustomer,
 } from '@/lib/stripe/helpers'
 import { getStripe } from '@/lib/stripe/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+  closeCashAction as closeCashActionSchema,
   confirmPaymentSchema,
   createPaymentSessionSchema,
   initiateCardPaymentSchema,
   initiateSepaSetupSchema,
+  refundCashPaymentSchema,
   refundPaymentSchema,
+  registerCashPaymentSchema,
   triggerSepaRenewalSchema,
+  type CloseCashInput,
   type ConfirmPaymentInput,
   type CreatePaymentSessionInput,
   type InitiateCardPaymentInput,
   type InitiateSepaSetupInput,
+  type RefundCashPaymentInput,
   type RefundPaymentInput,
+  type RegisterCashPaymentInput,
   type TriggerSepaRenewalInput,
 } from '@/lib/validations/payments'
 
@@ -481,4 +495,454 @@ export async function createBillingPortalSessionAction(): Promise<
     return_url: `${env.APP_URL}/app`,
   })
   return { ok: true, data: { url: portal.url } }
+}
+
+// ---------------------------------------------------------------------------
+// Phase 06 — cash / bank-transfer payment registration
+// ---------------------------------------------------------------------------
+
+function zodFieldErrors(
+  issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey>; message: string }>,
+): Record<string, string> {
+  const fieldErrors: Record<string, string> = {}
+  for (const issue of issues) {
+    const key = issue.path
+      .map((p) => (typeof p === 'symbol' ? p.description ?? '' : String(p)))
+      .join('.')
+    if (!fieldErrors[key]) fieldErrors[key] = issue.message
+  }
+  return fieldErrors
+}
+
+/**
+ * Register a manual cash / bank-transfer payment.
+ *
+ * The DB function `register_cash_payment` does the atomic part: reserves the
+ * receipt number, creates/extends the subscription, inserts the payment row.
+ * We then render and store the PDF; if PDF generation fails the payment row
+ * stays valid and the owner can re-trigger via `regenerateReceiptUrlAction`.
+ */
+export async function registerCashPaymentAction(
+  input: RegisterCashPaymentInput,
+): Promise<
+  ActionResult<{
+    payment_id: string
+    subscription_id: string
+    receipt_number: string
+    invoice_number: string | null
+    receipt_url: string | null
+    invoice_url: string | null
+  }>
+> {
+  const owner = await requireOwnerOrStaff()
+  const parsed = registerCashPaymentSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error:
+        parsed.error.issues[0]?.message ?? 'Controlla i dati inseriti.',
+      fieldErrors: zodFieldErrors(parsed.error.issues),
+    }
+  }
+  const data = parsed.data
+
+  const admin = createAdminClient()
+
+  // Verify the member belongs to the gym + the plan does too.
+  const { data: member } = await admin
+    .from('profiles')
+    .select('id, gym_id, role')
+    .eq('id', data.member_id)
+    .single()
+  if (!member || member.gym_id !== owner.gym_id || member.role !== 'member') {
+    return { ok: false, error: 'Membro non valido' }
+  }
+
+  const { data: plan } = await admin
+    .from('subscription_plans')
+    .select('id, gym_id, price_cents, is_active')
+    .eq('id', data.plan_id)
+    .single()
+  if (!plan || plan.gym_id !== owner.gym_id || !plan.is_active) {
+    return { ok: false, error: 'Piano non valido' }
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const startDate = data.start_date ?? today
+
+  const { data: rpcResult, error: rpcErr } = await admin.rpc(
+    'register_cash_payment',
+    {
+      p_gym_id: owner.gym_id,
+      p_member_id: data.member_id,
+      p_plan_id: data.plan_id,
+      p_start_date: startDate,
+      p_amount_cents: data.amount_cents,
+      p_payment_method: data.payment_method,
+      p_created_by: owner.id,
+      p_notes: data.notes ?? undefined,
+      p_emit_invoice: data.emit_invoice ?? false,
+      p_invoice_fiscal_code: data.invoice_fiscal_code ?? undefined,
+    },
+  )
+
+  if (rpcErr || !rpcResult) {
+    return {
+      ok: false,
+      error: `Registrazione non riuscita: ${rpcErr?.message ?? 'errore'}`,
+    }
+  }
+
+  // The RPC returns a Json (jsonb_build_object). Narrow it.
+  const rpc = rpcResult as unknown as {
+    payment_id: string
+    subscription_id: string
+    receipt_number: string
+    invoice_number: string | null
+  }
+
+  // Generate PDFs synchronously: the action result wants the URL so the UI
+  // can open the file in a new tab. If it throws we still return success with
+  // a hint (the receipt_number is reserved and the URL can be regenerated).
+  let receiptUrl: string | null = null
+  let invoiceUrl: string | null = null
+
+  try {
+    const r = await generateAndStoreReceipt({
+      paymentId: rpc.payment_id,
+      kind: 'receipt',
+    })
+    receiptUrl = r.signedUrl
+  } catch (err) {
+    console.error(
+      '[payments] receipt PDF generation failed (gap %s):',
+      rpc.receipt_number,
+      err,
+    )
+  }
+
+  if (rpc.invoice_number) {
+    try {
+      const i = await generateAndStoreReceipt({
+        paymentId: rpc.payment_id,
+        kind: 'invoice',
+        withVirtualStamp: data.amount_cents > 7747,
+      })
+      invoiceUrl = i.signedUrl
+    } catch (err) {
+      console.error(
+        '[payments] invoice PDF generation failed (gap %s):',
+        rpc.invoice_number,
+        err,
+      )
+    }
+  }
+
+  revalidatePath('/dashboard', 'layout')
+  revalidatePath(`/dashboard/membri/${data.member_id}`)
+
+  return {
+    ok: true,
+    data: {
+      payment_id: rpc.payment_id,
+      subscription_id: rpc.subscription_id,
+      receipt_number: rpc.receipt_number,
+      invoice_number: rpc.invoice_number,
+      receipt_url: receiptUrl,
+      invoice_url: invoiceUrl,
+    },
+    message: `Pagamento registrato — ricevuta ${rpc.receipt_number}`,
+  }
+}
+
+/**
+ * Mint a fresh signed URL for an existing receipt PDF, so the owner / member
+ * can re-download from the dashboard at any time.
+ */
+export async function regenerateReceiptUrlAction(
+  paymentId: string,
+  kind: 'receipt' | 'invoice' = 'receipt',
+): Promise<ActionResult<{ url: string }>> {
+  const profile = await requireProfile()
+  const admin = createAdminClient()
+
+  const { data: payment, error } = await admin
+    .from('payments')
+    .select(
+      'id, gym_id, member_id, receipt_pdf_path, invoice_pdf_path, receipt_number, invoice_number',
+    )
+    .eq('id', paymentId)
+    .single()
+  if (error || !payment) {
+    return { ok: false, error: 'Pagamento non trovato' }
+  }
+
+  // Authorization: owner/staff of the same gym OR the owning member.
+  const isOwnerStaff =
+    (profile.role === 'owner' || profile.role === 'staff') &&
+    profile.gym_id === payment.gym_id
+  const isOwningMember =
+    profile.role === 'member' && profile.id === payment.member_id
+  if (!isOwnerStaff && !isOwningMember) {
+    return { ok: false, error: 'Non autorizzato' }
+  }
+
+  const path = kind === 'invoice' ? payment.invoice_pdf_path : payment.receipt_pdf_path
+
+  // If the path is missing, regenerate the PDF (covers gaps from earlier failures).
+  if (!path) {
+    if (kind === 'invoice' && !payment.invoice_number) {
+      return { ok: false, error: 'Fattura non disponibile per questo pagamento' }
+    }
+    if (kind === 'receipt' && !payment.receipt_number) {
+      return { ok: false, error: 'Ricevuta non disponibile per questo pagamento' }
+    }
+    if (!isOwnerStaff) {
+      return {
+        ok: false,
+        error: 'PDF non disponibile, contatta la palestra per la rigenerazione.',
+      }
+    }
+    try {
+      const r = await generateAndStoreReceipt({ paymentId, kind })
+      return { ok: true, data: { url: r.signedUrl } }
+    } catch (err) {
+      console.error('[payments] regenerate failed:', err)
+      return { ok: false, error: 'Generazione PDF non riuscita' }
+    }
+  }
+
+  try {
+    const url = await createSignedReceiptUrl(path)
+    return { ok: true, data: { url } }
+  } catch (err) {
+    console.error('[payments] signed URL failed:', err)
+    return { ok: false, error: 'Impossibile generare il link di download' }
+  }
+}
+
+/**
+ * Refund a cash/bank-transfer payment.
+ *
+ * Records a NEW payment row with `status='refunded'`, negative `amount_cents`
+ * and `refund_of_payment_id` pointing at the original. Rolls back the
+ * subscription `end_date` by the plan duration (best-effort symmetry with
+ * `register_cash_payment`).
+ */
+export async function refundCashPaymentAction(
+  input: RefundCashPaymentInput,
+): Promise<ActionResult> {
+  const owner = await requireOwnerOrStaff()
+  const parsed = refundCashPaymentSchema.safeParse(input)
+  if (!parsed.success) {
+    return { ok: false, error: 'Dati non validi' }
+  }
+
+  const admin = createAdminClient()
+  const { data: original, error } = await admin
+    .from('payments')
+    .select(
+      'id, gym_id, member_id, subscription_id, amount_cents, payment_method, status, receipt_number',
+    )
+    .eq('id', parsed.data.payment_id)
+    .single()
+
+  if (error || !original) {
+    return { ok: false, error: 'Pagamento non trovato' }
+  }
+  if (original.gym_id !== owner.gym_id) {
+    return { ok: false, error: 'Non autorizzato' }
+  }
+  if (original.status !== 'succeeded') {
+    return {
+      ok: false,
+      error: 'Solo pagamenti completati possono essere rimborsati',
+    }
+  }
+  if (
+    original.payment_method !== 'cash' &&
+    original.payment_method !== 'bank_transfer'
+  ) {
+    return {
+      ok: false,
+      error: 'Per rimborsare carte/SEPA usa Stripe (Rimborsa nella riga)',
+    }
+  }
+
+  // Insert refund row.
+  const { error: insertErr } = await admin.from('payments').insert({
+    gym_id: original.gym_id,
+    member_id: original.member_id,
+    subscription_id: original.subscription_id,
+    amount_cents: -original.amount_cents,
+    currency: 'EUR',
+    payment_method: original.payment_method,
+    status: 'refunded',
+    paid_at: new Date().toISOString(),
+    created_by: owner.id,
+    refund_of_payment_id: original.id,
+    notes: parsed.data.reason
+      ? `Rimborso ricevuta ${original.receipt_number ?? original.id} — ${parsed.data.reason}`
+      : `Rimborso ricevuta ${original.receipt_number ?? original.id}`,
+  })
+  if (insertErr) {
+    return {
+      ok: false,
+      error: `Rimborso non riuscito: ${insertErr.message}`,
+    }
+  }
+
+  // Mark the original payment as refunded too so the row reflects the new state.
+  await admin
+    .from('payments')
+    .update({ status: 'refunded' })
+    .eq('id', original.id)
+
+  // Best-effort subscription rollback: shrink end_date by the plan duration.
+  if (original.subscription_id) {
+    const { data: sub } = await admin
+      .from('subscriptions')
+      .select('id, end_date, plan_id')
+      .eq('id', original.subscription_id)
+      .single()
+    if (sub?.plan_id) {
+      const { data: plan } = await admin
+        .from('subscription_plans')
+        .select('duration_days')
+        .eq('id', sub.plan_id)
+        .single()
+      if (plan?.duration_days && sub.end_date) {
+        const newEnd = new Date(sub.end_date + 'T00:00:00Z')
+        newEnd.setUTCDate(newEnd.getUTCDate() - plan.duration_days)
+        await admin
+          .from('subscriptions')
+          .update({ end_date: newEnd.toISOString().slice(0, 10) })
+          .eq('id', sub.id)
+      }
+    }
+  }
+
+  revalidatePath('/dashboard', 'layout')
+  revalidatePath(`/dashboard/membri/${original.member_id}`)
+  revalidatePath('/dashboard/cassa')
+  return { ok: true, message: 'Rimborso registrato.' }
+}
+
+/**
+ * Close the daily cash: aggregates the day's payments, generates a PDF
+ * report, uploads to storage, and persists a `daily_close_reports` row.
+ *
+ * Idempotent on (gym_id, close_date): if a row already exists it gets
+ * updated (the report PDF is overwritten via Storage `upsert: true`).
+ */
+export async function closeCashAction(
+  input: CloseCashInput,
+): Promise<ActionResult<{ pdfUrl: string }>> {
+  const owner = await requireOwnerOrStaff()
+  const parsed = closeCashActionSchema.safeParse(input)
+  if (!parsed.success) {
+    return { ok: false, error: 'Dati non validi' }
+  }
+
+  const closeDate = parsed.data.close_date ?? new Date().toISOString().slice(0, 10)
+  const admin = createAdminClient()
+
+  // Pull all *succeeded* payments paid_at within the day window for this gym.
+  const startIso = new Date(closeDate + 'T00:00:00.000Z').toISOString()
+  const endIso = new Date(closeDate + 'T23:59:59.999Z').toISOString()
+
+  const { data: paymentsRaw, error: pErr } = await admin
+    .from('payments')
+    .select(
+      'id, paid_at, amount_cents, payment_method, receipt_number, member_id, member:profiles!payments_member_id_fkey(full_name)',
+    )
+    .eq('gym_id', owner.gym_id)
+    .eq('status', 'succeeded')
+    .gte('paid_at', startIso)
+    .lte('paid_at', endIso)
+    .order('paid_at', { ascending: true })
+
+  if (pErr) {
+    return { ok: false, error: `Lettura pagamenti non riuscita: ${pErr.message}` }
+  }
+
+  type Row = {
+    id: string
+    paid_at: string | null
+    amount_cents: number
+    payment_method: string
+    receipt_number: string | null
+    member_id: string
+    member: { full_name: string } | null
+  }
+  const rows = (paymentsRaw ?? []) as unknown as Row[]
+
+  let cash = 0
+  let card = 0
+  let sepa = 0
+  let bank = 0
+  for (const r of rows) {
+    if (r.payment_method === 'cash') cash += r.amount_cents
+    else if (r.payment_method === 'card') card += r.amount_cents
+    else if (r.payment_method === 'sepa') sepa += r.amount_cents
+    else if (r.payment_method === 'bank_transfer') bank += r.amount_cents
+  }
+  const total = cash + card + sepa + bank
+
+  const closedAt = new Date()
+
+  const { path, signedUrl } = await generateAndStoreDailyReport({
+    gymId: owner.gym_id,
+    closeDate,
+    closedAt,
+    closedBy: owner.full_name,
+    payments: rows.map((r) => ({
+      id: r.id,
+      paid_at: r.paid_at ?? closedAt.toISOString(),
+      member_name: r.member?.full_name ?? '—',
+      amount_cents: r.amount_cents,
+      payment_method: r.payment_method,
+      receipt_number: r.receipt_number,
+    })),
+    totals: {
+      total_cents: total,
+      cash_cents: cash,
+      card_cents: card,
+      sepa_cents: sepa,
+      bank_transfer_cents: bank,
+      transactions_count: rows.length,
+    },
+  })
+
+  // Upsert the daily-close row.
+  const { error: upsertErr } = await admin.from('daily_close_reports').upsert(
+    {
+      gym_id: owner.gym_id,
+      close_date: closeDate,
+      closed_at: closedAt.toISOString(),
+      closed_by: owner.id,
+      total_cents: total,
+      cash_cents: cash,
+      card_cents: card,
+      sepa_cents: sepa,
+      bank_transfer_cents: bank,
+      transactions_count: rows.length,
+      pdf_path: path,
+      notes: parsed.data.notes ?? null,
+    },
+    { onConflict: 'gym_id,close_date' },
+  )
+  if (upsertErr) {
+    return {
+      ok: false,
+      error: `Salvataggio chiusura non riuscito: ${upsertErr.message}`,
+    }
+  }
+
+  revalidatePath('/dashboard/cassa')
+  return {
+    ok: true,
+    data: { pdfUrl: signedUrl },
+    message: 'Chiusura cassa registrata.',
+  }
 }

@@ -770,3 +770,92 @@ export async function getRecentFailedPayments(
 
 // Re-export type for caller convenience.
 export type { Subscription, SubscriptionWithPlan }
+
+// ---------------------------------------------------------------------------
+// Phase 06 — Cassa giornaliera (daily cash KPIs + transaction list)
+// ---------------------------------------------------------------------------
+
+export type CashRegisterPayment = Payment & { member: Profile | null }
+
+export type CashRegisterDay = {
+  closeDate: string
+  totalCents: number
+  cashCents: number
+  cardCents: number
+  sepaCents: number
+  bankTransferCents: number
+  transactionsCount: number
+  monthCents: number
+  payments: CashRegisterPayment[]
+  /** When set, the cassa is already closed for this day. */
+  alreadyClosedAt: string | null
+  alreadyClosedPdfPath: string | null
+}
+
+/**
+ * Aggregate the day's payments + month-to-date totals + transaction list for
+ * the /dashboard/cassa page.
+ *
+ * `closeDate` is an ISO `YYYY-MM-DD` (defaults to today).
+ */
+export async function getCashRegisterDay(
+  closeDate?: string,
+): Promise<CashRegisterDay> {
+  const supabase = await createClient()
+  const date = closeDate ?? toIsoDate(startOfToday())
+  const start = new Date(date + 'T00:00:00.000Z').toISOString()
+  const end = new Date(date + 'T23:59:59.999Z').toISOString()
+  const monthStartIso = new Date(
+    Date.UTC(new Date(date).getUTCFullYear(), new Date(date).getUTCMonth(), 1),
+  ).toISOString()
+
+  const [dayRes, monthRes, closedRes] = await Promise.all([
+    supabase
+      .from('payments')
+      .select('*, member:profiles!payments_member_id_fkey(*)')
+      .eq('status', PAYMENT_STATUS.SUCCEEDED)
+      .gte('paid_at', start)
+      .lte('paid_at', end)
+      .order('paid_at', { ascending: true }),
+    supabase
+      .from('payments')
+      .select('amount_cents')
+      .eq('status', PAYMENT_STATUS.SUCCEEDED)
+      .gte('paid_at', monthStartIso),
+    supabase
+      .from('daily_close_reports')
+      .select('closed_at, pdf_path')
+      .eq('close_date', date)
+      .maybeSingle(),
+  ])
+
+  const payments = (dayRes.data as CashRegisterPayment[] | null) ?? []
+  let cash = 0
+  let card = 0
+  let sepa = 0
+  let bank = 0
+  for (const p of payments) {
+    if (p.payment_method === 'cash') cash += p.amount_cents
+    else if (p.payment_method === 'card') card += p.amount_cents
+    else if (p.payment_method === 'sepa') sepa += p.amount_cents
+    else if (p.payment_method === 'bank_transfer') bank += p.amount_cents
+  }
+  const total = cash + card + sepa + bank
+
+  const monthCents =
+    monthRes.data?.reduce((s, p) => s + (p.amount_cents ?? 0), 0) ?? 0
+
+  return {
+    closeDate: date,
+    totalCents: total,
+    cashCents: cash,
+    cardCents: card,
+    sepaCents: sepa,
+    bankTransferCents: bank,
+    transactionsCount: payments.length,
+    monthCents,
+    payments,
+    alreadyClosedAt: closedRes.data?.closed_at ?? null,
+    alreadyClosedPdfPath: closedRes.data?.pdf_path ?? null,
+  }
+}
