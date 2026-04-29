@@ -8,6 +8,7 @@
 import { AlertTriangleIcon, ArrowRightIcon, PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 
+import { CashPaymentDialog } from '@/components/owner/cash-payment-dialog'
 import { ExportPaymentsButton } from '@/components/owner/export-payments-button'
 import { KpiCard } from '@/components/owner/kpi-card'
 import { OnboardingCoach } from '@/components/owner/onboarding-coach'
@@ -17,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  getActiveSubscriptionPlans,
   getDashboardKPIs,
   getExpiringSoon,
   getRecentFailedPayments,
@@ -48,11 +50,12 @@ function badgeForDays(days: number): { label: string; className: string } {
 }
 
 export default async function DashboardHomePage() {
-  const [kpis, expiring, recentPayments, failedPayments] = await Promise.all([
+  const [kpis, expiring, recentPayments, failedPayments, plans] = await Promise.all([
     getDashboardKPIs(),
     getExpiringSoon(7),
     getRecentPayments(5),
     getRecentFailedPayments({ days: 7, limit: 5 }),
+    getActiveSubscriptionPlans(),
   ])
 
   const isFirstTime = kpis.totalMembers === 0
@@ -287,10 +290,16 @@ export default async function DashboardHomePage() {
             Nuovo membro
           </Link>
         </Button>
-        <Button variant="outline" disabled title="Disponibile dopo Phase 06">
-          <PlusIcon className="size-4" />
-          Registra pagamento contanti
-        </Button>
+        <CashPaymentDialog
+          plans={plans}
+          mode={{ kind: 'picker' }}
+          trigger={
+            <Button variant="outline">
+              <PlusIcon className="size-4" />
+              Registra pagamento contanti
+            </Button>
+          }
+        />
         <ExportPaymentsButton />
       </section>
     </div>

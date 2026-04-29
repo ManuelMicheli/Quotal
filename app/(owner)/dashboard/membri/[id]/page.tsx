@@ -5,13 +5,15 @@
  * actions (renew/suspend/resume) live in a client component that reads
  * `?action=` from the URL.
  */
-import { AlertTriangleIcon, MailIcon, PhoneIcon } from 'lucide-react'
+import { AlertTriangleIcon, DownloadIcon, MailIcon, PhoneIcon } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { CashPaymentDialog } from '@/components/owner/cash-payment-dialog'
 import { MemberActions } from '@/components/owner/member-actions'
 import { MemberForm } from '@/components/owner/member-form'
 import { PaymentMethodBadge } from '@/components/owner/payment-method-badge'
+import { RefundCashButton } from '@/components/owner/refund-cash-button'
 import { RefundPaymentButton } from '@/components/owner/refund-payment-button'
 import { SendPayLinkDialog } from '@/components/owner/send-pay-link-dialog'
 import {
@@ -21,6 +23,7 @@ import {
 import { TriggerRenewalButton } from '@/components/owner/trigger-renewal-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -121,6 +124,17 @@ export default async function MemberDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <CashPaymentDialog
+            plans={plans}
+            mode={{
+              kind: 'member',
+              member: {
+                id: profile.id,
+                full_name: profile.full_name,
+                email: profile.email,
+              },
+            }}
+          />
           <SendPayLinkDialog memberId={profile.id} plans={plans} />
           {active_subscription &&
           active_subscription.auto_renew &&
@@ -309,29 +323,72 @@ export default async function MemberDetailPage({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payments.map((p) => (
-                      <TableRow key={p.id}>
-                        <TableCell>
-                          {formatDate(p.paid_at ?? p.created_at, 'short')}
-                        </TableCell>
-                        <TableCell className="font-medium tabular-nums">
-                          {formatCurrency(p.amount_cents)}
-                        </TableCell>
-                        <TableCell>
-                          <PaymentMethodBadge method={p.payment_method} />
-                        </TableCell>
-                        <TableCell>
-                          <PaymentStatusBadge status={p.status} />
-                        </TableCell>
-                        <TableCell>{p.receipt_number ?? '—'}</TableCell>
-                        <TableCell className="text-right">
-                          {p.status === 'succeeded' &&
-                          p.stripe_payment_intent_id ? (
-                            <RefundPaymentButton paymentId={p.id} />
-                          ) : null}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {payments.map((p) => {
+                      const isCashLike =
+                        p.payment_method === 'cash' ||
+                        p.payment_method === 'bank_transfer'
+                      return (
+                        <TableRow key={p.id}>
+                          <TableCell>
+                            {formatDate(p.paid_at ?? p.created_at, 'short')}
+                          </TableCell>
+                          <TableCell className="font-medium tabular-nums">
+                            {formatCurrency(p.amount_cents)}
+                          </TableCell>
+                          <TableCell>
+                            <PaymentMethodBadge method={p.payment_method} />
+                          </TableCell>
+                          <TableCell>
+                            <PaymentStatusBadge status={p.status} />
+                          </TableCell>
+                          <TableCell>{p.receipt_number ?? '—'}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {p.receipt_number ? (
+                                <Button
+                                  asChild
+                                  size="sm"
+                                  variant="outline"
+                                  title="Scarica ricevuta"
+                                >
+                                  <a
+                                    href={`/api/owner/payments/receipt?payment=${p.id}&kind=receipt`}
+                                    target="_blank"
+                                    rel="noopener"
+                                  >
+                                    <DownloadIcon className="size-4" />
+                                  </a>
+                                </Button>
+                              ) : null}
+                              {p.invoice_number ? (
+                                <Button
+                                  asChild
+                                  size="sm"
+                                  variant="outline"
+                                  title="Scarica fattura"
+                                >
+                                  <a
+                                    href={`/api/owner/payments/receipt?payment=${p.id}&kind=invoice`}
+                                    target="_blank"
+                                    rel="noopener"
+                                  >
+                                    <DownloadIcon className="size-4" />
+                                    Fatt.
+                                  </a>
+                                </Button>
+                              ) : null}
+                              {p.status === 'succeeded' &&
+                              p.stripe_payment_intent_id ? (
+                                <RefundPaymentButton paymentId={p.id} />
+                              ) : null}
+                              {p.status === 'succeeded' && isCashLike ? (
+                                <RefundCashButton paymentId={p.id} />
+                              ) : null}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               )}

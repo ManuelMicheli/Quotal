@@ -2,7 +2,7 @@
  * Supabase database types — auto-generated.
  *
  * Generated from the live "Quotal" project schema (project ref:
- * frkngwpsctullsedhtbm) at the end of Phase 05. Regenerate after every
+ * frkngwpsctullsedhtbm) at the end of Phase 06. Regenerate after every
  * schema migration:
  *
  *   npx supabase gen types typescript --project-id frkngwpsctullsedhtbm \
@@ -74,6 +74,69 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_close_reports: {
+        Row: {
+          bank_transfer_cents: number
+          card_cents: number
+          cash_cents: number
+          close_date: string
+          closed_at: string
+          closed_by: string | null
+          gym_id: string
+          id: string
+          notes: string | null
+          pdf_path: string | null
+          sepa_cents: number
+          total_cents: number
+          transactions_count: number
+        }
+        Insert: {
+          bank_transfer_cents?: number
+          card_cents?: number
+          cash_cents?: number
+          close_date: string
+          closed_at?: string
+          closed_by?: string | null
+          gym_id: string
+          id?: string
+          notes?: string | null
+          pdf_path?: string | null
+          sepa_cents?: number
+          total_cents?: number
+          transactions_count?: number
+        }
+        Update: {
+          bank_transfer_cents?: number
+          card_cents?: number
+          cash_cents?: number
+          close_date?: string
+          closed_at?: string
+          closed_by?: string | null
+          gym_id?: string
+          id?: string
+          notes?: string | null
+          pdf_path?: string | null
+          sepa_cents?: number
+          total_cents?: number
+          transactions_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_close_reports_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_close_reports_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
             referencedColumns: ["id"]
           },
         ]
@@ -296,13 +359,16 @@ export type Database = {
           gym_id: string
           id: string
           invoice_number: string | null
+          invoice_pdf_path: string | null
           invoice_pdf_url: string | null
           member_id: string
           notes: string | null
           paid_at: string | null
           payment_method: string
           receipt_number: string | null
+          receipt_pdf_path: string | null
           receipt_pdf_url: string | null
+          refund_of_payment_id: string | null
           status: string
           stripe_charge_id: string | null
           stripe_payment_intent_id: string | null
@@ -319,13 +385,16 @@ export type Database = {
           gym_id: string
           id?: string
           invoice_number?: string | null
+          invoice_pdf_path?: string | null
           invoice_pdf_url?: string | null
           member_id: string
           notes?: string | null
           paid_at?: string | null
           payment_method: string
           receipt_number?: string | null
+          receipt_pdf_path?: string | null
           receipt_pdf_url?: string | null
+          refund_of_payment_id?: string | null
           status: string
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -342,13 +411,16 @@ export type Database = {
           gym_id?: string
           id?: string
           invoice_number?: string | null
+          invoice_pdf_path?: string | null
           invoice_pdf_url?: string | null
           member_id?: string
           notes?: string | null
           paid_at?: string | null
           payment_method?: string
           receipt_number?: string | null
+          receipt_pdf_path?: string | null
           receipt_pdf_url?: string | null
+          refund_of_payment_id?: string | null
           status?: string
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -375,6 +447,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_refund_of_payment_id_fkey"
+            columns: ["refund_of_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
             referencedColumns: ["id"]
           },
           {
@@ -756,6 +835,7 @@ export type Database = {
     }
     Functions: {
       current_gym_id: { Args: never; Returns: string }
+      generate_invoice_number: { Args: { p_gym_id: string }; Returns: string }
       generate_receipt_number: { Args: { p_gym_id: string }; Returns: string }
       is_owner_or_staff: { Args: never; Returns: boolean }
       process_successful_payment: {
@@ -785,6 +865,21 @@ export type Database = {
           p_stripe_payment_intent_id: string
         }
         Returns: string
+      }
+      register_cash_payment: {
+        Args: {
+          p_amount_cents: number
+          p_created_by: string
+          p_emit_invoice?: boolean
+          p_gym_id: string
+          p_invoice_fiscal_code?: string
+          p_member_id: string
+          p_notes?: string
+          p_payment_method: string
+          p_plan_id: string
+          p_start_date: string
+        }
+        Returns: Json
       }
       update_expired_subscriptions: { Args: never; Returns: undefined }
     }

@@ -13,6 +13,7 @@
  * `/dashboard/membri/abc` should still highlight the "Membri" item.
  */
 import {
+  BanknoteIcon,
   CreditCardIcon,
   DoorOpenIcon,
   LayoutDashboardIcon,
@@ -54,6 +55,7 @@ const PRIMARY_NAV: NavItem[] = [
   { href: '/dashboard/membri', label: 'Membri', icon: UsersIcon },
   { href: '/dashboard/abbonamenti', label: 'Abbonamenti', icon: CreditCardIcon },
   { href: '/dashboard/pagamenti', label: 'Pagamenti', icon: ReceiptIcon },
+  { href: '/dashboard/cassa', label: 'Cassa', icon: BanknoteIcon },
   { href: '/dashboard/ingressi', label: 'Ingressi', icon: DoorOpenIcon },
 ]
 
@@ -177,7 +179,7 @@ function MobileBottomNav() {
   const pathname = usePathname()
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden">
-      <ul className="grid grid-cols-5">
+      <ul className="grid grid-cols-6">
         {PRIMARY_NAV.map((item) => {
           const Icon = item.icon
           const active = isActive(item, pathname)
