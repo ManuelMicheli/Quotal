@@ -16,6 +16,14 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().min(1).optional(),
     RESEND_FROM_EMAIL: z.string().email().optional(),
     APP_URL: z.string().url().default('http://localhost:3000'),
+    /**
+     * Set to "true" to expose `/onboarding-titolare`. The titolare flips this
+     * to "false" once the first owner exists, so the route can never be
+     * abused to escalate privileges in production.
+     */
+    ENABLE_OWNER_ONBOARDING: z
+      .enum(['true', 'false'])
+      .default('false'),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -32,6 +40,7 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
     APP_URL: process.env.APP_URL,
+    ENABLE_OWNER_ONBOARDING: process.env.ENABLE_OWNER_ONBOARDING,
   },
   // Skip validation when running in CI / build with no real env (e.g. Docker
   // build phase). Set SKIP_ENV_VALIDATION=true in those contexts.
