@@ -38,6 +38,13 @@ const PUBLIC_PATHS = [
   '/access',
   // Dev-only Stripe playground (only mounted when NODE_ENV=development).
   '/dev',
+  // Phase 10 — legal/SEO surfaces. Reachable without auth.
+  '/privacy',
+  '/termini',
+  '/cookie-policy',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/offline',
 ] as const
 
 function isPublicPath(pathname: string): boolean {

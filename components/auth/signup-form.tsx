@@ -57,6 +57,14 @@ export function SignupForm() {
     formData.set('password_confirm', values.password_confirm)
     formData.set('terms', values.terms ? 'true' : 'false')
 
+    // Pass through the honeypot field — empty for humans, filled by bots.
+    const honeypot = (
+      document.getElementById('quotal-signup-website-hp') as
+        | HTMLInputElement
+        | null
+    )?.value
+    if (honeypot) formData.set('website', honeypot)
+
     startTransition(async () => {
       const result = await signupAction(formData)
       if (result.ok) {
@@ -83,6 +91,28 @@ export function SignupForm() {
         onSubmit={form.handleSubmit(onSubmit)}
         noValidate
       >
+        {/*
+          Honeypot. Real humans never see/fill this; spam bots that submit
+          every field do. The server action treats a non-empty value as a
+          bot and silently no-ops.
+        */}
+        <input
+          id="quotal-signup-website-hp"
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            opacity: 0,
+            height: 0,
+            width: 0,
+            pointerEvents: 'none',
+          }}
+        />
+
         <FormField
           control={form.control}
           name="full_name"

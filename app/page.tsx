@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
+import { LegalFooter } from '@/components/shared/legal-footer'
 import { Button } from '@/components/ui/button'
 import { APP_NAME, APP_TAGLINE } from '@/lib/constants'
 
@@ -35,19 +36,58 @@ export default function HomePage() {
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.36 }}
             className="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:flex-row"
           >
-            <Button asChild size="lg" className="w-full sm:w-auto">
+            <Button
+              asChild
+              size="lg"
+              className="w-full transition-transform active:scale-[0.97] sm:w-auto"
+            >
               <Link href="/login?role=owner">Accedi come titolare</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="w-full transition-transform active:scale-[0.97] sm:w-auto"
+            >
               <Link href="/login?role=member">Accedi come membro</Link>
             </Button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.6 }}
+            className="mt-16 grid w-full grid-cols-1 gap-6 text-left sm:grid-cols-3"
+          >
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Pagamenti automatici
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                SEPA, carta o contanti — tutto in un&apos;unica vista.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Accessi senza badge
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                QR personale dal telefono, controllo in tempo reale.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                100% conforme GDPR
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Dati cifrati, conservati in UE, esportabili in autonomia.
+              </p>
+            </div>
           </motion.div>
         </div>
       </main>
 
-      <footer className="border-t border-border/60 px-6 py-6 text-center text-sm text-muted-foreground">
-        <span>&copy; 2026 {APP_NAME}</span>
-      </footer>
+      <LegalFooter />
     </div>
   )
 }

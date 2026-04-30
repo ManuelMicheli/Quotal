@@ -8,6 +8,7 @@
 import Link from 'next/link'
 
 import { Logo } from '@/components/shared/logo'
+import { APP_NAME } from '@/lib/constants'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,8 +23,21 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <main className="w-full max-w-[420px]">{children}</main>
 
-      <footer className="mt-10 text-xs text-muted-foreground">
-        &copy; 2026 Quotal
+      <footer className="mt-10 flex flex-col items-center gap-2 text-xs text-muted-foreground">
+        <nav className="flex gap-3">
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy
+          </Link>
+          <Link href="/termini" className="hover:text-foreground">
+            Termini
+          </Link>
+          <Link href="/cookie-policy" className="hover:text-foreground">
+            Cookie
+          </Link>
+        </nav>
+        <p>
+          © {new Date().getFullYear()} {APP_NAME}
+        </p>
       </footer>
     </div>
   )

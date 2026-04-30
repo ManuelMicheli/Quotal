@@ -18,6 +18,7 @@ import { redirect } from 'next/navigation'
 import { dashboardPathForRole } from '@/lib/auth'
 import { ROLES } from '@/lib/constants'
 import { env } from '@/lib/env'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -33,11 +34,22 @@ export type ActionResult =
   | { ok: false; error: string }
 
 /**
+ * Generic message returned when the rate-limit middleware fires. We keep it
+ * vague on purpose: any leaked detail (e.g. window length) helps an attacker
+ * pace their burst.
+ */
+const RATE_LIMITED_MESSAGE =
+  'Troppi tentativi ravvicinati. Aspetta qualche istante prima di riprovare.'
+
+/**
  * Sign in with email + password. On success, redirect to the role-specific
  * landing page. We deliberately collapse all auth errors to a single generic
  * message so we don't leak whether the email or password is the problem.
  */
 export async function loginAction(formData: FormData): Promise<ActionResult> {
+  const rl = await checkRateLimit('auth')
+  if (!rl.success) return { ok: false, error: RATE_LIMITED_MESSAGE }
+
   const parsed = loginSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
@@ -84,6 +96,21 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
  * user a confirmation link, and we render a "check your inbox" screen.
  */
 export async function signupAction(formData: FormData): Promise<ActionResult> {
+  const rl = await checkRateLimit('auth')
+  if (!rl.success) return { ok: false, error: RATE_LIMITED_MESSAGE }
+
+  // Honeypot: a hidden `website` field that a real human never fills in but
+  // bots scraping every field tend to set. We pretend success rather than
+  // 4xx so the bot gets no feedback to retry against.
+  const honeypot = formData.get('website')
+  if (typeof honeypot === 'string' && honeypot.trim().length > 0) {
+    return {
+      ok: true,
+      message:
+        'Ti abbiamo inviato un’email di conferma. Clicca sul link per attivare il tuo account.',
+    }
+  }
+
   const parsed = signupSchema.safeParse({
     full_name: formData.get('full_name'),
     email: formData.get('email'),
@@ -176,6 +203,9 @@ export async function logoutAction() {
 export async function resetPasswordAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  const rl = await checkRateLimit('passwordReset')
+  if (!rl.success) return { ok: false, error: RATE_LIMITED_MESSAGE }
+
   const parsed = resetPasswordSchema.safeParse({
     email: formData.get('email'),
   })
