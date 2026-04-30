@@ -3,9 +3,9 @@
  *
  * GET /app/pagamenti/portal → 302 to portal.url
  *
- * Members can use the portal to revoke their SEPA mandate or view past
- * invoices. Owners hitting this redirect get sent to /login by middleware
- * (this file lives under `(member)`, which is gated to role=member).
+ * On any failure (no Stripe customer, portal not configured, network)
+ * redirects back to /app/pagamenti?portal=<reason> so the UI can surface
+ * the error instead of throwing a 500.
  */
 import { NextResponse } from 'next/server'
 
@@ -19,12 +19,21 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const member = await requireMember()
   if (!member.stripe_customer_id) {
-    return NextResponse.redirect(`${env.APP_URL}/app?portal=missing`)
+    return NextResponse.redirect(
+      `${env.APP_URL}/app/pagamenti?portal=missing`,
+    )
   }
-  const stripe = getStripe()
-  const portal = await stripe.billingPortal.sessions.create({
-    customer: member.stripe_customer_id,
-    return_url: `${env.APP_URL}/app`,
-  })
-  return NextResponse.redirect(portal.url)
+  try {
+    const stripe = getStripe()
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: member.stripe_customer_id,
+      return_url: `${env.APP_URL}/app/pagamenti`,
+    })
+    return NextResponse.redirect(portal.url)
+  } catch (err) {
+    console.error('[member/portal] stripe billingPortal failed:', err)
+    return NextResponse.redirect(
+      `${env.APP_URL}/app/pagamenti?portal=error`,
+    )
+  }
 }

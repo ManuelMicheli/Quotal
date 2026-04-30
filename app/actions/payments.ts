@@ -18,7 +18,7 @@
  */
 import { revalidatePath } from 'next/cache'
 
-import { requireOwnerOrStaff, requireProfile } from '@/lib/auth'
+import { requireMember, requireOwnerOrStaff, requireProfile } from '@/lib/auth'
 import { env } from '@/lib/env'
 import { dispatchNotification } from '@/lib/notifications/dispatcher'
 import {
@@ -129,6 +129,84 @@ export async function createPaymentSessionAction(
     ok: true,
     data: { token: session.token, paymentUrl, sessionId: session.id },
     message: 'Link di pagamento creato',
+  }
+}
+
+/**
+ * Member self-service: create a payment session to renew their own subscription.
+ *
+ * Distinct from `createPaymentSessionAction` (owner/staff only). Reuses an
+ * existing pending session for the same plan if one is still valid, so a
+ * member tapping "Paga" twice doesn't pile up rows.
+ */
+export async function createSelfPaymentSessionAction(input: {
+  plan_id: string
+}): Promise<ActionResult<{ token: string; paymentUrl: string }>> {
+  const member = await requireMember()
+  const planId = typeof input.plan_id === 'string' ? input.plan_id.trim() : ''
+  if (!planId) return { ok: false, error: 'Piano non valido' }
+
+  const admin = createAdminClient()
+
+  const { data: plan, error: planErr } = await admin
+    .from('subscription_plans')
+    .select('id, gym_id, price_cents, is_active')
+    .eq('id', planId)
+    .single()
+  if (planErr || !plan) return { ok: false, error: 'Piano non trovato' }
+  if (plan.gym_id !== member.gym_id || !plan.is_active) {
+    return { ok: false, error: 'Piano non valido' }
+  }
+
+  const nowIso = new Date().toISOString()
+  const { data: existing } = await admin
+    .from('payment_sessions')
+    .select('id, token, expires_at, plan_id, amount_cents')
+    .eq('member_id', member.id)
+    .eq('status', 'pending')
+    .gt('expires_at', nowIso)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (
+    existing &&
+    existing.plan_id === plan.id &&
+    existing.amount_cents === plan.price_cents
+  ) {
+    return {
+      ok: true,
+      data: {
+        token: existing.token,
+        paymentUrl: `${env.APP_URL}/pay/${existing.token}`,
+      },
+    }
+  }
+
+  const token = generatePaymentSessionToken()
+  const { data: session, error: insertErr } = await admin
+    .from('payment_sessions')
+    .insert({
+      gym_id: member.gym_id,
+      member_id: member.id,
+      plan_id: plan.id,
+      token,
+      status: 'pending',
+      amount_cents: plan.price_cents,
+      created_by: member.id,
+    })
+    .select('id, token')
+    .single()
+  if (insertErr || !session) {
+    return { ok: false, error: insertErr?.message ?? 'Errore creazione sessione' }
+  }
+
+  return {
+    ok: true,
+    data: {
+      token: session.token,
+      paymentUrl: `${env.APP_URL}/pay/${session.token}`,
+    },
   }
 }
 

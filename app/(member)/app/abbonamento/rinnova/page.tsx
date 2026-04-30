@@ -6,7 +6,7 @@
  */
 import { redirect } from 'next/navigation'
 
-import { createPaymentSessionAction } from '@/app/actions/payments'
+import { createSelfPaymentSessionAction } from '@/app/actions/payments'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireMember } from '@/lib/auth'
@@ -15,9 +15,14 @@ import { formatCurrency } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-export default async function MemberRenewPage() {
+export default async function MemberRenewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
   const profile = await requireMember()
   const supabase = await createClient()
+  const { error: errorParam } = await searchParams
 
   const { data: plans } = await supabase
     .from('subscription_plans')
@@ -28,16 +33,16 @@ export default async function MemberRenewPage() {
 
   async function startRenewal(formData: FormData) {
     'use server'
-    const me = await requireMember()
     const planId = formData.get('plan_id')?.toString() ?? ''
-    if (!planId) return
-    const result = await createPaymentSessionAction({
-      member_id: me.id,
-      plan_id: planId,
-    })
-    if (result.ok && result.data) {
-      redirect(`/pay/${result.data.token}`)
+    if (!planId) {
+      redirect('/app/abbonamento/rinnova?error=plan')
     }
+    const result = await createSelfPaymentSessionAction({ plan_id: planId })
+    if (!result.ok || !result.data) {
+      const msg = encodeURIComponent(!result.ok ? result.error : 'unknown')
+      redirect(`/app/abbonamento/rinnova?error=${msg}`)
+    }
+    redirect(`/pay/${result.data.token}`)
   }
 
   return (
@@ -48,6 +53,15 @@ export default async function MemberRenewPage() {
           Scegli il piano
         </h1>
       </header>
+
+      {errorParam ? (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+        >
+          Pagamento non avviato. Riprova o contatta la palestra.
+        </div>
+      ) : null}
 
       {!plans || plans.length === 0 ? (
         <Card>

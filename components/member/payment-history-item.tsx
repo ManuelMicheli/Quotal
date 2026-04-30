@@ -25,12 +25,16 @@ export function PaymentHistoryItem({ payment }: { payment: Payment }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold">
-            {isRefund ? 'Rimborso' : formatCurrency(Math.abs(payment.amount_cents))}
             {isRefund ? (
-              <span className="ml-1 text-sm font-normal text-destructive">
-                {formatCurrency(payment.amount_cents)}
-              </span>
-            ) : null}
+              <>
+                <span>Rimborso</span>
+                <span className="ml-2 font-normal text-destructive">
+                  {formatCurrency(payment.amount_cents)}
+                </span>
+              </>
+            ) : (
+              formatCurrency(payment.amount_cents)
+            )}
           </p>
           <p className="text-xs text-muted-foreground">
             {formatDate(date, 'long')}
