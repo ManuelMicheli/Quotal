@@ -4,11 +4,11 @@
  * Logged-in member picks a plan and is redirected to a freshly-created
  * `/pay/[token]` URL. Reuses the same payment flow as the owner-issued link.
  */
+import { ArrowUpRightIcon } from 'lucide-react'
 import { redirect } from 'next/navigation'
 
 import { createSelfPaymentSessionAction } from '@/app/actions/payments'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireMember } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/format'
@@ -46,10 +46,12 @@ export default async function MemberRenewPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-6 px-6 py-12">
-      <header>
-        <p className="text-sm text-muted-foreground">Rinnova abbonamento</p>
-        <h1 className="font-display text-2xl tracking-tight">
+    <div className="flex flex-col gap-6 md:gap-10">
+      <header className="pt-2 md:pt-4">
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground md:text-xs">
+          Rinnova abbonamento
+        </p>
+        <h1 className="mt-2 font-display text-3xl tracking-tight md:text-5xl lg:text-6xl">
           Scegli il piano
         </h1>
       </header>
@@ -64,40 +66,44 @@ export default async function MemberRenewPage({
       ) : null}
 
       {!plans || plans.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Nessun piano attivo. Contatta la palestra.
-          </CardContent>
-        </Card>
+        <div className="ring-soft rounded-3xl bg-card px-5 py-12 text-center text-sm text-muted-foreground">
+          Nessun piano attivo. Contatta la palestra.
+        </div>
       ) : (
-        <form action={startRenewal} className="flex flex-col gap-3">
+        <form
+          action={startRenewal}
+          className="grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4"
+        >
           {plans.map((p) => (
-            <Card key={p.id}>
-              <CardHeader>
-                <CardTitle className="text-base">{p.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex items-center justify-between gap-3">
-                <div className="text-sm text-muted-foreground">
+            <article
+              key={p.id}
+              className="ring-elevated tap-shrink flex flex-col gap-4 rounded-3xl bg-card p-6 md:p-7"
+            >
+              <div className="flex-1">
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground md:text-xs">
                   {p.duration_days} giorni
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-display text-lg">
-                    {formatCurrency(p.price_cents)}
-                  </span>
-                  <Button
-                    type="submit"
-                    name="plan_id"
-                    value={p.id}
-                    size="sm"
-                  >
-                    Paga
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </p>
+                <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl lg:text-4xl">
+                  {p.name}
+                </h2>
+                <p className="tabular mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+                  {formatCurrency(p.price_cents)}
+                </p>
+              </div>
+              <Button
+                type="submit"
+                name="plan_id"
+                value={p.id}
+                size="lg"
+                className="w-full rounded-full"
+              >
+                Paga ora
+                <ArrowUpRightIcon size={16} />
+              </Button>
+            </article>
           ))}
         </form>
       )}
-    </main>
+    </div>
   )
 }

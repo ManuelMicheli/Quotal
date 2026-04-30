@@ -20,7 +20,7 @@ export default function LegalLayout({
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 px-6 py-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+        <div className="flex w-full items-center justify-between gap-4 md:px-4 lg:px-8">
           <Link href="/" aria-label="Torna alla home Quotal">
             <Logo size="sm" />
           </Link>
@@ -41,8 +41,8 @@ export default function LegalLayout({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 md:py-16 lg:py-20">
-        <article className="prose prose-stone dark:prose-invert max-w-none">
+      <main className="w-full flex-1 px-6 py-12 md:px-12 md:py-16 lg:px-20 lg:py-20 xl:px-32">
+        <article className="prose prose-stone dark:prose-invert max-w-4xl">
           {children}
         </article>
       </main>

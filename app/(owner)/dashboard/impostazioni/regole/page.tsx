@@ -34,7 +34,7 @@ export default async function GymRulesPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <div>
         <Link
           href="/dashboard/impostazioni"

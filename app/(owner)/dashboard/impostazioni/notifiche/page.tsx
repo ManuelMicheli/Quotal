@@ -23,7 +23,7 @@ export default async function OwnerNotificationsSettingsPage() {
   const prefs = await getNotificationPreferences(profile.id)
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <Link
         href="/dashboard/impostazioni"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"

@@ -41,7 +41,7 @@ export function MemberTopBar() {
       className="sticky top-0 z-40 hidden border-b border-border/60 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 md:block"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-6 lg:h-20 lg:px-10">
+      <div className="flex h-16 w-full items-center gap-6 px-10 lg:h-20 lg:px-16 xl:px-24 2xl:px-32">
         <Link href="/app" className="shrink-0">
           <Logo size="sm" />
         </Link>

@@ -58,7 +58,7 @@ export default async function MemberAppLayout({
       <OnlineBanner />
       <MemberTopBar />
 
-      <main className="relative mx-auto w-full max-w-md px-5 pb-32 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:max-w-5xl md:px-8 md:pb-16 md:pt-10 lg:max-w-6xl lg:px-10 lg:pt-12">
+      <main className="relative mx-auto w-full max-w-md px-5 pb-32 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:max-w-none md:px-10 md:pb-16 md:pt-10 lg:px-16 lg:pt-12 xl:px-24 2xl:px-32">
         {children}
       </main>
 

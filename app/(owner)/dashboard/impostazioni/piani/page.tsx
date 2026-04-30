@@ -16,7 +16,7 @@ export default async function PlansSettingsPage() {
   const plans = await getSubscriptionPlans()
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <div>
         <Link
           href="/dashboard/impostazioni"

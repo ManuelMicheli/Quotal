@@ -63,7 +63,7 @@ const SECTIONS = [
 
 export default function SettingsHubPage() {
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <header className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">Configurazione</p>
         <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Impostazioni</h1>

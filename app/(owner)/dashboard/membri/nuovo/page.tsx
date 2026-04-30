@@ -11,7 +11,7 @@ export default async function NewMemberPage() {
   const plans = await getActiveSubscriptionPlans()
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <header className="flex flex-col gap-1">
         <Link
           href="/dashboard/membri"
