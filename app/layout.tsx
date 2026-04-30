@@ -31,8 +31,22 @@ export const metadata: Metadata = {
   },
   description: APP_DESCRIPTION,
   applicationName: APP_NAME,
+  // PWA manifest — served as a static file under /public.
+  manifest: '/manifest.webmanifest',
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: APP_NAME,
+    statusBarStyle: 'black-translucent',
+    startupImage: ['/icons/apple-touch-icon.png'],
   },
   authors: [{ name: APP_NAME }],
   creator: APP_NAME,
@@ -42,12 +56,18 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0A',
+  // Brand teal — matches the manifest theme_color so the address bar /
+  // status bar tint matches the PWA chrome when installed.
+  themeColor: '#0F766E',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 5,
   viewportFit: 'cover',
 }
 
