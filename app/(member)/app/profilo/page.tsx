@@ -8,7 +8,7 @@
  * Server component for the data load; the form itself is a client
  * component (`ProfileForm`).
  */
-import { KeyIcon } from 'lucide-react'
+import { BellIcon, KeyIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { PageHeader } from '@/components/member/page-header'
@@ -42,6 +42,20 @@ export default async function MemberProfilePage() {
         </CardHeader>
         <CardContent>
           <ProfileForm profile={profile} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Notifiche</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline" className="w-full justify-start">
+            <Link href="/app/profilo/notifiche">
+              <BellIcon size={16} />
+              Gestisci email e push
+            </Link>
+          </Button>
         </CardContent>
       </Card>
 

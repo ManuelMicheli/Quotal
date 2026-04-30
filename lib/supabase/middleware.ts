@@ -97,11 +97,20 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   // `x-device-token`, never a Supabase session. Letting it through here
   // matches the policy already in place for /api/webhooks.
   const isAccessVerify = pathname === '/api/access/verify'
+  // Cron endpoints (Phase 09) authenticate with the CRON_SECRET bearer
+  // token. Same fall-through rationale as webhooks/access-verify.
+  const isCron = pathname.startsWith('/api/cron/')
   const isApiRoute = pathname.startsWith('/api/')
 
   // --- Unauthenticated requests ---------------------------------------------
   if (!user) {
-    if (isPublicPath(pathname) || isWebhook || isHealth || isAccessVerify) {
+    if (
+      isPublicPath(pathname) ||
+      isWebhook ||
+      isHealth ||
+      isAccessVerify ||
+      isCron
+    ) {
       return supabaseResponse
     }
 

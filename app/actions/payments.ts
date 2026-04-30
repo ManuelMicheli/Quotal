@@ -20,6 +20,7 @@ import { revalidatePath } from 'next/cache'
 
 import { requireOwnerOrStaff, requireProfile } from '@/lib/auth'
 import { env } from '@/lib/env'
+import { dispatchNotification } from '@/lib/notifications/dispatcher'
 import {
   createSignedReceiptUrl,
   generateAndStoreReceipt,
@@ -636,6 +637,26 @@ export async function registerCashPaymentAction(
         err,
       )
     }
+  }
+
+  // Phase 09: email the receipt to the member (best-effort).
+  try {
+    await dispatchNotification({
+      type: 'receipt',
+      recipient_id: data.member_id,
+      // Receipts are NOT idempotent on subscription_id (a single
+      // subscription may receive multiple receipts over time), so we
+      // force the send.
+      force: true,
+      data: {
+        receipt_number: rpc.receipt_number,
+        amount_cents: data.amount_cents,
+        paid_at: today,
+        payment_method: data.payment_method,
+      },
+    })
+  } catch (err) {
+    console.warn('[payments] cash receipt notification failed', err)
   }
 
   revalidatePath('/dashboard', 'layout')

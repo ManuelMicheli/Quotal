@@ -14,8 +14,27 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
-    RESEND_FROM_EMAIL: z.string().email().optional(),
+    RESEND_FROM_EMAIL: z.string().min(1).optional(),
+    /**
+     * Optional `Reply-To` header (e.g. `support@quotal.it`). Falls back to
+     * `RESEND_FROM_EMAIL` if unset.
+     */
+    RESEND_REPLY_TO: z.string().email().optional(),
+    /**
+     * Resend webhook signing secret. Optional: when unset the
+     * `/api/webhooks/resend` endpoint accepts requests without verification
+     * (useful in dev). In production, set this to the value Resend prints
+     * when you create the webhook.
+     */
+    RESEND_WEBHOOK_SECRET: z.string().min(1).optional(),
     APP_URL: z.string().url().default('http://localhost:3000'),
+    /**
+     * Shared secret used by Supabase pg_cron / Edge Functions to invoke
+     * Phase 09 cron endpoints (`/api/cron/...`). Sent as `Authorization:
+     * Bearer ...`. Optional in dev — if unset, the cron endpoints reject
+     * every request (fail-closed) since there's no way to authenticate.
+     */
+    CRON_SECRET: z.string().min(16).optional(),
     /**
      * Set to "true" to expose `/onboarding-titolare`. The titolare flips this
      * to "false" once the first owner exists, so the route can never be
@@ -84,6 +103,9 @@ export const env = createEnv({
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+    RESEND_REPLY_TO: process.env.RESEND_REPLY_TO,
+    RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET,
+    CRON_SECRET: process.env.CRON_SECRET,
     APP_URL: process.env.APP_URL,
     ENABLE_OWNER_ONBOARDING: process.env.ENABLE_OWNER_ONBOARDING,
     QR_TOKEN_SECRET: process.env.QR_TOKEN_SECRET,

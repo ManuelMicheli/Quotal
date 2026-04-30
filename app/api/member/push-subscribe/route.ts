@@ -3,12 +3,10 @@
  *
  * POST /api/member/push-subscribe — body matches `pushSubscribeSchema`.
  *
- * Stores the web-push subscription in `push_subscriptions`. The send
- * pipeline lives in Phase 09 — this endpoint exists now so the SW can
- * register on first install/permission grant without losing the data.
- *
- * Returns 501 if the gym hasn't configured a VAPID keypair yet, so the
- * UI can hide the "abilita notifiche" prompt until Phase 09 ships.
+ * Stores the web-push subscription in `push_subscriptions`. As of Phase
+ * 09 the send pipeline is wired up via `lib/notifications/dispatcher.ts`,
+ * but the UI still hides the "abilita notifiche" prompt when no VAPID
+ * keypair is set (the SW would refuse to subscribe anyway).
  */
 import { NextResponse } from 'next/server'
 
@@ -19,7 +17,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
-  if (!env.VAPID_PRIVATE_KEY) {
+  if (!env.VAPID_PRIVATE_KEY || !env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
     return NextResponse.json(
       {
         ok: false,

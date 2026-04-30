@@ -13,11 +13,15 @@
  */
 import { revalidatePath } from 'next/cache'
 
-import { requireMember } from '@/lib/auth'
+import { requireMember, requireProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import {
+  memberNotificationPreferencesSchema,
+  ownerNotificationPreferencesSchema,
   pushSubscribeSchema,
   updateMemberProfileSchema,
+  type MemberNotificationPreferencesInput,
+  type OwnerNotificationPreferencesInput,
   type PushSubscribeInput,
   type UpdateMemberProfileInput,
 } from '@/lib/validations/member'
@@ -142,5 +146,112 @@ export async function pushUnsubscribeAction(
   if (error) {
     return { ok: false, error: 'Disattivazione notifiche non riuscita.' }
   }
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Notification preferences (Phase 09)
+// ---------------------------------------------------------------------------
+
+export async function updateMemberNotificationPreferencesAction(
+  input: MemberNotificationPreferencesInput,
+): Promise<ActionResult> {
+  const profile = await requireMember()
+  const parsed = memberNotificationPreferencesSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? 'Dati non validi.',
+      fieldErrors: zodToFieldErrors(parsed.error.issues),
+    }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('notification_preferences')
+    .upsert(
+      {
+        member_id: profile.id,
+        gym_id: profile.gym_id,
+        ...parsed.data,
+      },
+      { onConflict: 'member_id' },
+    )
+  if (error) {
+    return { ok: false, error: `Salvataggio non riuscito: ${error.message}` }
+  }
+  revalidatePath('/app/profilo')
+  return { ok: true, message: 'Preferenze aggiornate.' }
+}
+
+export async function updateOwnerNotificationPreferencesAction(
+  input: OwnerNotificationPreferencesInput,
+): Promise<ActionResult> {
+  const profile = await requireProfile()
+  if (profile.role !== 'owner' && profile.role !== 'staff') {
+    return { ok: false, error: 'Permessi insufficienti.' }
+  }
+  const parsed = ownerNotificationPreferencesSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? 'Dati non validi.',
+      fieldErrors: zodToFieldErrors(parsed.error.issues),
+    }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('notification_preferences')
+    .upsert(
+      {
+        member_id: profile.id,
+        gym_id: profile.gym_id,
+        ...parsed.data,
+      },
+      { onConflict: 'member_id' },
+    )
+  if (error) {
+    return { ok: false, error: `Salvataggio non riuscito: ${error.message}` }
+  }
+  revalidatePath('/dashboard/impostazioni/notifiche')
+  return { ok: true, message: 'Preferenze aggiornate.' }
+}
+
+// ---------------------------------------------------------------------------
+// Owner inbox: mark notification as read
+// ---------------------------------------------------------------------------
+
+export async function markOwnerNotificationReadAction(
+  notification_id: string,
+): Promise<ActionResult> {
+  const profile = await requireProfile()
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('owner_notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('id', notification_id)
+    .eq('recipient_id', profile.id)
+  if (error) {
+    return { ok: false, error: error.message }
+  }
+  revalidatePath('/dashboard', 'layout')
+  return { ok: true }
+}
+
+export async function markAllOwnerNotificationsReadAction(): Promise<
+  ActionResult
+> {
+  const profile = await requireProfile()
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('owner_notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('recipient_id', profile.id)
+    .is('read_at', null)
+  if (error) {
+    return { ok: false, error: error.message }
+  }
+  revalidatePath('/dashboard', 'layout')
   return { ok: true }
 }

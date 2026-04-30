@@ -76,3 +76,40 @@ export const pushSubscribeSchema = z.object({
   user_agent: optionalString,
 })
 export type PushSubscribeInput = z.infer<typeof pushSubscribeSchema>
+
+// ---------------------------------------------------------------------------
+// Notification preferences (Phase 09)
+// ---------------------------------------------------------------------------
+
+/**
+ * Member-side preference toggles. Owners/staff also have additional flags
+ * (digest, owner alerts) but those are exposed in a separate dashboard page.
+ */
+export const memberNotificationPreferencesSchema = z.object({
+  email_enabled: z.boolean(),
+  push_enabled: z.boolean(),
+  email_expiry_reminders: z.boolean(),
+  email_payment_receipts: z.boolean(),
+  email_payment_failures: z.boolean(),
+  email_lifecycle_changes: z.boolean(),
+  push_expiry_reminders: z.boolean(),
+  push_payment_events: z.boolean(),
+})
+export type MemberNotificationPreferencesInput = z.infer<
+  typeof memberNotificationPreferencesSchema
+>
+
+/**
+ * Owner-side preference toggles — superset of the member toggles plus
+ * the owner-only flags.
+ */
+export const ownerNotificationPreferencesSchema =
+  memberNotificationPreferencesSchema.extend({
+    email_daily_digest: z.boolean(),
+    email_payment_failed_alert: z.boolean(),
+    email_new_member_alert: z.boolean(),
+    email_monthly_report: z.boolean(),
+  })
+export type OwnerNotificationPreferencesInput = z.infer<
+  typeof ownerNotificationPreferencesSchema
+>

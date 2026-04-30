@@ -10,14 +10,15 @@
  * The mobile counterpart shows just the page title + avatar trigger; render
  * via `<MobileTopbar />`.
  */
-import { BellIcon, SearchIcon } from 'lucide-react'
+import { SearchIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
 
+import { OwnerNotificationsBell } from '@/components/owner/notifications-bell'
 import { ProfileDropdown } from '@/components/owner/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
+import type { OwnerNotification } from '@/lib/domain-types'
 
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -52,10 +53,14 @@ export function OwnerTopbar({
   ownerName,
   ownerEmail,
   ownerAvatarUrl,
+  initialNotifications = [],
+  initialUnread = 0,
 }: {
   ownerName: string
   ownerEmail: string
   ownerAvatarUrl?: string | null
+  initialNotifications?: OwnerNotification[]
+  initialUnread?: number
 }) {
   const pathname = usePathname()
   const segments = pathname.split('/').filter(Boolean)
@@ -103,9 +108,10 @@ export function OwnerTopbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" disabled aria-label="Notifiche">
-          <BellIcon className="size-5" />
-        </Button>
+        <OwnerNotificationsBell
+          initialNotifications={initialNotifications}
+          initialUnread={initialUnread}
+        />
         <ProfileDropdown
           ownerName={ownerName}
           ownerEmail={ownerEmail}
