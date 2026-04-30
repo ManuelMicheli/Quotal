@@ -32,7 +32,7 @@ export default async function OwnerNotificationsSettingsPage() {
       </Link>
       <header className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">Configurazione</p>
-        <h1 className="font-display text-3xl tracking-tight">Notifiche</h1>
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Notifiche</h1>
         <p className="text-sm text-muted-foreground">
           Scegli quali email ricevere. Le impostazioni sono per-utente:
           ogni titolare e collaboratore decide da sé.

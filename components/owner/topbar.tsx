@@ -7,8 +7,8 @@
  * Items not in the map are humanised (capitalised, dashes → spaces). The
  * last segment is rendered as plain text; the rest as links.
  *
- * The mobile counterpart shows just the page title + avatar trigger; render
- * via `<MobileTopbar />`.
+ * Mobile presentation: the breadcrumb collapses to the page title only and a
+ * compact action cluster (theme toggle + bell + avatar trigger).
  */
 import { SearchIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -17,6 +17,7 @@ import * as React from 'react'
 
 import { OwnerNotificationsBell } from '@/components/owner/notifications-bell'
 import { ProfileDropdown } from '@/components/owner/sidebar'
+import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { OwnerNotification } from '@/lib/domain-types'
 
@@ -32,11 +33,11 @@ const SEGMENT_LABELS: Record<string, string> = {
   regole: 'Regole',
   profilo: 'Profilo',
   nuovo: 'Nuovo',
+  cassa: 'Cassa',
 }
 
 function humaniseSegment(seg: string): string {
   if (SEGMENT_LABELS[seg]) return SEGMENT_LABELS[seg]
-  // UUIDs and ids: don't humanise, leave as-is but truncate.
   if (/^[0-9a-f]{8}-/.test(seg)) return seg.slice(0, 8) + '…'
   return seg
     .split('-')
@@ -64,10 +65,17 @@ export function OwnerTopbar({
 }) {
   const pathname = usePathname()
   const segments = pathname.split('/').filter(Boolean)
+  const lastSeg = segments[segments.length - 1] ?? 'dashboard'
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
-      <nav className="hidden flex-1 items-center gap-2 text-sm md:flex" aria-label="Breadcrumb">
+    <header
+      className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 md:h-20 md:gap-4 md:px-8 lg:px-12 xl:px-16"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <nav
+        className="hidden flex-1 items-center gap-2 text-sm md:flex"
+        aria-label="Breadcrumb"
+      >
         {segments.map((seg, idx) => {
           const href = '/' + segments.slice(0, idx + 1).join('/')
           const isLast = idx === segments.length - 1
@@ -78,7 +86,9 @@ export function OwnerTopbar({
                 <span className="text-muted-foreground/40">/</span>
               ) : null}
               {isLast ? (
-                <span className="font-medium text-foreground">{label}</span>
+                <span className="font-display text-base font-medium text-foreground tracking-tight md:text-lg">
+                  {label}
+                </span>
               ) : (
                 <Link
                   href={href}
@@ -92,22 +102,27 @@ export function OwnerTopbar({
         })}
       </nav>
 
-      <div className="flex flex-1 items-center justify-end gap-2 md:flex-none md:flex-1 md:justify-center">
+      <p className="font-display text-base font-medium tracking-tight md:hidden">
+        {humaniseSegment(lastSeg)}
+      </p>
+
+      <div className="hidden flex-1 items-center justify-center md:flex">
         <button
           type="button"
           disabled
-          className="hidden h-9 w-72 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed md:flex"
+          className="hidden h-10 w-80 items-center gap-2 rounded-full border border-border/70 bg-card/60 px-4 text-sm text-muted-foreground transition-colors hover:bg-card disabled:cursor-not-allowed md:flex"
           title="Disponibile prossimamente"
         >
           <SearchIcon className="size-4" />
-          <span>Cerca…</span>
-          <kbd className="ml-auto hidden rounded bg-background px-1.5 py-0.5 text-[10px] font-medium md:inline">
+          <span>Cerca membri, pagamenti, abbonamenti…</span>
+          <kbd className="ml-auto rounded border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-medium">
             ⌘K
           </kbd>
         </button>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
+        <ThemeToggle />
         <OwnerNotificationsBell
           initialNotifications={initialNotifications}
           initialUnread={initialUnread}
@@ -117,8 +132,12 @@ export function OwnerTopbar({
           ownerEmail={ownerEmail}
           ownerAvatarUrl={ownerAvatarUrl}
         >
-          <button type="button" className="md:hidden" aria-label="Apri profilo">
-            <Avatar className="size-8">
+          <button
+            type="button"
+            className="tap-shrink md:hidden"
+            aria-label="Apri profilo"
+          >
+            <Avatar className="size-9">
               {ownerAvatarUrl ? <AvatarImage src={ownerAvatarUrl} alt={ownerName} /> : null}
               <AvatarFallback className="bg-muted text-xs">
                 {initialsFor(ownerName)}

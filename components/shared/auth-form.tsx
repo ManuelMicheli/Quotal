@@ -5,7 +5,6 @@
  * Server component. The form itself is supplied by the caller as a client
  * component child — keeps the heavy `useForm` machinery out of this scope.
  */
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 export function AuthForm({
@@ -22,19 +21,26 @@ export function AuthForm({
   className?: string
 }) {
   return (
-    <Card className={cn('w-full', className)}>
-      <CardHeader>
-        <CardTitle className="text-2xl font-display tracking-tight">
+    <section
+      className={cn(
+        'ring-elevated rounded-[28px] bg-card/95 p-6 backdrop-blur-sm md:p-8',
+        className,
+      )}
+    >
+      <header className="space-y-2">
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl">
           {title}
-        </CardTitle>
-        {description ? <CardDescription>{description}</CardDescription> : null}
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6">
+        </h1>
+        {description ? (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        ) : null}
+      </header>
+      <div className="mt-6 flex flex-col gap-6">
         {children}
         {footer ? (
           <div className="text-sm text-muted-foreground">{footer}</div>
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

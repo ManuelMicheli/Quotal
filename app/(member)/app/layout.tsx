@@ -2,16 +2,12 @@
  * Layout for the member PWA.
  *
  * Server component. Calls `requireMember()` so every nested page gets the
- * profile guard "for free". Renders:
- *   - the offline banner (top, conditional)
- *   - the page content with bottom padding to clear the bottom nav
- *   - the install-prompt (above the bottom nav, conditional)
- *   - the bottom nav (sticky, fixed)
- *   - the SW registration shim (mounted once, no UI)
+ * profile guard "for free".
  *
- * Min-screen + flex layout keeps short pages aligned to the top of the
- * viewport on mobile. The `pb-24` reserves room for the 64px-tall bottom
- * nav + the iPhone home-indicator safe area.
+ * Responsive shape:
+ *   - Phone: single column (max-w-md), bottom dock for nav, install prompt.
+ *   - Tablet+: glass top bar with full nav, container expands to max-w-6xl,
+ *     bottom dock hides.
  */
 import type { Metadata, Viewport } from 'next'
 
@@ -19,12 +15,12 @@ import { BottomNav } from '@/components/member/bottom-nav'
 import { InstallPrompt } from '@/components/member/install-prompt'
 import { OnlineBanner } from '@/components/member/online-banner'
 import { ServiceWorkerRegister } from '@/components/member/sw-register'
+import { MemberTopBar } from '@/components/member/top-bar'
 import { Toaster } from '@/components/ui/sonner'
 import { requireMember } from '@/lib/auth'
 
 export const metadata: Metadata = {
   title: 'La tua palestra',
-  // Help iOS Safari pick the right colour for the status bar in PWA mode.
   appleWebApp: {
     title: 'Quotal',
     statusBarStyle: 'black-translucent',
@@ -45,21 +41,27 @@ export default async function MemberAppLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Side-effect only — `requireMember` redirects on missing role / no
-  // session. Doesn't need to be awaited's value here; nested pages call
-  // `requireMember()` again to actually use the profile.
   await requireMember()
 
   return (
-    <div className="relative min-h-dvh bg-gradient-to-b from-stone-50 to-stone-100 text-foreground">
+    <div className="relative min-h-dvh overflow-x-hidden bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="bg-aurora pointer-events-none fixed inset-x-0 top-0 h-[60vh]"
+      />
+      <div
+        aria-hidden="true"
+        className="bg-grain pointer-events-none fixed inset-0 opacity-40 mix-blend-multiply"
+      />
+
       <ServiceWorkerRegister />
       <OnlineBanner />
-      <main
-        className="mx-auto w-full max-w-md px-4 pb-24 pt-4"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}
-      >
+      <MemberTopBar />
+
+      <main className="relative mx-auto w-full max-w-md px-5 pb-32 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:max-w-5xl md:px-8 md:pb-16 md:pt-10 lg:max-w-6xl lg:px-10 lg:pt-12">
         {children}
       </main>
+
       <InstallPrompt />
       <BottomNav />
       <Toaster position="top-center" />

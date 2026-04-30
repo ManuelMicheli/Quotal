@@ -73,9 +73,17 @@ export default async function OwnerOnboardingPage() {
       redirect('/login?error=owner_exists')
     }
   } catch (err) {
-    // If admin client creation fails (placeholder service role), surface a
-    // clear hint rather than a generic 500.
-    if (err instanceof Error && err.name === 'NEXT_REDIRECT') throw err
+    // In Next.js 16, redirect() throws an Error whose `message` is
+    // 'NEXT_REDIRECT' (and whose `digest` begins with 'NEXT_REDIRECT;…').
+    // The previous check on `err.name` never matched and swallowed the
+    // redirect. Match by message OR digest to be safe across versions.
+    if (
+      err instanceof Error &&
+      (err.message === 'NEXT_REDIRECT' ||
+        (err as { digest?: string }).digest?.startsWith('NEXT_REDIRECT'))
+    ) {
+      throw err
+    }
     return (
       <AuthForm
         title="Configurazione necessaria"

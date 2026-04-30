@@ -71,11 +71,11 @@ export default async function PaymentsPage({
     .slice(0, 7)}`
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">Contabilità</p>
-          <h1 className="font-display text-3xl tracking-tight">Pagamenti</h1>
+          <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Pagamenti</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="outline">

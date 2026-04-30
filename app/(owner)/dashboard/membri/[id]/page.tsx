@@ -96,7 +96,7 @@ export default async function MemberDetailPage({
           </Avatar>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-3xl tracking-tight">
+              <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
                 {profile.full_name}
               </h1>
               {profile.is_problematic ? (

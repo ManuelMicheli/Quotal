@@ -44,7 +44,7 @@ export default async function GymRulesPage() {
         </Link>
       </div>
       <header>
-        <h1 className="font-display text-3xl tracking-tight">Regole operative</h1>
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Regole operative</h1>
         <p className="text-sm text-muted-foreground">
           Tolleranza scadenza, limite sospensioni e promemoria automatici.
         </p>

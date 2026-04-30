@@ -23,13 +23,22 @@ export default async function OwnerDashboardLayout({
 
   return (
     <TooltipProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="relative flex min-h-screen w-full bg-background text-foreground">
+        <div
+          aria-hidden="true"
+          className="bg-aurora pointer-events-none fixed inset-x-0 top-0 h-[40vh]"
+        />
+        <div
+          aria-hidden="true"
+          className="bg-grain pointer-events-none fixed inset-0 opacity-30 mix-blend-multiply"
+        />
+
         <OwnerSidebar
           ownerName={profile.full_name}
           ownerEmail={profile.email}
           ownerAvatarUrl={profile.avatar_url}
         />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="relative flex min-w-0 flex-1 flex-col">
           <OwnerTopbar
             ownerName={profile.full_name}
             ownerEmail={profile.email}
@@ -37,7 +46,7 @@ export default async function OwnerDashboardLayout({
             initialNotifications={notifications}
             initialUnread={unread}
           />
-          <main className="flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">
+          <main className="flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-12 md:pt-8 lg:px-12 lg:pt-10 xl:px-16">
             {children}
           </main>
         </div>

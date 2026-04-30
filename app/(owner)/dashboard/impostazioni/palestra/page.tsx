@@ -25,7 +25,7 @@ export default async function GymSettingsPage() {
         </Link>
       </div>
       <header>
-        <h1 className="font-display text-3xl tracking-tight">Palestra</h1>
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Palestra</h1>
         <p className="text-sm text-muted-foreground">
           Dati che appariranno su ricevute, fatture e comunicazioni ai membri.
         </p>

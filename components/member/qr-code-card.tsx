@@ -3,18 +3,10 @@
 /**
  * Member access QR card.
  *
- * Renders the QR returned by `/api/member/qr` and refreshes it well
- * before the 5-min server TTL expires. The card behaves correctly even
- * when offline thanks to the SW cache fallback on the same endpoint —
- * the last successful QR is shown along with an "offline" banner so the
- * member can still walk past the tornello (Phase 08 will treat
- * almost-expired tokens with a small grace window).
- *
- * Refresh policy:
- *   - On mount + every REFRESH_INTERVAL_MS (≈4 minutes by default).
- *   - When the page becomes visible again (mobile users often background
- *     the app between the locker and the door).
- *   - Manual refresh button as escape hatch.
+ * Premium minimalist treatment: white inset QR panel framed by hairline
+ * corner crosshairs, status pill, soft scan-line animation, ghost
+ * refresh affordance. Refresh policy and offline cache behaviour are
+ * unchanged from the prior implementation.
  */
 import { RefreshCwIcon, ShieldCheckIcon, WifiOffIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -31,7 +23,7 @@ type QrResponse = {
   fullName: string
 }
 
-const REFRESH_INTERVAL_MS = 4 * 60 * 1000 // 4 min, server TTL is 5
+const REFRESH_INTERVAL_MS = 4 * 60 * 1000
 const LOCAL_STORAGE_KEY = 'quotal:last-qr'
 
 function readCached(): QrResponse | null {
@@ -63,16 +55,9 @@ export function QrCodeCard({
   isAccessAllowed,
 }: {
   initialFullName: string
-  /**
-   * Whether the member's subscription currently grants access. Drives
-   * the green/red badge; the QR itself is always rendered so staff can
-   * scan and see "blocked" on the tornello side.
-   */
   isAccessAllowed: boolean
 }) {
   const online = useOnlineStatus()
-  // Lazy initialiser: read localStorage on first render so we paint the
-  // cached QR immediately without a setState-in-effect cascade.
   const [qr, setQr] = useState<QrResponse | null>(() => readCached())
   const [loading, setLoading] = useState<boolean>(() => readCached() === null)
   const [error, setError] = useState<string | null>(null)
@@ -95,7 +80,6 @@ export function QrCodeCard({
       setStale(false)
       writeCached(json)
     } catch (err) {
-      // Offline / 5xx — fall back to the cached copy if we have one.
       const cached = readCached()
       if (cached) {
         setQr(cached)
@@ -112,17 +96,11 @@ export function QrCodeCard({
     }
   }, [])
 
-  // Trigger a fresh fetch on mount in addition to the synchronously-
-  // painted cache copy. The setState happens asynchronously inside
-  // `fetchQr` after the network round trip, not synchronously here, so
-  // it does NOT cause a cascading render — the rule's heuristic flags
-  // this regardless because it can't see across the await.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchQr()
   }, [fetchQr])
 
-  // Periodic refresh while online + on visibility change.
   useEffect(() => {
     function schedule() {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -149,46 +127,83 @@ export function QrCodeCard({
     }
   }, [fetchQr])
 
+  const cornerClass =
+    'absolute h-4 w-4 border-foreground/80'
+
   return (
     <section
       aria-labelledby="qr-card-title"
-      className="rounded-3xl border border-border bg-card p-5 shadow-sm"
+      className="ring-elevated relative h-full overflow-hidden rounded-[28px] bg-card p-6 md:p-7"
     >
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <p id="qr-card-title" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p
+            id="qr-card-title"
+            className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+          >
             Il tuo accesso
           </p>
-          <p className="mt-0.5 text-sm font-medium">{qr?.fullName ?? initialFullName}</p>
+          <p className="mt-1 truncate font-display text-lg tracking-tight">
+            {qr?.fullName ?? initialFullName}
+          </p>
         </div>
         <span
           className={cn(
-            'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
+            'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset',
             isAccessAllowed
-              ? 'border-success/30 bg-success/10 text-success'
-              : 'border-destructive/30 bg-destructive/10 text-destructive',
+              ? 'bg-success/10 text-success ring-success/20'
+              : 'bg-destructive/10 text-destructive ring-destructive/25',
           )}
         >
+          <span
+            aria-hidden="true"
+            className={cn(
+              'inline-block size-1.5 rounded-full',
+              isAccessAllowed ? 'bg-success' : 'bg-destructive',
+              isAccessAllowed && 'animate-pulse',
+            )}
+          />
           <ShieldCheckIcon size={12} />
           {isAccessAllowed ? 'Attivo' : 'Bloccato'}
         </span>
       </div>
 
-      <div className="relative mx-auto flex aspect-square w-full max-w-[280px] items-center justify-center overflow-hidden rounded-2xl bg-white p-3">
-        {loading && !qr ? (
-          <div className="h-full w-full animate-pulse rounded-xl bg-muted" />
-        ) : qr ? (
-          <div
-            className="h-full w-full"
-            // The SVG is generated by `qrcode` — we trust our own server.
-            dangerouslySetInnerHTML={{ __html: qr.svg }}
-          />
-        ) : (
-          <p className="px-4 text-center text-sm text-destructive">{error}</p>
-        )}
+      <div className="relative mx-auto mt-5 aspect-square w-full max-w-[280px] md:mt-6 md:max-w-[320px]">
+        <span aria-hidden="true" className={cn(cornerClass, 'left-0 top-0 border-l-2 border-t-2 rounded-tl-md')} />
+        <span aria-hidden="true" className={cn(cornerClass, 'right-0 top-0 border-r-2 border-t-2 rounded-tr-md')} />
+        <span aria-hidden="true" className={cn(cornerClass, 'bottom-0 left-0 border-b-2 border-l-2 rounded-bl-md')} />
+        <span aria-hidden="true" className={cn(cornerClass, 'bottom-0 right-0 border-b-2 border-r-2 rounded-br-md')} />
+
+        <div className="absolute inset-2 overflow-hidden rounded-2xl bg-white p-3">
+          {loading && !qr ? (
+            <div className="shimmer relative h-full w-full overflow-hidden rounded-xl bg-muted" />
+          ) : qr ? (
+            <>
+              <div
+                className="h-full w-full"
+                dangerouslySetInnerHTML={{ __html: qr.svg }}
+              />
+              {isAccessAllowed && !stale ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-3 top-3 h-12 rounded-full"
+                  style={{
+                    background:
+                      'linear-gradient(180deg, color-mix(in oklab, var(--accent) 35%, transparent), transparent)',
+                    animation: 'scan 3.2s ease-in-out infinite',
+                  }}
+                />
+              ) : null}
+            </>
+          ) : (
+            <p className="flex h-full items-center justify-center px-4 text-center text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </div>
       </div>
 
-      <p className="mt-3 text-center text-xs text-muted-foreground">
+      <p className="mt-5 text-center text-xs text-muted-foreground">
         Avvicina il telefono al lettore alla porta.
       </p>
 
@@ -201,17 +216,17 @@ export function QrCodeCard({
         </p>
       ) : null}
 
-      <div className="mt-3 flex justify-center">
+      <div className="mt-4 flex justify-center">
         <button
           type="button"
           onClick={() => {
             setLoading(true)
             void fetchQr()
           }}
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="tap-shrink inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label="Rigenera QR code"
         >
-          <RefreshCwIcon size={12} />
+          <RefreshCwIcon size={12} className={cn(loading && 'animate-spin')} />
           Aggiorna QR
         </button>
       </div>

@@ -49,10 +49,10 @@ export default async function AccessLogsPage({
   })
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8">
       <header className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">Operazioni</p>
-        <h1 className="font-display text-3xl tracking-tight">Ingressi</h1>
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Ingressi</h1>
         <p className="text-sm text-muted-foreground">
           Storico degli accessi dal tornello e dal tablet kiosk. Ogni
           tentativo è registrato — riuscito o negato.

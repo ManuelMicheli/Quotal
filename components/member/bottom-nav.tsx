@@ -1,15 +1,11 @@
 'use client'
 
 /**
- * Sticky bottom navigation for the member PWA.
+ * Floating bottom navigation for the member PWA.
  *
- * Four tabs: Home / Abbonamento / Pagamenti / Profilo. The active tab
- * gets a thin accent indicator above the icon. Bottom safe-area is
- * honoured via env(safe-area-inset-bottom) so the nav clears the iPhone
- * home-indicator without overlap.
- *
- * Pure presentational — segments come from `usePathname()` so the nav
- * stays in sync without any external state.
+ * Pill-shaped, glass-blurred dock. Active tab gets a filled accent pill
+ * with the label visible only when active (tab-bar idiom). Bottom safe
+ * area is honoured via env(safe-area-inset-bottom).
  */
 import {
   CreditCardIcon,
@@ -42,16 +38,18 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigazione principale"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70"
+      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 md:hidden"
       style={{
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)',
       }}
     >
-      <ul className="mx-auto flex max-w-md items-stretch justify-around">
+      <ul
+        className={cn(
+          'ring-floating flex w-full max-w-sm items-center justify-between gap-1 rounded-full p-1.5',
+          'bg-card/85 backdrop-blur-xl supports-[backdrop-filter]:bg-card/70',
+        )}
+      >
         {TABS.map((tab) => {
-          // "Home" must match exactly — every other tab is a prefix match
-          // so nested pages (e.g. /app/profilo/sicurezza) keep the parent
-          // tab highlighted.
           const active =
             tab.href === '/app'
               ? pathname === '/app'
@@ -62,26 +60,25 @@ export function BottomNav() {
               <Link
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
+                aria-label={tab.label}
                 className={cn(
-                  'relative flex h-16 flex-col items-center justify-center gap-1 text-xs',
+                  'tap-shrink relative flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-full text-sm font-medium transition-colors',
                   active
-                    ? 'text-accent'
+                    ? 'bg-foreground text-background'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'absolute top-0 h-0.5 w-8 rounded-b-full bg-accent transition-opacity',
-                    active ? 'opacity-100' : 'opacity-0',
-                  )}
-                />
                 <Icon
-                  size={20}
+                  size={18}
                   strokeWidth={active ? 2.25 : 1.75}
                   aria-hidden="true"
                 />
-                <span className={cn(active && 'font-medium')}>
+                <span
+                  className={cn(
+                    'overflow-hidden whitespace-nowrap text-[13px] tracking-tight transition-[max-width,opacity] duration-300',
+                    active ? 'max-w-[120px] opacity-100' : 'max-w-0 opacity-0',
+                  )}
+                >
                   {tab.label}
                 </span>
               </Link>

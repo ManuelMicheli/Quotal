@@ -58,7 +58,7 @@ export default async function GdprRequestsPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <header className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">Privacy</p>
-        <h1 className="font-display text-3xl tracking-tight">
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
           Richieste GDPR
         </h1>
         <p className="text-sm text-muted-foreground">

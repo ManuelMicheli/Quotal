@@ -61,18 +61,23 @@ export default async function DashboardHomePage() {
   const isFirstTime = kpis.totalMembers === 0
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="flex flex-col gap-6 md:gap-8 lg:gap-10">
       {isFirstTime ? <OnboardingCoach /> : null}
 
       <header className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">Panoramica</p>
-        <h1 className="font-display text-3xl tracking-tight">
-          Buongiorno, andiamo a vedere com&apos;è andata.
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground md:text-xs">
+          Panoramica
+        </p>
+        <h1 className="mt-2 font-display text-3xl tracking-tight md:text-5xl lg:text-6xl">
+          Buongiorno,{' '}
+          <span className="italic text-muted-foreground">
+            andiamo a vedere com&apos;è andata.
+          </span>
         </h1>
       </header>
 
       {/* KPI cards */}
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-3 md:gap-6 lg:gap-8">
         <KpiCard
           title="Incasso del mese"
           value={formatCurrency(kpis.monthRevenueCents)}
@@ -119,7 +124,7 @@ export default async function DashboardHomePage() {
       </section>
 
       {/* Action cards */}
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-2 md:gap-6 lg:gap-8">
         <Card>
           <CardHeader className="flex-row items-center justify-between gap-4 space-y-0">
             <CardTitle>Scadenze prossime 7 giorni</CardTitle>

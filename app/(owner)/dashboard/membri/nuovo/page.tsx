@@ -19,7 +19,7 @@ export default async function NewMemberPage() {
         >
           ← Torna alla lista
         </Link>
-        <h1 className="font-display text-3xl tracking-tight">Nuovo membro</h1>
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Nuovo membro</h1>
         <p className="text-sm text-muted-foreground">
           Aggiungi un membro alla palestra. Riceverà un&apos;email con un link
           per impostare la sua password.

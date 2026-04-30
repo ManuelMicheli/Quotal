@@ -107,13 +107,13 @@ function DesktopSidebar({
 }) {
   const pathname = usePathname()
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
-      <div className="px-6 py-6">
-        <Link href="/dashboard">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-sidebar-border/70 bg-sidebar/80 text-sidebar-foreground backdrop-blur-xl md:flex lg:w-72">
+      <div className="px-7 py-7">
+        <Link href="/dashboard" className="inline-block">
           <Logo size="sm" />
         </Link>
       </div>
-      <nav className="flex flex-1 flex-col gap-1 px-3">
+      <nav className="flex flex-1 flex-col gap-0.5 px-3">
         {PRIMARY_NAV.map((item) => {
           const Icon = item.icon
           const active = isActive(item, pathname)
@@ -121,29 +121,40 @@ function DesktopSidebar({
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'tap-shrink group relative flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors',
                 active
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                  ? 'bg-foreground text-background'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
               )}
             >
-              <Icon className="size-4" />
-              {item.label}
+              <Icon
+                className={cn('size-4 shrink-0', active && 'text-background')}
+                strokeWidth={active ? 2.25 : 1.75}
+              />
+              <span className="flex-1 truncate">{item.label}</span>
+              {active ? (
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full bg-background/80"
+                />
+              ) : null}
             </Link>
           )
         })}
         <div className="mt-auto" />
         <Link
           href={SETTINGS_NAV.href}
+          aria-current={isActive(SETTINGS_NAV, pathname) ? 'page' : undefined}
           className={cn(
-            'mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            'tap-shrink mb-3 flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors',
             isActive(SETTINGS_NAV, pathname)
-              ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-              : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+              ? 'bg-foreground text-background'
+              : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
           )}
         >
-          <SettingsIcon className="size-4" />
+          <SettingsIcon className="size-4" strokeWidth={1.75} />
           Impostazioni
         </Link>
       </nav>
@@ -155,9 +166,9 @@ function DesktopSidebar({
       >
         <button
           type="button"
-          className="m-3 flex items-center gap-3 rounded-md border border-sidebar-border bg-sidebar p-2 text-left transition-colors hover:bg-sidebar-accent"
+          className="tap-shrink m-3 flex items-center gap-3 rounded-2xl border border-sidebar-border/70 bg-card p-3 text-left transition-colors hover:bg-sidebar-accent"
         >
-          <Avatar className="size-8">
+          <Avatar className="size-9">
             {ownerAvatarUrl ? <AvatarImage src={ownerAvatarUrl} alt={ownerName} /> : null}
             <AvatarFallback className="bg-muted text-xs">
               {initialsFor(ownerName)}
@@ -178,7 +189,10 @@ function DesktopSidebar({
 function MobileBottomNav() {
   const pathname = usePathname()
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 md:hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
       <ul className="grid grid-cols-6">
         {PRIMARY_NAV.map((item) => {
           const Icon = item.icon
@@ -187,12 +201,23 @@ function MobileBottomNav() {
             <li key={item.href}>
               <Link
                 href={item.href}
+                aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex flex-col items-center gap-1 px-2 py-2 text-[11px] font-medium transition-colors',
-                  active ? 'text-accent' : 'text-muted-foreground',
+                  'tap-shrink relative flex flex-col items-center gap-1 px-2 py-2.5 text-[10px] font-medium transition-colors',
+                  active ? 'text-foreground' : 'text-muted-foreground',
                 )}
               >
-                <Icon className="size-5" />
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'absolute -top-px h-0.5 w-7 rounded-b-full bg-foreground transition-opacity',
+                    active ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
+                <Icon
+                  className="size-5"
+                  strokeWidth={active ? 2.25 : 1.75}
+                />
                 <span>{item.label}</span>
               </Link>
             </li>
@@ -220,7 +245,7 @@ export function ProfileDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="w-56">
+      <DropdownMenuContent align={align} className="w-60">
         <DropdownMenuLabel className="flex items-center gap-2">
           <Avatar className="size-7">
             {ownerAvatarUrl ? <AvatarImage src={ownerAvatarUrl} alt={ownerName} /> : null}

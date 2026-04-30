@@ -26,7 +26,7 @@ export default async function PlansSettingsPage() {
         </Link>
       </div>
       <header>
-        <h1 className="font-display text-3xl tracking-tight">
+        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
           Piani abbonamento
         </h1>
         <p className="text-sm text-muted-foreground">
