@@ -2,7 +2,7 @@
  * Supabase database types — auto-generated.
  *
  * Generated from the live "Quotal" project schema (project ref:
- * frkngwpsctullsedhtbm) at the end of Phase 07. Regenerate after every
+ * frkngwpsctullsedhtbm) at the end of Phase 08. Regenerate after every
  * schema migration:
  *
  *   npx supabase gen types typescript --project-id frkngwpsctullsedhtbm \
@@ -27,6 +27,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_devices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          device_type: string
+          gym_id: string
+          id: string
+          is_active: boolean
+          last_seen_at: string | null
+          name: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          device_type: string
+          gym_id: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          name: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          device_type?: string
+          gym_id?: string
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string | null
+          name?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_devices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_devices_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       access_logs: {
         Row: {
           accessed_at: string

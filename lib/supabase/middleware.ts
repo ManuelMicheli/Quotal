@@ -34,6 +34,8 @@ const PUBLIC_PATHS = [
   // Public payment flow (Phase 05). Token-gated server-side; gym members
   // pay without ever logging in.
   '/pay',
+  // Public tablet kiosk (Phase 08). Auth via device token in query string.
+  '/access',
   // Dev-only Stripe playground (only mounted when NODE_ENV=development).
   '/dev',
 ] as const
@@ -91,11 +93,15 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const { pathname } = request.nextUrl
   const isWebhook = pathname.startsWith('/api/webhooks/')
   const isHealth = pathname === '/api/health'
+  // The access-verify endpoint authenticates with the device bearer token in
+  // `x-device-token`, never a Supabase session. Letting it through here
+  // matches the policy already in place for /api/webhooks.
+  const isAccessVerify = pathname === '/api/access/verify'
   const isApiRoute = pathname.startsWith('/api/')
 
   // --- Unauthenticated requests ---------------------------------------------
   if (!user) {
-    if (isPublicPath(pathname) || isWebhook || isHealth) {
+    if (isPublicPath(pathname) || isWebhook || isHealth || isAccessVerify) {
       return supabaseResponse
     }
 

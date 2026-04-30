@@ -38,6 +38,19 @@ export const env = createEnv({
      * until Phase 09 — the subscribe endpoint short-circuits if missing.
      */
     VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+    /**
+     * Phase 08 access-control hardware adapter. `mock` is the only
+     * "thinking-only" backend (no physical command sent — useful for the
+     * QR + tablet MVP where the tablet itself is the gate). `rest` proxies
+     * grant/lock commands to a generic vendor HTTP API after a successful
+     * decision. The verify endpoint always runs the full DB pipeline; the
+     * adapter only owns the *physical action*.
+     */
+    ACCESS_CONTROL_ADAPTER: z.enum(['mock', 'rest']).default('mock'),
+    /** Base URL for the REST-adapter vendor API, e.g. https://gateway.local. */
+    ACCESS_CONTROL_BASE_URL: z.string().url().optional(),
+    /** Bearer token sent as `Authorization: Bearer ...` to the REST adapter. */
+    ACCESS_CONTROL_API_KEY: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -75,6 +88,9 @@ export const env = createEnv({
     ENABLE_OWNER_ONBOARDING: process.env.ENABLE_OWNER_ONBOARDING,
     QR_TOKEN_SECRET: process.env.QR_TOKEN_SECRET,
     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+    ACCESS_CONTROL_ADAPTER: process.env.ACCESS_CONTROL_ADAPTER,
+    ACCESS_CONTROL_BASE_URL: process.env.ACCESS_CONTROL_BASE_URL,
+    ACCESS_CONTROL_API_KEY: process.env.ACCESS_CONTROL_API_KEY,
   },
   // Skip validation when running in CI / build with no real env (e.g. Docker
   // build phase). Set SKIP_ENV_VALIDATION=true in those contexts.

@@ -5,6 +5,7 @@
 import {
   BuildingIcon,
   CreditCardIcon,
+  DoorOpenIcon,
   ScrollTextIcon,
   UserIcon,
 } from 'lucide-react'
@@ -30,6 +31,12 @@ const SECTIONS = [
     title: 'Regole operative',
     description: 'Periodo di grazia, sospensioni, notifiche scadenza.',
     icon: ScrollTextIcon,
+  },
+  {
+    href: '/dashboard/impostazioni/dispositivi',
+    title: 'Dispositivi accessi',
+    description: 'Tornelli e tablet autorizzati a verificare gli ingressi.',
+    icon: DoorOpenIcon,
   },
   {
     href: '/dashboard/impostazioni/profilo',

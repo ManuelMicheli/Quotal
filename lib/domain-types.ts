@@ -27,6 +27,7 @@ export type DailyCloseReport =
   Database['public']['Tables']['daily_close_reports']['Row']
 export type PushSubscriptionRow =
   Database['public']['Tables']['push_subscriptions']['Row']
+export type AccessDevice = Database['public']['Tables']['access_devices']['Row']
 
 // -----------------------------------------------------------------------------
 // Composed types — convenient shapes for joined queries.

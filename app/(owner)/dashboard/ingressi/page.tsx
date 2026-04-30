@@ -22,6 +22,17 @@ import { formatDate } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
+const DENIAL_LABEL_IT: Record<string, string> = {
+  unknown_badge: 'Badge sconosciuto',
+  no_subscription: 'Nessun abbonamento',
+  expired: 'Scaduto',
+  suspended: 'Sospeso',
+  cancelled: 'Disdetto',
+  invalid_token: 'QR non valido',
+  wrong_gym: 'Codice di un altro impianto',
+  problematic_member: 'Membro bloccato',
+}
+
 export default async function AccessLogsPage({
   searchParams,
 }: {
@@ -43,7 +54,8 @@ export default async function AccessLogsPage({
         <p className="text-sm text-muted-foreground">Operazioni</p>
         <h1 className="font-display text-3xl tracking-tight">Ingressi</h1>
         <p className="text-sm text-muted-foreground">
-          I log accessi popolati dal tornello arriveranno con la Phase 08.
+          Storico degli accessi dal tornello e dal tablet kiosk. Ogni
+          tentativo è registrato — riuscito o negato.
         </p>
       </header>
 
@@ -99,7 +111,9 @@ export default async function AccessLogsPage({
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {log.denial_reason ?? '—'}
+                    {log.denial_reason
+                      ? (DENIAL_LABEL_IT[log.denial_reason] ?? log.denial_reason)
+                      : '—'}
                   </TableCell>
                 </TableRow>
               ))}
