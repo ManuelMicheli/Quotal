@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 
+import { CookieBanner } from '@/components/shared/cookie-banner'
 import { APP_DESCRIPTION, APP_NAME } from '@/lib/constants'
+import { LEGAL_CONFIG } from '@/lib/legal/config'
 
 import './globals.css'
 
@@ -25,12 +27,23 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(LEGAL_CONFIG.app.url),
   title: {
-    default: APP_NAME,
-    template: `${APP_NAME} — %s`,
+    default: `${APP_NAME} — ${APP_DESCRIPTION}`,
+    template: `%s · ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
   applicationName: APP_NAME,
+  keywords: [
+    'palestra',
+    'gestione palestra',
+    'abbonamenti palestra',
+    'iscrizione palestra',
+    'SaaS palestra',
+    'quote associative',
+    'PWA palestra',
+    'check-in palestra',
+  ],
   // PWA manifest — served as a static file under /public.
   manifest: '/manifest.webmanifest',
   icons: {
@@ -55,6 +68,40 @@ export const metadata: Metadata = {
     email: false,
     address: false,
     telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'it_IT',
+    url: LEGAL_CONFIG.app.url,
+    siteName: APP_NAME,
+    title: `${APP_NAME} — ${APP_DESCRIPTION}`,
+    description: APP_DESCRIPTION,
+    images: [
+      {
+        url: '/icons/icon-512.png',
+        width: 512,
+        height: 512,
+        alt: APP_NAME,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: `${APP_NAME} — ${APP_DESCRIPTION}`,
+    description: APP_DESCRIPTION,
+    images: ['/icons/icon-512.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   other: {
     'mobile-web-app-capable': 'yes',
@@ -84,6 +131,7 @@ export default function RootLayout({
     >
       <body className="font-sans bg-background text-foreground min-h-screen antialiased">
         {children}
+        <CookieBanner />
       </body>
     </html>
   )

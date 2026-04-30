@@ -8,10 +8,11 @@
  * Server component for the data load; the form itself is a client
  * component (`ProfileForm`).
  */
-import { BellIcon, KeyIcon } from 'lucide-react'
+import { BellIcon, FileTextIcon, KeyIcon, ShieldIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { PageHeader } from '@/components/member/page-header'
+import { PrivacyActions } from '@/components/member/privacy-actions'
 import { ProfileForm } from '@/components/member/profile-form'
 import { LogoutButton } from '@/components/shared/logout-button'
 import { Button } from '@/components/ui/button'
@@ -78,23 +79,36 @@ export default async function MemberProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Privacy</CardTitle>
+          <CardTitle className="text-base">Privacy e dati</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            Esportazione e cancellazione dei tuoi dati saranno disponibili
-            nelle prossime versioni dell&apos;app.
-          </p>
-          <p>
-            Per richieste GDPR, scrivi a{' '}
-            <a
-              href="mailto:privacy@quotal.it"
-              className="text-accent underline"
-            >
-              privacy@quotal.it
-            </a>
-            .
-          </p>
+        <CardContent className="space-y-3">
+          <PrivacyActions />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Documenti legali</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          <Button asChild variant="outline" className="w-full justify-start">
+            <Link href="/privacy">
+              <ShieldIcon size={16} />
+              Informativa privacy
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full justify-start">
+            <Link href="/termini">
+              <FileTextIcon size={16} />
+              Termini e condizioni
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full justify-start">
+            <Link href="/cookie-policy">
+              <FileTextIcon size={16} />
+              Cookie policy
+            </Link>
+          </Button>
         </CardContent>
       </Card>
 
@@ -104,7 +118,13 @@ export default async function MemberProfilePage() {
         </CardHeader>
         <CardContent className="space-y-1 text-xs text-muted-foreground">
           <p>{APP_NAME} v0.1.0</p>
-          <p>© {new Date().getFullYear()} Quotal</p>
+          <p>
+            © {new Date().getFullYear()} Quotal. Per richieste GDPR scrivi a{' '}
+            <a href="mailto:privacy@quotal.it" className="text-accent underline">
+              privacy@quotal.it
+            </a>
+            .
+          </p>
         </CardContent>
       </Card>
     </div>

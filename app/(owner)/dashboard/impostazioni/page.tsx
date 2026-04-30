@@ -8,6 +8,7 @@ import {
   CreditCardIcon,
   DoorOpenIcon,
   ScrollTextIcon,
+  ShieldIcon,
   UserIcon,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -50,6 +51,13 @@ const SECTIONS = [
     title: 'Il tuo profilo',
     description: 'Dati personali del titolare e cambio password.',
     icon: UserIcon,
+  },
+  {
+    href: '/dashboard/impostazioni/gdpr-richieste',
+    title: 'Richieste GDPR',
+    description:
+      'Coda di esportazioni e cancellazioni richieste dai membri (Art. 17 e 20).',
+    icon: ShieldIcon,
   },
 ] as const
 

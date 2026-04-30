@@ -2,12 +2,8 @@
  * Supabase database types — auto-generated.
  *
  * Generated from the live "Quotal" project schema (project ref:
- * frkngwpsctullsedhtbm) at the end of Phase 09. Regenerate after every
- * schema migration via the Supabase MCP tool `generate_typescript_types`
- * (the local Supabase CLI requires an access token we don't store here).
- *
- * Do not edit by hand. Domain-level convenience types live in
- * `lib/domain-types.ts`.
+ * frkngwpsctullsedhtbm) at the end of Phase 10. Regenerate after every
+ * migration via `mcp__claude_ai_Supabase__generate_typescript_types`.
  */
 export type Json =
   | string
@@ -127,6 +123,54 @@ export type Database = {
           },
         ]
       }
+      account_deletion_requests: {
+        Row: {
+          gym_id: string
+          id: string
+          member_id: string
+          notes: string | null
+          processed_at: string | null
+          reason: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          gym_id: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          processed_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          gym_id?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          processed_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_deletion_requests_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_deletion_requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_close_reports: {
         Row: {
           bank_transfer_cents: number
@@ -186,6 +230,57 @@ export type Database = {
             columns: ["gym_id"]
             isOneToOne: false
             referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_export_requests: {
+        Row: {
+          download_path: string | null
+          error: string | null
+          expires_at: string | null
+          fulfilled_at: string | null
+          gym_id: string
+          id: string
+          member_id: string
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          download_path?: string | null
+          error?: string | null
+          expires_at?: string | null
+          fulfilled_at?: string | null
+          gym_id: string
+          id?: string
+          member_id: string
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          download_path?: string | null
+          error?: string | null
+          expires_at?: string | null
+          fulfilled_at?: string | null
+          gym_id?: string
+          id?: string
+          member_id?: string
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_export_requests_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_export_requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -657,6 +752,7 @@ export type Database = {
           birth_date: string | null
           city: string | null
           created_at: string
+          deleted_at: string | null
           email: string
           fiscal_code: string | null
           full_name: string
@@ -679,6 +775,7 @@ export type Database = {
           birth_date?: string | null
           city?: string | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           fiscal_code?: string | null
           full_name: string
@@ -701,6 +798,7 @@ export type Database = {
           birth_date?: string | null
           city?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           fiscal_code?: string | null
           full_name?: string
