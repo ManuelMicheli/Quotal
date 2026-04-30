@@ -136,8 +136,11 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
 
   const supabase = await createClient()
 
-  // Single-tenant MVP: all members belong to the one and only gym.
-  const { data: gym, error: gymError } = await supabase
+  // Single-tenant MVP: all members belong to the one and only gym. Read via
+  // the admin client because signup runs as `anon` and RLS on `gyms` only
+  // grants SELECT to `authenticated`. Gym id is non-sensitive in the MVP.
+  const admin = createAdminClient()
+  const { data: gym, error: gymError } = await admin
     .from('gyms')
     .select('id')
     .limit(1)
