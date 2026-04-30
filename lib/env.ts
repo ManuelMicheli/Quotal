@@ -50,14 +50,6 @@ export const env = createEnv({
      */
     CRON_SECRET: z.string().min(16).optional(),
     /**
-     * Set to "true" to expose `/onboarding-titolare`. The titolare flips this
-     * to "false" once the first owner exists, so the route can never be
-     * abused to escalate privileges in production.
-     */
-    ENABLE_OWNER_ONBOARDING: z
-      .enum(['true', 'false'])
-      .default('false'),
-    /**
      * HMAC secret used to sign the JWT embedded in the member access QR
      * (Phase 07). The tornello (Phase 08) verifies this signature before
      * granting entry. Optional in dev — a deterministic dev fallback is
@@ -121,7 +113,6 @@ export const env = createEnv({
     RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET,
     CRON_SECRET: process.env.CRON_SECRET,
     APP_URL: process.env.APP_URL ?? inferredAppUrl,
-    ENABLE_OWNER_ONBOARDING: process.env.ENABLE_OWNER_ONBOARDING,
     QR_TOKEN_SECRET: process.env.QR_TOKEN_SECRET,
     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
     ACCESS_CONTROL_ADAPTER: process.env.ACCESS_CONTROL_ADAPTER,

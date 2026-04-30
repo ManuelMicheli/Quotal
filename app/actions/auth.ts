@@ -47,6 +47,50 @@ const RATE_LIMITED_MESSAGE =
   'Troppi tentativi ravvicinati. Aspetta qualche istante prima di riprovare.'
 
 /**
+ * Convert a free-text gym name into a URL-safe slug. ASCII-only, lowercase,
+ * dash-separated, capped at 50 chars. Empty input collapses to 'palestra'.
+ */
+function slugify(input: string): string {
+  const base = input
+    .toLowerCase()
+    .normalize('NFKD')
+    // Strip Unicode combining marks (accents) left behind by NFKD.
+    .replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50)
+  return base || 'palestra'
+}
+
+/**
+ * Resolve an unused slug derived from `base` by appending an incrementing
+ * suffix until a collision-free value is found. Uses the admin client because
+ * we run pre-auth and the gyms table is RLS-locked to authenticated users.
+ */
+async function ensureUniqueGymSlug(
+  admin: ReturnType<typeof createAdminClient>,
+  base: string,
+): Promise<string> {
+  let candidate = base
+  let suffix = 1
+  // Loop bound is defensive; collision chains beyond 100 are virtually
+  // impossible with normal gym names.
+  for (let i = 0; i < 100; i++) {
+    const { data } = await admin
+      .from('gyms')
+      .select('id')
+      .eq('slug', candidate)
+      .maybeSingle()
+    if (!data) return candidate
+    suffix += 1
+    candidate = `${base}-${suffix}`
+  }
+  // Fallback: random tail. Keeps the action resilient even in absurd edge
+  // cases instead of failing the whole onboarding.
+  return `${base}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+/**
  * Sign in with email + password. On success, redirect to the role-specific
  * landing page. We deliberately collapse all auth errors to a single generic
  * message so we don't leak whether the email or password is the problem.
@@ -122,6 +166,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
     phone: formData.get('phone') || undefined,
     password: formData.get('password'),
     password_confirm: formData.get('password_confirm'),
+    gym_slug: formData.get('gym_slug'),
     terms: formData.get('terms') === 'on' || formData.get('terms') === 'true',
   })
 
@@ -136,21 +181,21 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
 
   const supabase = await createClient()
 
-  // Single-tenant MVP: all members belong to the one and only gym. Read via
-  // the admin client because signup runs as `anon` and RLS on `gyms` only
-  // grants SELECT to `authenticated`. Gym id is non-sensitive in the MVP.
+  // Multi-tenant: resolve the target gym by the slug embedded in the public
+  // signup link. Read via the admin client because signup runs as `anon` and
+  // RLS on `gyms` only grants SELECT to `authenticated`. Slug is public.
   const admin = createAdminClient()
   const { data: gym, error: gymError } = await admin
     .from('gyms')
     .select('id')
-    .limit(1)
+    .eq('slug', parsed.data.gym_slug)
     .maybeSingle()
 
   if (gymError || !gym) {
     return {
       ok: false,
       error:
-        'Configurazione palestra non trovata. Contatta il titolare per completare il setup.',
+        'Palestra non trovata. Verifica il link di iscrizione con il titolare.',
     }
   }
 
@@ -347,28 +392,21 @@ export async function updatePasswordAction(
 }
 
 /**
- * One-shot owner onboarding. Creates the very first owner user and updates
- * the gym row with the real data the user provided.
+ * Public owner onboarding. Provisions a brand-new gym row and the owner
+ * profile/user that goes with it, then signs the owner in. Used as the
+ * self-service path for any new gym joining the platform.
  *
- * Guards:
- *   1. `ENABLE_OWNER_ONBOARDING` env var must be truthy. Once the owner is
- *      live, the user flips this to false in production to lock the route.
- *   2. The flow refuses to proceed if any owner already exists in the DB
- *      (defence-in-depth in case the env var is left enabled by mistake).
- *
- * Uses the service-role client because regular signup goes through email
- * confirmation, and we want the owner to be able to log in immediately.
+ * The flow is rate-limited but otherwise unauthenticated, so guard against
+ * abuse via:
+ *   - rate limiter on the `auth` bucket
+ *   - email + slug uniqueness checks
+ *   - admin client only used for the strictly necessary writes
  */
 export async function ownerOnboardingAction(
   formData: FormData,
 ): Promise<ActionResult> {
-  if (process.env.ENABLE_OWNER_ONBOARDING !== 'true') {
-    return {
-      ok: false,
-      error:
-        'L’onboarding del titolare è disabilitato. Contatta il supporto se ne hai bisogno.',
-    }
-  }
+  const rl = await checkRateLimit('auth')
+  if (!rl.success) return { ok: false, error: RATE_LIMITED_MESSAGE }
 
   const parsed = ownerOnboardingSchema.safeParse({
     full_name: formData.get('full_name'),
@@ -394,45 +432,33 @@ export async function ownerOnboardingAction(
 
   const admin = createAdminClient()
 
-  // 1. Refuse if an owner already exists (DB-level safety).
-  const { count, error: countError } = await admin
-    .from('profiles')
-    .select('id', { count: 'exact', head: true })
-    .eq('role', ROLES.OWNER)
-
-  if (countError) {
-    return {
-      ok: false,
-      error: 'Errore di connessione al database. Riprova fra qualche istante.',
-    }
-  }
-  if ((count ?? 0) > 0) {
-    return {
-      ok: false,
-      error:
-        'Un titolare è già stato registrato. Effettua il login dalla pagina di accesso.',
-    }
-  }
-
-  // 2. Update the existing seeded gym row with the real data.
-  const { data: gym, error: gymSelectError } = await admin
+  // 1. Reject duplicate VAT numbers up front so two owners can't claim the
+  // same legal entity. We treat VAT as an effective unique key in the app
+  // even though the schema doesn't enforce it (legacy single-tenant DDL).
+  const { data: existingByVat } = await admin
     .from('gyms')
     .select('id')
-    .limit(1)
+    .eq('vat_number', parsed.data.gym_vat_number)
     .maybeSingle()
-
-  if (gymSelectError || !gym) {
+  if (existingByVat) {
     return {
       ok: false,
       error:
-        'Riga palestra non trovata: assicurati di aver eseguito i seed del database.',
+        'Esiste già una palestra registrata con questa P.IVA. Contatta il supporto se è un errore.',
     }
   }
 
-  const { error: gymUpdateError } = await admin
+  // 2. Provision a brand-new gym row with a slug derived from the gym name.
+  const slug = await ensureUniqueGymSlug(
+    admin,
+    slugify(parsed.data.gym_name),
+  )
+
+  const { data: gym, error: gymInsertError } = await admin
     .from('gyms')
-    .update({
+    .insert({
       name: parsed.data.gym_name,
+      slug,
       vat_number: parsed.data.gym_vat_number,
       address: parsed.data.gym_address,
       city: parsed.data.gym_city,
@@ -441,16 +467,18 @@ export async function ownerOnboardingAction(
       phone: parsed.data.gym_phone,
       email: parsed.data.email,
     })
-    .eq('id', gym.id)
+    .select('id')
+    .single()
 
-  if (gymUpdateError) {
+  if (gymInsertError || !gym) {
     return {
       ok: false,
-      error: 'Aggiornamento dati palestra non riuscito. Riprova.',
+      error: 'Creazione palestra non riuscita. Riprova fra qualche istante.',
     }
   }
 
-  // 3. Create the owner user — `handle_new_user` will write the profile.
+  // 3. Create the owner user — `handle_new_user` will write the matching
+  // profile row using the gym_id we pass in metadata.
   const { error: createUserError } = await admin.auth.admin.createUser({
     email: parsed.data.email,
     password: parsed.data.password,
@@ -463,6 +491,9 @@ export async function ownerOnboardingAction(
   })
 
   if (createUserError) {
+    // Roll the gym back so a failed user creation doesn't leave an orphan
+    // tenant row that future onboardings will clash with on slug/VAT.
+    await admin.from('gyms').delete().eq('id', gym.id)
     return {
       ok: false,
       error:

@@ -11,7 +11,13 @@ import { AuthSubmitButton } from '@/components/auth/auth-submit-button'
 import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter'
 import { signupSchema, type SignupInput } from '@/lib/validations/auth'
 
-export function SignupForm({ initialError }: { initialError?: string }) {
+export function SignupForm({
+  initialError,
+  gymSlug,
+}: {
+  initialError?: string
+  gymSlug: string
+}) {
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -20,6 +26,7 @@ export function SignupForm({ initialError }: { initialError?: string }) {
       phone: '',
       password: '',
       password_confirm: '',
+      gym_slug: gymSlug,
       terms: true,
     },
     mode: 'onSubmit',
@@ -40,6 +47,7 @@ export function SignupForm({ initialError }: { initialError?: string }) {
     if (values.phone) formData.set('phone', values.phone)
     formData.set('password', values.password)
     formData.set('password_confirm', values.password_confirm)
+    formData.set('gym_slug', gymSlug)
     // Member signup implies acceptance — checkbox lives in the page footer copy.
     formData.set('terms', 'true')
 

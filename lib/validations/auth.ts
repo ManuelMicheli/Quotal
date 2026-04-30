@@ -31,6 +31,9 @@ export const signupSchema = z
     phone: z.string().optional(),
     password: passwordSchema,
     password_confirm: z.string(),
+    gym_slug: z
+      .string()
+      .min(1, 'Link palestra mancante. Chiedi al titolare il link di iscrizione.'),
     terms: z.literal(true, {
       message: 'Devi accettare i Termini e l’informativa Privacy',
     }),
