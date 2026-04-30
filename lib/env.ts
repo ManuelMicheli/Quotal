@@ -8,6 +8,20 @@
 import { createEnv } from '@t3-oss/env-nextjs'
 import { z } from 'zod'
 
+/**
+ * Auto-derive the public app URL from Vercel-injected env vars when
+ * `NEXT_PUBLIC_APP_URL` is not set explicitly. Production deployments resolve
+ * to the stable production domain; previews use the per-deployment URL so the
+ * email redirect lands on the same preview that issued it.
+ */
+const inferredAppUrl =
+  process.env.VERCEL_ENV === 'production' &&
+  process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : undefined
+
 export const env = createEnv({
   server: {
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
@@ -94,7 +108,7 @@ export const env = createEnv({
   runtimeEnv: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? inferredAppUrl,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
@@ -106,7 +120,7 @@ export const env = createEnv({
     RESEND_REPLY_TO: process.env.RESEND_REPLY_TO,
     RESEND_WEBHOOK_SECRET: process.env.RESEND_WEBHOOK_SECRET,
     CRON_SECRET: process.env.CRON_SECRET,
-    APP_URL: process.env.APP_URL,
+    APP_URL: process.env.APP_URL ?? inferredAppUrl,
     ENABLE_OWNER_ONBOARDING: process.env.ENABLE_OWNER_ONBOARDING,
     QR_TOKEN_SECRET: process.env.QR_TOKEN_SECRET,
     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
