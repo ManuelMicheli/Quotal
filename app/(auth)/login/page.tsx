@@ -1,48 +1,71 @@
 /**
- * Login page.
+ * Login page — premium dark redesign.
  *
- * Server component — only loads the role-aware copy and the client form.
- * Middleware bounces signed-in users away before they reach this page,
- * but the components are stateless so re-rendering is cheap.
+ * Renders the silky shell, the Q logo card, OAuth buttons, an "or" divider,
+ * and the email/password form. Both the form and the OAuth button group
+ * read the optional `next` param so we can resume an interrupted route.
  */
 import Link from 'next/link'
 
+import { AuthDivider } from '@/components/auth/auth-divider'
+import { AuthShell } from '@/components/auth/auth-shell'
 import { LoginForm } from '@/components/auth/login-form'
-import { AuthForm } from '@/components/shared/auth-form'
+import { OAuthButtons } from '@/components/auth/oauth-buttons'
+import { QuotalLogoCard } from '@/components/auth/quotal-logo-card'
 
-type SearchParams = Promise<{ role?: string }>
+export const metadata = {
+  title: 'Accedi',
+}
+
+const ERROR_MESSAGES: Record<string, string> = {
+  invalid_link: 'Il link non è valido o è scaduto. Richiedine uno nuovo.',
+  owner_exists:
+    'Un titolare è già stato registrato. Effettua il login dalla pagina di accesso.',
+}
+
+type SearchParams = Promise<{
+  next?: string
+  error?: string
+  role?: string
+}>
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: SearchParams
 }) {
-  const { role } = await searchParams
+  const { next, error, role } = await searchParams
+  const initialError = error
+    ? (ERROR_MESSAGES[error] ?? decodeURIComponent(error))
+    : undefined
   const isOwnerCopy = role === 'owner'
 
   return (
-    <AuthForm
-      title={isOwnerCopy ? 'Accedi come titolare' : 'Bentornato'}
-      description={
-        isOwnerCopy
-          ? 'Gestisci abbonamenti, pagamenti e membri della tua palestra.'
-          : 'Accedi al tuo abbonamento e visualizza il tuo stato.'
-      }
-      footer={
-        <div className="flex flex-col gap-1">
-          <p>
-            Non hai ancora un account?{' '}
+    <AuthShell>
+      <div className="w-full">
+        <QuotalLogoCard />
+
+        <div className="space-y-2 text-center">
+          <h1 className="font-display text-[28px] font-medium leading-tight text-white md:text-[32px]">
+            {isOwnerCopy ? 'Accedi come titolare' : 'Bentornato'}
+          </h1>
+          <p className="text-sm text-zinc-400">
+            Non hai un account?{' '}
             <Link
               href="/signup"
-              className="font-medium text-foreground underline-offset-4 hover:underline"
+              className="font-medium text-zinc-100 transition-colors hover:text-teal-400"
             >
               Registrati
             </Link>
           </p>
         </div>
-      }
-    >
-      <LoginForm />
-    </AuthForm>
+
+        <div className="mt-10 space-y-6">
+          <OAuthButtons next={next} />
+          <AuthDivider label="oppure" />
+          <LoginForm initialError={initialError} />
+        </div>
+      </div>
+    </AuthShell>
   )
 }

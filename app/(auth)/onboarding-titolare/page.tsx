@@ -10,6 +10,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { OnboardingShell } from '@/components/auth/onboarding-shell'
 import { OwnerOnboardingForm } from '@/components/auth/owner-onboarding-form'
 import { AuthForm } from '@/components/shared/auth-form'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -25,6 +26,7 @@ export default async function OwnerOnboardingPage() {
   // useful hint to whoever is bootstrapping the app for the first time.
   if (env.ENABLE_OWNER_ONBOARDING !== 'true') {
     return (
+      <OnboardingShell>
       <AuthForm
         title="Onboarding titolare"
         description="Pagina disabilitata per sicurezza."
@@ -56,6 +58,7 @@ export default async function OwnerOnboardingPage() {
           </Link>
         </p>
       </AuthForm>
+      </OnboardingShell>
     )
   }
 
@@ -85,6 +88,7 @@ export default async function OwnerOnboardingPage() {
       throw err
     }
     return (
+      <OnboardingShell>
       <AuthForm
         title="Configurazione necessaria"
         description="La service role key Supabase non è configurata."
@@ -105,15 +109,18 @@ export default async function OwnerOnboardingPage() {
           </AlertDescription>
         </Alert>
       </AuthForm>
+      </OnboardingShell>
     )
   }
 
   return (
-    <AuthForm
-      title="Configura la tua palestra"
-      description="Imposta il tuo account titolare e i dati della palestra. Questa pagina è disponibile solo al primo avvio."
-    >
-      <OwnerOnboardingForm />
-    </AuthForm>
+    <OnboardingShell>
+      <AuthForm
+        title="Configura la tua palestra"
+        description="Imposta il tuo account titolare e i dati della palestra. Questa pagina è disponibile solo al primo avvio."
+      >
+        <OwnerOnboardingForm />
+      </AuthForm>
+    </OnboardingShell>
   )
 }

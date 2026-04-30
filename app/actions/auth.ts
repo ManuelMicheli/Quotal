@@ -13,9 +13,14 @@
  */
 
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { dashboardPathForRole } from '@/lib/auth'
+import {
+  enabledOAuthProviders,
+  type OAuthProvider,
+} from '@/lib/auth/providers'
 import { ROLES } from '@/lib/constants'
 import { env } from '@/lib/env'
 import { checkRateLimit } from '@/lib/security/rate-limit'
@@ -179,6 +184,56 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
     message:
       'Ti abbiamo inviato un’email di conferma. Clicca sul link per attivare il tuo account.',
   }
+}
+
+/**
+ * Kick off an OAuth sign-in via Supabase. We rebuild the redirect URL on
+ * the server so the `next` query param is preserved through the provider
+ * round-trip.
+ */
+export async function signInWithProviderAction(
+  provider: OAuthProvider,
+  next?: string,
+): Promise<ActionResult> {
+  if (!enabledOAuthProviders[provider]) {
+    return {
+      ok: false,
+      error: 'Questo provider non è ancora disponibile.',
+    }
+  }
+
+  const rl = await checkRateLimit('auth')
+  if (!rl.success) return { ok: false, error: RATE_LIMITED_MESSAGE }
+
+  const supabase = await createClient()
+  const headersList = await headers()
+  const origin =
+    headersList.get('origin') ||
+    env.NEXT_PUBLIC_APP_URL ||
+    'http://localhost:3000'
+
+  const redirectTo = new URL('/auth/callback', origin)
+  if (next) redirectTo.searchParams.set('next', next)
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: redirectTo.toString(),
+      queryParams:
+        provider === 'google'
+          ? { access_type: 'offline', prompt: 'select_account' }
+          : undefined,
+    },
+  })
+
+  if (error || !data?.url) {
+    return {
+      ok: false,
+      error: 'Accesso non riuscito. Riprova fra qualche istante.',
+    }
+  }
+
+  redirect(data.url)
 }
 
 /**

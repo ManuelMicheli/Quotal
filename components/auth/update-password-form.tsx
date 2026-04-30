@@ -1,27 +1,14 @@
 'use client'
 
-/**
- * "Set a new password" form. Reached from the email link delivered by
- * `resetPasswordAction`. The auth callback exchanges the recovery code
- * for a session, so by the time we render here `auth.getUser()` is valid.
- */
 import { zodResolver } from '@hookform/resolvers/zod'
+import { motion } from 'framer-motion'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { updatePasswordAction } from '@/app/actions/auth'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { AuthInput } from '@/components/auth/auth-input'
+import { AuthSubmitButton } from '@/components/auth/auth-submit-button'
+import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter'
 import {
   updatePasswordSchema,
   type UpdatePasswordInput,
@@ -35,6 +22,7 @@ export function UpdatePasswordForm() {
 
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const password = form.watch('password')
 
   function onSubmit(values: UpdatePasswordInput) {
     setError(null)
@@ -44,67 +32,54 @@ export function UpdatePasswordForm() {
 
     startTransition(async () => {
       const result = await updatePasswordAction(formData)
-      // Successful update redirects, so we only land here on failure.
       if (result && !result.ok) setError(result.error)
     })
   }
 
   return (
-    <Form {...form}>
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={form.handleSubmit(onSubmit)}
-        noValidate
-      >
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nuova password</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  autoComplete="new-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Minimo 8 caratteri, almeno una maiuscola e un numero.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+    <motion.form
+      onSubmit={form.handleSubmit(onSubmit)}
+      noValidate
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      className="space-y-5"
+    >
+      <div className="space-y-2">
+        <AuthInput
+          label="Nuova password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="••••••••••"
+          autoFocus
+          hint="Minimo 8 caratteri, almeno una maiuscola e un numero."
+          {...form.register('password')}
+          error={form.formState.errors.password?.message}
         />
+        <PasswordStrengthMeter password={password ?? ''} />
+      </div>
 
-        <FormField
-          control={form.control}
-          name="password_confirm"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Conferma password</FormLabel>
-              <FormControl>
-                <Input
-                  type="password"
-                  autoComplete="new-password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <AuthInput
+        label="Conferma password"
+        type="password"
+        autoComplete="new-password"
+        placeholder="••••••••••"
+        {...form.register('password_confirm')}
+        error={form.formState.errors.password_confirm?.message}
+      />
 
-        {error ? (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : null}
+      {error ? (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-500/20"
+          role="alert"
+        >
+          {error}
+        </motion.div>
+      ) : null}
 
-        <Button type="submit" disabled={pending} className="w-full">
-          {pending ? 'Aggiornamento…' : 'Aggiorna password'}
-        </Button>
-      </form>
-    </Form>
+      <AuthSubmitButton pending={pending}>Aggiorna password</AuthSubmitButton>
+    </motion.form>
   )
 }

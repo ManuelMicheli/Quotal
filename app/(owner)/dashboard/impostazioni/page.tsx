@@ -3,6 +3,7 @@
  * Each card is one big tap target — friendlier than a sidebar at this depth.
  */
 import {
+  BanknoteIcon,
   BellIcon,
   BuildingIcon,
   CreditCardIcon,
@@ -27,6 +28,13 @@ const SECTIONS = [
     title: 'Piani abbonamento',
     description: 'Crea, modifica e riordina i piani vendibili ai membri.',
     icon: CreditCardIcon,
+  },
+  {
+    href: '/dashboard/impostazioni/stripe',
+    title: 'Stripe',
+    description:
+      'Stato account, saldo, ultimi payout. KYC e IBAN si gestiscono su Stripe.',
+    icon: BanknoteIcon,
   },
   {
     href: '/dashboard/impostazioni/regole',

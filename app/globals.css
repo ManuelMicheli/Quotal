@@ -272,3 +272,19 @@
     font-feature-settings: "tnum" 1;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Auth pages — autofill styling.
+ * Chromium paints a yellow background on autofilled inputs that doesn't
+ * survive any other CSS reset; the box-shadow trick (huge inset shadow that
+ * matches the input bg) is the only reliable way to override it.
+ * ------------------------------------------------------------------------- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px rgb(24 24 27 / 0.5) inset !important;
+  -webkit-text-fill-color: #fafafa !important;
+  caret-color: #fafafa !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
