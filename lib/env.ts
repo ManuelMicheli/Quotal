@@ -24,6 +24,20 @@ export const env = createEnv({
     ENABLE_OWNER_ONBOARDING: z
       .enum(['true', 'false'])
       .default('false'),
+    /**
+     * HMAC secret used to sign the JWT embedded in the member access QR
+     * (Phase 07). The tornello (Phase 08) verifies this signature before
+     * granting entry. Optional in dev — a deterministic dev fallback is
+     * derived from `NEXT_PUBLIC_SUPABASE_URL` so localhost just works, but
+     * production MUST set a real 32+ byte secret.
+     */
+    QR_TOKEN_SECRET: z.string().min(16).optional(),
+    /**
+     * VAPID keypair for web-push (Phase 09 send pipeline). Stored here
+     * because the SW needs the public key at registration time. Optional
+     * until Phase 09 — the subscribe endpoint short-circuits if missing.
+     */
+    VAPID_PRIVATE_KEY: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -38,6 +52,12 @@ export const env = createEnv({
      * error if it's missing at runtime.
      */
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+    /**
+     * VAPID public key (uncompressed P-256 base64url). Read by the SW push
+     * subscription flow on the client. Optional in MVP — without it the
+     * "abilita notifiche" flow stays disabled.
+     */
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().min(1).optional(),
   },
   runtimeEnv: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -45,6 +65,7 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
@@ -52,6 +73,8 @@ export const env = createEnv({
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
     APP_URL: process.env.APP_URL,
     ENABLE_OWNER_ONBOARDING: process.env.ENABLE_OWNER_ONBOARDING,
+    QR_TOKEN_SECRET: process.env.QR_TOKEN_SECRET,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
   },
   // Skip validation when running in CI / build with no real env (e.g. Docker
   // build phase). Set SKIP_ENV_VALIDATION=true in those contexts.

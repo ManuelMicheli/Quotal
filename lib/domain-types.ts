@@ -25,6 +25,8 @@ export type NotificationSent =
   Database['public']['Tables']['notifications_sent']['Row']
 export type DailyCloseReport =
   Database['public']['Tables']['daily_close_reports']['Row']
+export type PushSubscriptionRow =
+  Database['public']['Tables']['push_subscriptions']['Row']
 
 // -----------------------------------------------------------------------------
 // Composed types — convenient shapes for joined queries.

@@ -2,7 +2,7 @@
  * Supabase database types — auto-generated.
  *
  * Generated from the live "Quotal" project schema (project ref:
- * frkngwpsctullsedhtbm) at the end of Phase 06. Regenerate after every
+ * frkngwpsctullsedhtbm) at the end of Phase 07. Regenerate after every
  * schema migration:
  *
  *   npx supabase gen types typescript --project-id frkngwpsctullsedhtbm \
@@ -538,6 +538,57 @@ export type Database = {
             columns: ["gym_id"]
             isOneToOne: false
             referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string
+          endpoint: string
+          gym_id: string
+          id: string
+          last_seen_at: string
+          member_id: string
+          p256dh_key: string
+          user_agent: string | null
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string
+          endpoint: string
+          gym_id: string
+          id?: string
+          last_seen_at?: string
+          member_id: string
+          p256dh_key: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string
+          endpoint?: string
+          gym_id?: string
+          id?: string
+          last_seen_at?: string
+          member_id?: string
+          p256dh_key?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
