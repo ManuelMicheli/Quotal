@@ -3,6 +3,7 @@
  * Each card is one big tap target — friendlier than a sidebar at this depth.
  */
 import {
+  BellIcon,
   BuildingIcon,
   CreditCardIcon,
   DoorOpenIcon,
@@ -37,6 +38,12 @@ const SECTIONS = [
     title: 'Dispositivi accessi',
     description: 'Tornelli e tablet autorizzati a verificare gli ingressi.',
     icon: DoorOpenIcon,
+  },
+  {
+    href: '/dashboard/impostazioni/notifiche',
+    title: 'Notifiche',
+    description: 'Email che vuoi ricevere come titolare (digest, alert, report).',
+    icon: BellIcon,
   },
   {
     href: '/dashboard/impostazioni/profilo',

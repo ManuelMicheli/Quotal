@@ -2,14 +2,12 @@
  * Supabase database types — auto-generated.
  *
  * Generated from the live "Quotal" project schema (project ref:
- * frkngwpsctullsedhtbm) at the end of Phase 08. Regenerate after every
- * schema migration:
+ * frkngwpsctullsedhtbm) at the end of Phase 09. Regenerate after every
+ * schema migration via the Supabase MCP tool `generate_typescript_types`
+ * (the local Supabase CLI requires an access token we don't store here).
  *
- *   npx supabase gen types typescript --project-id frkngwpsctullsedhtbm \
- *     > lib/supabase/types.ts
- *
- * Or via the Supabase MCP tool `generate_typescript_types`. Do not edit by
- * hand. Domain-level convenience types live in `lib/domain-types.ts`.
+ * Do not edit by hand. Domain-level convenience types live in
+ * `lib/domain-types.ts`.
  */
 export type Json =
   | string
@@ -255,37 +253,118 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_daily_digest: boolean
+          email_enabled: boolean
+          email_expiry_reminders: boolean
+          email_lifecycle_changes: boolean
+          email_monthly_report: boolean
+          email_new_member_alert: boolean
+          email_payment_failed_alert: boolean
+          email_payment_failures: boolean
+          email_payment_receipts: boolean
+          gym_id: string
+          member_id: string
+          push_enabled: boolean
+          push_expiry_reminders: boolean
+          push_payment_events: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_daily_digest?: boolean
+          email_enabled?: boolean
+          email_expiry_reminders?: boolean
+          email_lifecycle_changes?: boolean
+          email_monthly_report?: boolean
+          email_new_member_alert?: boolean
+          email_payment_failed_alert?: boolean
+          email_payment_failures?: boolean
+          email_payment_receipts?: boolean
+          gym_id: string
+          member_id: string
+          push_enabled?: boolean
+          push_expiry_reminders?: boolean
+          push_payment_events?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_daily_digest?: boolean
+          email_enabled?: boolean
+          email_expiry_reminders?: boolean
+          email_lifecycle_changes?: boolean
+          email_monthly_report?: boolean
+          email_new_member_alert?: boolean
+          email_payment_failed_alert?: boolean
+          email_payment_failures?: boolean
+          email_payment_receipts?: boolean
+          gym_id?: string
+          member_id?: string
+          push_enabled?: boolean
+          push_expiry_reminders?: boolean
+          push_payment_events?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications_sent: {
         Row: {
           channel: string
+          delivery_status: string | null
+          delivery_updated_at: string | null
           gym_id: string
           id: string
           member_id: string
           metadata: Json | null
           resend_message_id: string | null
           sent_at: string
+          sent_on_date: string | null
           subscription_id: string | null
           type: string
         }
         Insert: {
           channel?: string
+          delivery_status?: string | null
+          delivery_updated_at?: string | null
           gym_id: string
           id?: string
           member_id: string
           metadata?: Json | null
           resend_message_id?: string | null
           sent_at?: string
+          sent_on_date?: string | null
           subscription_id?: string | null
           type: string
         }
         Update: {
           channel?: string
+          delivery_status?: string | null
+          delivery_updated_at?: string | null
           gym_id?: string
           id?: string
           member_id?: string
           metadata?: Json | null
           resend_message_id?: string | null
           sent_at?: string
+          sent_on_date?: string | null
           subscription_id?: string | null
           type?: string
         }
@@ -309,6 +388,57 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          gym_id: string
+          id: string
+          link: string | null
+          read_at: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          gym_id: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          gym_id?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_notifications_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -420,6 +550,7 @@ export type Database = {
           receipt_pdf_path: string | null
           receipt_pdf_url: string | null
           refund_of_payment_id: string | null
+          retry_count: number
           status: string
           stripe_charge_id: string | null
           stripe_payment_intent_id: string | null
@@ -446,6 +577,7 @@ export type Database = {
           receipt_pdf_path?: string | null
           receipt_pdf_url?: string | null
           refund_of_payment_id?: string | null
+          retry_count?: number
           status: string
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -472,6 +604,7 @@ export type Database = {
           receipt_pdf_path?: string | null
           receipt_pdf_url?: string | null
           refund_of_payment_id?: string | null
+          retry_count?: number
           status?: string
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null

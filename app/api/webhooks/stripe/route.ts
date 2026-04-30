@@ -27,6 +27,7 @@ import 'server-only'
 import type { NextRequest } from 'next/server'
 import type Stripe from 'stripe'
 
+import { dispatchNotification } from '@/lib/notifications/dispatcher'
 import {
   extractFailureReason,
   stripePaymentMethodToDb,
@@ -198,6 +199,55 @@ async function handlePaymentSucceeded(
   if (error) {
     throw new Error(`process_successful_payment failed: ${error.message}`)
   }
+
+  // Phase 09: notify the member that the payment landed.
+  // Best-effort; never block webhook acknowledgement on email send.
+  try {
+    const { data: payment } = await admin
+      .from('payments')
+      .select(
+        'id, member_id, amount_cents, paid_at, payment_method, receipt_number, subscription_id, subscription:subscriptions(end_date)',
+      )
+      .eq('stripe_payment_intent_id', pi.id)
+      .maybeSingle()
+    if (payment) {
+      const subRow = Array.isArray(payment.subscription)
+        ? payment.subscription[0]
+        : payment.subscription
+      const isSepa = dbMethod === 'sepa'
+      // SEPA renewals get a dedicated "succeeded" message; everyone gets a receipt.
+      if (isSepa && autoRenew) {
+        await dispatchNotification({
+          type: 'sepa_succeeded',
+          recipient_id: payment.member_id,
+          subscription_id: payment.subscription_id ?? null,
+          data: {
+            amount_cents: payment.amount_cents,
+            end_date: subRow?.end_date ?? null,
+            receipt_number: payment.receipt_number,
+          },
+        })
+      }
+      if (payment.receipt_number) {
+        await dispatchNotification({
+          type: 'receipt',
+          recipient_id: payment.member_id,
+          // Receipts are NOT subscription-scoped for idempotency: a member
+          // can receive multiple receipts in the lifetime of one
+          // subscription. Use force so we always send.
+          force: true,
+          data: {
+            receipt_number: payment.receipt_number,
+            amount_cents: payment.amount_cents,
+            paid_at: payment.paid_at,
+            payment_method: payment.payment_method,
+          },
+        })
+      }
+    }
+  } catch (err) {
+    console.warn('[stripe webhook] notification dispatch failed', err)
+  }
 }
 
 async function handlePaymentFailed(
@@ -209,20 +259,71 @@ async function handlePaymentFailed(
 
   const reason = extractFailureReason(pi)
 
+  const dbMethod =
+    stripePaymentMethodToDb(
+      typeof pi.payment_method === 'object' && pi.payment_method
+        ? pi.payment_method.type
+        : null,
+    ) ?? 'card'
+
   const { error } = await admin.rpc('record_failed_payment', {
     p_payment_session_id: sessionId,
     p_amount_cents: pi.amount,
-    p_payment_method:
-      stripePaymentMethodToDb(
-        typeof pi.payment_method === 'object' && pi.payment_method
-          ? pi.payment_method.type
-          : null,
-      ) ?? 'card',
+    p_payment_method: dbMethod,
     p_stripe_payment_intent_id: pi.id,
     p_failure_reason: reason,
   })
   if (error) {
     throw new Error(`record_failed_payment failed: ${error.message}`)
+  }
+
+  // Phase 09: notify member (sepa_failed) + owner (payment_failed_owner).
+  // Best-effort; never block webhook ack.
+  try {
+    const { data: payment } = await admin
+      .from('payments')
+      .select('id, gym_id, member_id, amount_cents, member:profiles!payments_member_id_fkey(full_name)')
+      .eq('stripe_payment_intent_id', pi.id)
+      .maybeSingle()
+    if (payment && dbMethod === 'sepa') {
+      await dispatchNotification({
+        type: 'sepa_failed',
+        recipient_id: payment.member_id,
+        // No subscription_id scoping — multiple SEPA failures over time
+        // are independent events; force so each lands.
+        force: true,
+        data: {
+          amount_cents: payment.amount_cents,
+          failure_reason: reason,
+        },
+      })
+    }
+    if (payment) {
+      // Owner alerts: fan out to every owner/staff in the gym.
+      const { data: owners } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('gym_id', payment.gym_id)
+        .in('role', ['owner', 'staff'])
+      const memberRow = Array.isArray(payment.member)
+        ? payment.member[0]
+        : payment.member
+      for (const o of owners ?? []) {
+        await dispatchNotification({
+          type: 'payment_failed_owner',
+          recipient_id: o.id,
+          force: true,
+          data: {
+            failed_member_name: memberRow?.full_name ?? 'membro',
+            amount_cents: payment.amount_cents,
+            failure_reason: reason,
+            payment_id: payment.id,
+          },
+        })
+      }
+    }
+  } catch (err) {
+    console.warn('[stripe webhook] failed-payment notification dispatch failed', err)
   }
 }
 

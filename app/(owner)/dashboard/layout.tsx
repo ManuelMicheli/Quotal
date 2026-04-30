@@ -11,6 +11,7 @@ import { OwnerTopbar } from '@/components/owner/topbar'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { requireOwnerOrStaff } from '@/lib/auth'
+import { getOwnerNotifications } from '@/lib/queries/notifications'
 
 export default async function OwnerDashboardLayout({
   children,
@@ -18,6 +19,7 @@ export default async function OwnerDashboardLayout({
   children: React.ReactNode
 }) {
   const profile = await requireOwnerOrStaff()
+  const { notifications, unread } = await getOwnerNotifications(profile.id, 20)
 
   return (
     <TooltipProvider>
@@ -32,6 +34,8 @@ export default async function OwnerDashboardLayout({
             ownerName={profile.full_name}
             ownerEmail={profile.email}
             ownerAvatarUrl={profile.avatar_url}
+            initialNotifications={notifications}
+            initialUnread={unread}
           />
           <main className="flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">
             {children}

@@ -17,6 +17,7 @@ import { redirect } from 'next/navigation'
 import { requireOwnerOrStaff } from '@/lib/auth'
 import { ROLES, SUBSCRIPTION_STATUS } from '@/lib/constants'
 import type { GymSettings } from '@/lib/domain-types'
+import { dispatchNotification } from '@/lib/notifications/dispatcher'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -190,6 +191,30 @@ export async function createMemberAction(
       }
       // NOTE: Cash payment recording is implemented in Phase 06.
     }
+  }
+
+  // Phase 09: send welcome email (best-effort, never blocks creation).
+  try {
+    const { data: subInfo } = await supabase
+      .from('subscriptions')
+      .select('end_date, plan:subscription_plans(name, price_cents)')
+      .eq('member_id', memberId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const planRow = Array.isArray(subInfo?.plan)
+      ? subInfo?.plan[0]
+      : subInfo?.plan
+    await dispatchNotification({
+      type: 'welcome',
+      recipient_id: memberId,
+      data: {
+        plan: planRow ?? null,
+        end_date: subInfo?.end_date ?? null,
+      },
+    })
+  } catch (err) {
+    console.warn('[owner] welcome notification dispatch failed', err)
   }
 
   revalidatePath('/dashboard', 'layout')
@@ -376,6 +401,18 @@ export async function suspendSubscriptionAction(
     return { ok: false, error: `Sospensione non riuscita: ${statusError.message}` }
   }
 
+  // Phase 09: notify the member.
+  try {
+    await dispatchNotification({
+      type: 'subscription_suspended',
+      recipient_id: sub.member_id,
+      subscription_id: sub.id,
+      data: { reason: parsed.data.reason ?? null },
+    })
+  } catch (err) {
+    console.warn('[owner] suspended notification dispatch failed', err)
+  }
+
   revalidatePath('/dashboard', 'layout')
   return { ok: true, message: 'Abbonamento sospeso.' }
 }
@@ -400,7 +437,7 @@ export async function resumeSubscriptionAction(
 
   const { data: sub, error: fetchError } = await supabase
     .from('subscriptions')
-    .select('id, status, end_date, suspension_days_used')
+    .select('id, member_id, status, end_date, suspension_days_used')
     .eq('id', parsed.data.subscription_id)
     .maybeSingle()
 
@@ -451,6 +488,21 @@ export async function resumeSubscriptionAction(
 
   if (subError) {
     return { ok: false, error: `Riattivazione non riuscita: ${subError.message}` }
+  }
+
+  // Phase 09: notify the member. Idempotency is on (subscription_id,
+  // type); since `subscription_resumed` is a distinct type from
+  // `subscription_suspended`, we can re-use the subscription_id without
+  // needing the force flag.
+  try {
+    await dispatchNotification({
+      type: 'subscription_resumed',
+      recipient_id: sub.member_id,
+      subscription_id: sub.id,
+      data: { end_date: newEnd, days_added: daysSuspended },
+    })
+  } catch (err) {
+    console.warn('[owner] resumed notification dispatch failed', err)
   }
 
   revalidatePath('/dashboard', 'layout')
