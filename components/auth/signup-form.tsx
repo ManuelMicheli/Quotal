@@ -20,7 +20,8 @@ export function SignupForm({ initialError }: { initialError?: string }) {
       phone: '',
       password: '',
       password_confirm: '',
-    } as Partial<SignupInput> as SignupInput,
+      terms: true,
+    },
     mode: 'onSubmit',
   })
 
