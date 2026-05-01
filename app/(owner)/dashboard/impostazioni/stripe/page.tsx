@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireOwnerOrStaff } from '@/lib/auth'
+import { env } from '@/lib/env'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { getStripeAccountSnapshot } from '@/lib/stripe/account-status'
 
@@ -72,12 +73,16 @@ export default async function StripeSettingsPage() {
           </AlertDescription>
         </Alert>
       ) : !snap.connected ? (
-        <ConnectCard />
+        <>
+          <ConnectCard />
+          <PlatformFeeCard />
+        </>
       ) : (
         <>
           <StatusCard snap={snap} />
           <BalanceCard snap={snap} />
           <PayoutsCard snap={snap} />
+          <PlatformFeeCard />
           <ActionsCard snap={snap} />
         </>
       )}
@@ -111,6 +116,47 @@ function ConnectCard() {
           </li>
         </ul>
         <ConnectStripeButton label="Connetti la palestra a Stripe" />
+      </CardContent>
+    </Card>
+  )
+}
+
+function PlatformFeeCard() {
+  const bps = env.QUOTAL_APPLICATION_FEE_BPS
+  const pct = (bps / 100).toLocaleString('it-IT', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+
+  if (bps <= 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Commissioni Quotal</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Nessuna commissione di piattaforma applicata.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Commissioni Quotal</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        <p>
+          <span className="font-display text-2xl">{pct}%</span> trattenuta su
+          ogni pagamento dei tuoi iscritti come commissione di piattaforma.
+        </p>
+        <p className="text-muted-foreground">
+          Il costo viene scalato automaticamente da Stripe e non incide sulle
+          commissioni Stripe (carta/SEPA), che vedi nella dashboard Stripe.
+        </p>
       </CardContent>
     </Card>
   )

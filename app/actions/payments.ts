@@ -26,7 +26,10 @@ import {
   generateAndStoreReceipt,
 } from '@/lib/pdf/generate-receipt'
 import { generateAndStoreDailyReport } from '@/lib/pdf/generate-daily-report'
-import { getGymStripeAccountId } from '@/lib/stripe/connect'
+import {
+  computeApplicationFee,
+  getGymStripeAccountId,
+} from '@/lib/stripe/connect'
 import {
   generatePaymentSessionToken,
   getOrCreateStripeCustomer,
@@ -276,12 +279,18 @@ export async function initiateCardPaymentAction(
     }
     clientSecret = pi.client_secret
   } else {
+    const applicationFee = stripeAccountId
+      ? computeApplicationFee(session.amount_cents)
+      : 0
     const pi = await stripe.paymentIntents.create(
       {
         amount: session.amount_cents,
         currency: 'eur',
         payment_method_types: ['card'],
         receipt_email: member.email,
+        ...(applicationFee > 0
+          ? { application_fee_amount: applicationFee }
+          : {}),
         metadata: {
           gym_id: session.gym_id,
           member_id: session.member_id,
@@ -558,6 +567,9 @@ export async function triggerSepaRenewalAction(
   const connectOpts = stripeAccountId
     ? ({ stripeAccount: stripeAccountId } as const)
     : undefined
+  const applicationFee = stripeAccountId
+    ? computeApplicationFee(plan.price_cents)
+    : 0
   const pi = await stripe.paymentIntents.create(
     {
       amount: plan.price_cents,
@@ -568,6 +580,9 @@ export async function triggerSepaRenewalAction(
       confirm: true,
       off_session: true,
       receipt_email: member.email,
+      ...(applicationFee > 0
+        ? { application_fee_amount: applicationFee }
+        : {}),
       metadata: {
         gym_id: profile.gym_id,
         member_id: member.id,

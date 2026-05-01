@@ -23,7 +23,10 @@ import { NextResponse } from 'next/server'
 import { checkCronAuth } from '@/lib/notifications/cron-auth'
 import { dispatchNotification } from '@/lib/notifications/dispatcher'
 import { fanoutOwnerNotification } from '@/lib/notifications/owner-inbox'
-import { getGymStripeAccountId } from '@/lib/stripe/connect'
+import {
+  computeApplicationFee,
+  getGymStripeAccountId,
+} from '@/lib/stripe/connect'
 import { getStripe } from '@/lib/stripe/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -120,6 +123,9 @@ export async function POST(req: Request): Promise<Response> {
 
     try {
       const stripeAccountId = await getGymStripeAccountId(p.gym_id, admin)
+      const applicationFee = stripeAccountId
+        ? computeApplicationFee(p.amount_cents)
+        : 0
       const intent = await stripe.paymentIntents.create(
         {
           amount: p.amount_cents,
@@ -132,6 +138,9 @@ export async function POST(req: Request): Promise<Response> {
             : mandate.stripe_mandate_id,
           confirm: true,
           off_session: true,
+          ...(applicationFee > 0
+            ? { application_fee_amount: applicationFee }
+            : {}),
           metadata: {
             retry_of_payment_id: p.id,
             gym_id: p.gym_id,

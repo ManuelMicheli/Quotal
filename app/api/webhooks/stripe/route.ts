@@ -28,6 +28,7 @@ import type { NextRequest } from 'next/server'
 import type Stripe from 'stripe'
 
 import { dispatchNotification } from '@/lib/notifications/dispatcher'
+import { computeApplicationFee } from '@/lib/stripe/connect'
 import {
   extractFailureReason,
   stripePaymentMethodToDb,
@@ -425,6 +426,9 @@ async function handleSetupIntentSucceeded(
     throw new Error(`setup_intent ${si.id} has no customer`)
   }
 
+  const applicationFee = connectOpts
+    ? computeApplicationFee(session.amount_cents)
+    : 0
   const pi = await stripe.paymentIntents.create(
     {
       amount: session.amount_cents,
@@ -435,6 +439,9 @@ async function handleSetupIntentSucceeded(
       mandate: mandateId.startsWith('pending_') ? undefined : mandateId,
       confirm: true,
       off_session: autoRenew,
+      ...(applicationFee > 0
+        ? { application_fee_amount: applicationFee }
+        : {}),
       metadata: {
         gym_id: session.gym_id,
         member_id: session.member_id,

@@ -12,10 +12,25 @@ import 'server-only'
 
 import type Stripe from 'stripe'
 
+import { env } from '@/lib/env'
 import { getStripe } from '@/lib/stripe/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type AdminClient = ReturnType<typeof createAdminClient>
+
+/**
+ * Compute Quotal's platform fee for a given gross amount, in cents. Returns
+ * 0 when the fee is disabled in env. Round half-up to avoid sending 0 fees
+ * on tiny amounts when QUOTAL_APPLICATION_FEE_BPS would mathematically
+ * round to zero — anything below 1 cent is just dropped.
+ */
+export function computeApplicationFee(amountCents: number): number {
+  const bps = env.QUOTAL_APPLICATION_FEE_BPS
+  if (!bps || bps <= 0 || amountCents <= 0) return 0
+  // bps / 10000 = fraction. e.g. 200 bps → 2%.
+  const fee = Math.round((amountCents * bps) / 10000)
+  return Math.max(0, fee)
+}
 
 /**
  * Resolve the connected Stripe account id for a gym, or null if the gym has

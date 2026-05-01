@@ -76,6 +76,13 @@ export const env = createEnv({
     ACCESS_CONTROL_BASE_URL: z.string().url().optional(),
     /** Bearer token sent as `Authorization: Bearer ...` to the REST adapter. */
     ACCESS_CONTROL_API_KEY: z.string().min(1).optional(),
+    /**
+     * Quotal platform fee applied to every Connect charge, in basis points
+     * (1 bps = 0.01%). Default 200 = 2.00%. Charged via Stripe's
+     * `application_fee_amount` so the gym's payout is automatically net of
+     * the platform's cut. Set to 0 to disable (zero-fee mode).
+     */
+    QUOTAL_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(2000).default(200),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -118,6 +125,7 @@ export const env = createEnv({
     ACCESS_CONTROL_ADAPTER: process.env.ACCESS_CONTROL_ADAPTER,
     ACCESS_CONTROL_BASE_URL: process.env.ACCESS_CONTROL_BASE_URL,
     ACCESS_CONTROL_API_KEY: process.env.ACCESS_CONTROL_API_KEY,
+    QUOTAL_APPLICATION_FEE_BPS: process.env.QUOTAL_APPLICATION_FEE_BPS,
   },
   // Skip validation when running in CI / build with no real env (e.g. Docker
   // build phase). Set SKIP_ENV_VALIDATION=true in those contexts.
