@@ -1,8 +1,11 @@
 /**
- * Read-only helpers that surface the connected Stripe account's status to
- * the owner. The MVP is single-tenant: the Stripe account whose secret key
- * lives in `STRIPE_SECRET_KEY` is the gym's own account, so we just pull the
- * account, balance, and recent payouts directly.
+ * Read-only helpers that surface a gym's connected Stripe account state to
+ * the owner.
+ *
+ * Multi-tenant: each gym owns its own Stripe Express account whose id is
+ * stored in `gyms.stripe_account_id`. The platform Stripe key (the one in
+ * `STRIPE_SECRET_KEY`) is the *platform* account; we use it together with
+ * the `Stripe-Account` header to read the connected account.
  *
  * **Server only.** Never import from a client component.
  */
@@ -10,12 +13,18 @@ import 'server-only'
 
 import type Stripe from 'stripe'
 
+import { getCurrentGym } from '@/lib/queries/gym'
 import { getStripe } from '@/lib/stripe/server'
 
 export type StripeAccountSnapshot = {
+  /** True once both the platform key and the gym's Stripe account are set up. */
   configured: boolean
-  /** `true` if Stripe SDK call failed (e.g. invalid key). */
+  /** True once the gym has a `stripe_account_id` saved (Connect onboarding started). */
+  connected: boolean
+  /** `non-null` if the Stripe SDK call failed (e.g. invalid key). */
   error: string | null
+  /** Cached gym slug used to build links back into the dashboard. */
+  gym: { id: string; name: string } | null
   account: {
     id: string
     /** True once Stripe has approved the KYC and the account can charge cards. */
@@ -56,7 +65,9 @@ export type StripeAccountSnapshot = {
 
 const empty: StripeAccountSnapshot = {
   configured: false,
+  connected: false,
   error: null,
+  gym: null,
   account: null,
   balance: null,
   payouts: [],
@@ -67,21 +78,38 @@ function centsToEur(amount: number): number {
 }
 
 export async function getStripeAccountSnapshot(): Promise<StripeAccountSnapshot> {
+  const gym = await getCurrentGym()
+  const gymHeader = gym ? { id: gym.id, name: gym.name } : null
+
   let stripe: Stripe
   try {
     stripe = getStripe()
   } catch (err) {
     return {
       ...empty,
+      gym: gymHeader,
       error: err instanceof Error ? err.message : String(err),
     }
   }
 
+  if (!gym?.stripe_account_id) {
+    // Platform key works, but this gym hasn't connected its own account yet.
+    return {
+      ...empty,
+      configured: true,
+      connected: false,
+      gym: gymHeader,
+    }
+  }
+
+  const accountId = gym.stripe_account_id
+
   try {
+    const opts = { stripeAccount: accountId } as const
     const [account, balance, payouts] = await Promise.all([
-      stripe.accounts.retrieveCurrent(),
-      stripe.balance.retrieve(),
-      stripe.payouts.list({ limit: 5 }),
+      stripe.accounts.retrieve(accountId),
+      stripe.balance.retrieve({}, opts),
+      stripe.payouts.list({ limit: 5 }, opts),
     ])
 
     const eur = (b: Stripe.Balance['available'][number] | undefined) =>
@@ -91,7 +119,9 @@ export async function getStripeAccountSnapshot(): Promise<StripeAccountSnapshot>
 
     return {
       configured: true,
+      connected: true,
       error: null,
+      gym: gymHeader,
       account: {
         id: account.id,
         charges_enabled: account.charges_enabled ?? false,
@@ -129,6 +159,9 @@ export async function getStripeAccountSnapshot(): Promise<StripeAccountSnapshot>
   } catch (err) {
     return {
       ...empty,
+      configured: true,
+      connected: true,
+      gym: gymHeader,
       error: err instanceof Error ? err.message : String(err),
     }
   }

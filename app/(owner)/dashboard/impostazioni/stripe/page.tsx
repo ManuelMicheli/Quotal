@@ -13,9 +13,11 @@ import {
   CheckCircle2Icon,
   CreditCardIcon,
   ExternalLinkIcon,
+  LinkIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 
+import { ConnectStripeButton } from '@/components/owner/connect-stripe-button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,26 +60,19 @@ export default async function StripeSettingsPage() {
           <AlertTitle>Stripe non configurato</AlertTitle>
           <AlertDescription>
             <p>
-              Manca o non è valida la chiave segreta Stripe. Errore:{' '}
+              Manca o non è valida la chiave segreta della piattaforma. Errore:{' '}
               <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
                 {snap.error ?? 'STRIPE_SECRET_KEY assente'}
               </code>
             </p>
             <p className="mt-2">
-              <a
-                href="https://dashboard.stripe.com/apikeys"
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium underline underline-offset-4"
-              >
-                Apri Stripe → API keys
-              </a>
-              {' · '}
-              copia la chiave (test o live) e aggiungila alle variabili
-              d'ambiente del deploy come <code>STRIPE_SECRET_KEY</code>.
+              Contatta il supporto: la chiave la imposta l’operatore della
+              piattaforma, non la singola palestra.
             </p>
           </AlertDescription>
         </Alert>
+      ) : !snap.connected ? (
+        <ConnectCard />
       ) : (
         <>
           <StatusCard snap={snap} />
@@ -87,6 +82,37 @@ export default async function StripeSettingsPage() {
         </>
       )}
     </div>
+  )
+}
+
+function ConnectCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <LinkIcon className="size-5" />
+          Collega il tuo Stripe
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm">
+        <p className="text-muted-foreground">
+          Per ricevere i pagamenti dei tuoi iscritti devi collegare un account
+          Stripe alla tua palestra. Stripe gestisce la verifica dell’identità,
+          l’IBAN e i payout — Quotal non vede mai i tuoi soldi.
+        </p>
+        <ul className="ml-4 list-disc space-y-1 text-muted-foreground">
+          <li>Apri un account Express in pochi minuti.</li>
+          <li>
+            I pagamenti finiscono direttamente sul tuo conto Stripe e poi sul
+            tuo IBAN.
+          </li>
+          <li>
+            Puoi sospendere o riprendere l’onboarding in qualunque momento.
+          </li>
+        </ul>
+        <ConnectStripeButton label="Connetti la palestra a Stripe" />
+      </CardContent>
+    </Card>
   )
 }
 
@@ -289,12 +315,13 @@ function ActionsCard({
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-2">
         {needsKyc ? (
-          <ExternalLinkButton
-            href="https://dashboard.stripe.com/account/onboarding"
-            label="Completa onboarding (KYC)"
-            description="Documenti, IBAN, P.IVA: tutto qui."
-            primary
-          />
+          <div className="rounded-lg border bg-muted/30 p-4">
+            <p className="text-sm font-medium">Completa onboarding (KYC)</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Documenti, IBAN, P.IVA: tutto su Stripe.
+            </p>
+            <ConnectStripeButton label="Riprendi su Stripe" />
+          </div>
         ) : null}
         <ExternalLinkButton
           href="https://dashboard.stripe.com/settings/payouts"
