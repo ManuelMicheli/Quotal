@@ -78,10 +78,12 @@ Generate via `node scripts/gen-vapid.mjs`.
 
 ### App / misc
 
-- `APP_URL` — `https://quotal.it`
-- `NEXT_PUBLIC_APP_URL` — `https://quotal.it`
-- `ENABLE_OWNER_ONBOARDING` — set to `true` only for the very first owner
-  setup, then flip to `false`.
+- `APP_URL` — public origin. Auto-derived from `VERCEL_PROJECT_PRODUCTION_URL`
+  / `VERCEL_URL` when unset.
+- `NEXT_PUBLIC_APP_URL` — same as `APP_URL`, exposed to the client bundle so
+  the invite-link card renders the right origin.
+- `QUOTAL_APPLICATION_FEE_BPS` — platform fee taken from every Connect
+  charge, in basis points (`200` = 2.00%, default `200`, `0` to disable).
 - `CSP_REPORT_ONLY` — set to `true` for the first 24h after deploy to log
   CSP violations without blocking, then unset to enforce.
 
@@ -138,19 +140,23 @@ Generate via `node scripts/gen-vapid.mjs`.
 
 ## 5. End-to-end smoke test
 
-1. **Owner signup** — `ENABLE_OWNER_ONBOARDING=true` in Vercel, visit
-   `/onboarding-titolare`, create the first owner. Flip env back to `false`
-   immediately. Login lands on `/dashboard`.
-2. **Create member + plan** — `/dashboard/membri/nuovo` creates a member,
-   `/dashboard/impostazioni/piani` adds a plan. Verify the welcome email
-   arrives.
-3. **Cash payment** — open the member detail page, click "Registra
-   pagamento contanti". Verify the receipt PDF lands in Storage and the
-   Cassa total updates.
-4. **Email preview** — `/dashboard/impostazioni/notifiche` shows current
+1. **Owner signup** — visit `/onboarding-titolare` (publicly available),
+   create a new gym + owner. Login lands on `/dashboard`.
+2. **Connect Stripe** — `/dashboard/impostazioni/stripe` → "Connetti Stripe"
+   → complete the Express onboarding on Stripe. Status badge flips to
+   "Operativo" once charges + payouts are enabled.
+3. **Create plan** — `/dashboard/impostazioni/piani` adds a plan. Sync
+   prices: `STRIPE_SECRET_KEY=sk_… npx tsx scripts/sync-stripe-prices.ts`.
+4. **Invite member** — `/dashboard/membri` shows the public signup link;
+   open it in a private window to register a new member account.
+5. **Member payment** — register a cash payment from the member detail
+   page; verify the receipt PDF lands in Storage. For SEPA/card, send a
+   pay-link and complete the flow on the member side. Confirm the platform
+   fee (default 2%) shows up on the platform's Stripe balance.
+6. **Email preview** — `/dashboard/impostazioni/notifiche` shows current
    preferences. Open the React Email preview server (`npm exec react-email
    dev --port 3001`) for a visual sanity check on each template.
-5. **Member PWA + QR** — log out, log in as the member, install the PWA on
+7. **Member PWA + QR** — log out, log in as the member, install the PWA on
    a phone, open the home tab, generate the QR. Scan via tablet at
    `/access` (after creating an access device + token in Impostazioni →
    Dispositivi). Verify the access log row appears in `/dashboard/ingressi`.

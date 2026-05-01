@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Quotal** — Italian SaaS for gym subscription management. Single-tenant MVP, PWA member + owner dashboard, Stripe SEPA/card + cash payments, Resend transactional email, web-push notifications, access control, GDPR compliance.
+**Quotal** — Italian SaaS for gym subscription management. Multi-tenant (each gym = its own row + connected Stripe Express account), PWA member + owner dashboard, Stripe Connect direct charges with platform application fee (SEPA/card + cash), Resend transactional email, web-push notifications, access control, GDPR compliance.
 
 `PROJECT_STATUS.md` is the canonical post-Phase-10 reference (env vars, manual setup steps, deploy checklist, end-to-end smoke test, deferred work). Read it before working on phases / external dependencies / deploy.
 
@@ -46,7 +46,7 @@ Path alias: `@/*` → repo root.
 
 ### Route groups (`app/`)
 
-- `(auth)/` — login, signup, password reset, **`onboarding-titolare`** (gated by `ENABLE_OWNER_ONBOARDING=true`, only used to seed the first owner)
+- `(auth)/` — login, signup (`/signup?gym=<slug>`), password reset, **`onboarding-titolare`** (public — provisions a new gym + owner account)
 - `(owner)/dashboard/` — KPIs, members, subscriptions, payments, accesses, settings (plans, devices, GDPR, notifications)
 - `(member)/app/` — member PWA: subscription view, QR badge, profile, offline shell
 - `(public)/pay/` — token-gated public payment flow
@@ -92,9 +92,11 @@ Notable Postgres functions invoked from app code:
 
 RLS is enabled on every business table; policies in `..._enable_rls_and_policies.sql`. SECURITY DEFINER functions are hardened in `..._harden_security_definer_functions.sql`.
 
-### Stripe + payments
+### Stripe + payments (Connect, multi-tenant)
 
-`lib/stripe/` wraps the SDK. `app/api/webhooks/stripe/route.ts` verifies via `STRIPE_WEBHOOK_SECRET`, deduplicates with `stripe_events_processed`, then dispatches to the SQL functions above. Required webhook events: `payment_intent.{succeeded,payment_failed}`, `setup_intent.{succeeded,setup_failed}`, `charge.refunded`, `mandate.updated`. Sync `subscription_plans` → Stripe prices via `scripts/sync-stripe-prices.ts`.
+`lib/stripe/` wraps the SDK. Each gym owns its own Stripe Express account (`gyms.stripe_account_id`); `lib/stripe/connect.ts` provides `createConnectAccount`, `createOnboardingLink`, `getGymStripeAccountId`, and `computeApplicationFee`. Every PaymentIntent / SetupIntent / Customer / Refund / billing-portal call passes `{ stripeAccount }` so funds flow into the connected account; the platform keeps `QUOTAL_APPLICATION_FEE_BPS` (basis points, default 200 = 2%) via `application_fee_amount`.
+
+The webhook (`app/api/webhooks/stripe/route.ts`) listens to platform + Connect events on the same endpoint; when `event.account` is set the handlers thread it through any `stripe.*.retrieve` call. Required webhook events: `payment_intent.{succeeded,payment_failed}`, `setup_intent.{succeeded,setup_failed}`, `charge.refunded`, `charge.dispute.created`, `mandate.updated`. Enable "Listen to events on Connected accounts" on the endpoint. Sync `subscription_plans` → Stripe prices via `scripts/sync-stripe-prices.ts` (still operates on the platform account; per-gym Stripe Products are deferred).
 
 ### Notifications (Phase 09)
 
@@ -108,7 +110,7 @@ Pluggable hardware adapter selected via `ACCESS_CONTROL_ADAPTER` env (`mock` | `
 
 `next.config.ts` builds an explicit CSP and emits HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. CSP allows Stripe (`js.stripe.com`, `hooks.stripe.com`), Supabase (REST + Storage + Realtime via `wss://*.supabase.co`), Resend, Google Fonts, plus `data:` / `blob:` for QR data URLs and PDF object URLs. `'unsafe-inline'` on `script-src` is required by Next.js bootstrap + React hydration data (per-request nonce middleware is post-MVP). Set `CSP_REPORT_ONLY=true` for the first 24h after deploy.
 
-Rate limiting in `lib/security/rate-limit.ts` is **in-memory per Lambda** (acceptable for one-gym MVP; swap for `@upstash/ratelimit` before scaling).
+Rate limiting in `lib/security/rate-limit.ts` is **in-memory per Lambda** (swap for `@upstash/ratelimit` before scaling).
 
 ### Legal / GDPR (Phase 10)
 
