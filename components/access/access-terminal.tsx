@@ -3,11 +3,8 @@
 /**
  * Fullscreen tablet kiosk UI.
  *
- * MVP scope — keep it dependency-light and obvious:
- *   - Manual entry of a member's QR token (paste) or badge UID. A camera-
- *     based scanner ships in the next iteration; that requires html5-qrcode
- *     (~140KB) and is an opinionated upgrade we'd rather defer until a
- *     specific tablet model is on the bench.
+ *   - Two input modes: camera (lazy-loaded @zxing/browser) and manual /
+ *     hardware-reader keyboard input. The operator picks at the top.
  *   - On submit: POST /api/access/verify with the device token in headers.
  *   - Result screen for 3 seconds (green / red), then back to scan.
  *
@@ -15,8 +12,25 @@
  * environments (loud, busy, dim) so the visual language is large and
  * unambiguous.
  */
-import { CheckCircle2Icon, KeyboardIcon, XCircleIcon } from 'lucide-react'
+import { CameraIcon, CheckCircle2Icon, KeyboardIcon, XCircleIcon } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import * as React from 'react'
+
+const CameraScanner = dynamic(
+  () => import('./camera-scanner').then((m) => m.CameraScanner),
+  { ssr: false, loading: () => <CameraScannerLoading /> },
+)
+
+function CameraScannerLoading() {
+  return (
+    <div className="flex w-full max-w-xl flex-col items-center gap-4">
+      <div className="aspect-square w-full animate-pulse rounded-2xl border border-zinc-700 bg-zinc-900" />
+      <p className="text-sm text-zinc-400">Caricamento fotocamera…</p>
+    </div>
+  )
+}
+
+type InputMode = 'camera' | 'manual'
 
 const RESULT_DURATION_MS = 3000
 
@@ -50,6 +64,7 @@ export function AccessTerminal({
   deviceToken: string
 }) {
   const [mode, setMode] = React.useState<Mode>('idle')
+  const [inputMode, setInputMode] = React.useState<InputMode>('camera')
   const [result, setResult] = React.useState<VerifyResponse | null>(null)
   const [input, setInput] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -62,16 +77,16 @@ export function AccessTerminal({
       setMode('idle')
       setResult(null)
       setInput('')
-      inputRef.current?.focus()
+      if (inputMode === 'manual') inputRef.current?.focus()
     }, RESULT_DURATION_MS)
     return () => {
       if (resetTimerRef.current) window.clearTimeout(resetTimerRef.current)
     }
-  }, [mode])
+  }, [mode, inputMode])
 
   React.useEffect(() => {
-    if (mode === 'idle') inputRef.current?.focus()
-  }, [mode])
+    if (mode === 'idle' && inputMode === 'manual') inputRef.current?.focus()
+  }, [mode, inputMode])
 
   async function submit(raw: string) {
     const value = raw.trim()
@@ -118,23 +133,69 @@ export function AccessTerminal({
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center px-6">
+      <main className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-6">
         {mode === 'result' && result ? (
           <ResultScreen result={result} />
         ) : (
-          <ScannerInput
-            ref={inputRef}
-            value={input}
-            disabled={mode === 'submitting'}
-            onChange={setInput}
-            onSubmit={() => submit(input)}
-          />
+          <>
+            <InputModeToggle value={inputMode} onChange={setInputMode} />
+            {inputMode === 'camera' ? (
+              <CameraScanner
+                onScan={(value) => submit(value)}
+                paused={mode === 'submitting'}
+              />
+            ) : (
+              <ScannerInput
+                ref={inputRef}
+                value={input}
+                disabled={mode === 'submitting'}
+                onChange={setInput}
+                onSubmit={() => submit(input)}
+              />
+            )}
+          </>
         )}
       </main>
 
       <footer className="border-t border-zinc-800 px-6 py-3 text-center text-xs text-zinc-500">
         Modalità chiosco. Esci dal browser per disabilitare.
       </footer>
+    </div>
+  )
+}
+
+function InputModeToggle({
+  value,
+  onChange,
+}: {
+  value: InputMode
+  onChange: (mode: InputMode) => void
+}) {
+  const modes: Array<{ key: InputMode; label: string; Icon: typeof CameraIcon }> = [
+    { key: 'camera', label: 'Fotocamera', Icon: CameraIcon },
+    { key: 'manual', label: 'Manuale / lettore', Icon: KeyboardIcon },
+  ]
+  return (
+    <div className="inline-flex rounded-full border border-zinc-700 bg-zinc-900 p-1">
+      {modes.map(({ key, label, Icon }) => {
+        const active = value === key
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onChange(key)}
+            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors ${
+              active
+                ? 'bg-zinc-100 text-zinc-900'
+                : 'text-zinc-400 hover:text-zinc-100'
+            }`}
+            aria-pressed={active}
+          >
+            <Icon className="size-4" aria-hidden />
+            {label}
+          </button>
+        )
+      })}
     </div>
   )
 }

@@ -176,10 +176,11 @@ Generate via `node scripts/gen-vapid.mjs`.
 These are explicitly *not* in the MVP scope. Track in the issue tracker
 when you start building them.
 
-- **Camera-based QR scanning** in the kiosk — currently the access page
-  only accepts a manual badge UID input or an upstream RFID reader. To
-  enable phone-PWA + camera-tablet flows, integrate a JS QR library
-  (`@zxing/library`) into `/access`.
+- **Camera-based QR scanning** — wired (Phase 11). The kiosk at `/access`
+  now exposes a Fotocamera/Manuale toggle; in camera mode it lazy-loads
+  `@zxing/browser`, opens the back camera, dedupes scans within a 2s
+  window, and POSTs the decoded JWT to `/api/access/verify`. Camera mode
+  is the default; the manual / hardware-reader input remains as fallback.
 - **Monthly PDF report (titolare)** — the React Email template
   `monthly-owner-report.tsx` exists, but the PDF version (with charts) is
   pending.
