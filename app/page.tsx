@@ -95,8 +95,8 @@ export default function HomePage() {
               size="lg"
               className="tap-shrink w-full rounded-full sm:w-auto"
             >
-              <Link href="/login?role=owner">
-                Accedi come titolare
+              <Link href="/onboarding-titolare">
+                Registra la tua palestra
                 <ArrowUpRightIcon size={16} />
               </Link>
             </Button>
@@ -106,9 +106,18 @@ export default function HomePage() {
               variant="outline"
               className="tap-shrink w-full rounded-full sm:w-auto"
             >
-              <Link href="/login?role=member">Accedi come membro</Link>
+              <Link href="/login">Accedi</Link>
             </Button>
           </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.55 }}
+            className="mt-4 text-xs text-muted-foreground md:text-sm"
+          >
+            Sei un iscritto? Chiedi al titolare il link di iscrizione della tua palestra.
+          </motion.p>
         </section>
 
         <motion.section

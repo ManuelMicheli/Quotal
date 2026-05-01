@@ -50,12 +50,12 @@ export default async function LoginPage({
             {isOwnerCopy ? 'Accedi come titolare' : 'Bentornato'}
           </h1>
           <p className="text-sm text-zinc-400">
-            Non hai un account?{' '}
+            Hai una palestra?{' '}
             <Link
-              href="/signup"
+              href="/onboarding-titolare"
               className="font-medium text-zinc-100 transition-colors hover:text-teal-400"
             >
-              Registrati
+              Registrala
             </Link>
           </p>
         </div>
@@ -65,6 +65,10 @@ export default async function LoginPage({
           <AuthDivider label="oppure" />
           <LoginForm initialError={initialError} />
         </div>
+
+        <p className="mt-8 text-center text-xs leading-relaxed text-zinc-500">
+          Sei un iscritto? Usa il link di iscrizione condiviso dalla tua palestra.
+        </p>
       </div>
     </AuthShell>
   )
