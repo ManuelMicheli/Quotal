@@ -5,6 +5,7 @@
  * Server / Client Component below this point. The `reset` callback re-tries
  * the failing render — useful for transient blips (eg a Supabase 5xx).
  */
+import * as Sentry from '@sentry/nextjs'
 import Link from 'next/link'
 import { useEffect } from 'react'
 
@@ -18,9 +19,10 @@ export default function GlobalErrorPage({
   reset: () => void
 }) {
   useEffect(() => {
-    // Hook for Sentry / posthog when wired in production. Logs to console
-    // in dev so the developer sees the trace in the terminal too.
-    console.error('[error.tsx]', error)
+    Sentry.captureException(error)
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[error.tsx]', error)
+    }
   }, [error])
 
   return (

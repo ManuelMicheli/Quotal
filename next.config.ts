@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs'
 import type { NextConfig } from 'next'
 
 /**
@@ -45,6 +46,8 @@ const cspDirectives: Record<string, string[]> = {
     'https://api.stripe.com',
     'https://hooks.stripe.com',
     'https://api.resend.com',
+    'https://*.sentry.io',
+    'https://*.ingest.sentry.io',
   ],
   'frame-src': [
     "'self'",
@@ -109,4 +112,21 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+/**
+ * Wrap with Sentry only when the auth token is present (build-time env).
+ * Without it the wrapper still works but skips source-map upload, which is
+ * what we want in CI / local builds with no Sentry credentials.
+ */
+const sentryEnabled = Boolean(process.env.SENTRY_AUTH_TOKEN)
+
+export default sentryEnabled
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      silent: !process.env.CI,
+      widenClientFileUpload: true,
+      tunnelRoute: '/monitoring',
+      disableLogger: true,
+      automaticVercelMonitors: true,
+    })
+  : nextConfig

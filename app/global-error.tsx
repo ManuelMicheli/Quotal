@@ -4,6 +4,7 @@
  * Last-resort error page that wraps even the root layout.
  * Must define its own <html> + <body>.
  */
+import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
 
 export default function GlobalError({
@@ -14,7 +15,10 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('[global-error.tsx]', error)
+    Sentry.captureException(error)
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[global-error.tsx]', error)
+    }
   }, [error])
 
   return (

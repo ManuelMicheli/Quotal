@@ -76,6 +76,14 @@ Generate via `node scripts/gen-vapid.mjs`.
 - `ACCESS_CONTROL_API_KEY` — bearer for `rest` adapter
 - `QR_TOKEN_SECRET` — HMAC secret for member QR JWTs (32+ bytes)
 
+### Sentry (observability)
+
+- `SENTRY_DSN` + `NEXT_PUBLIC_SENTRY_DSN` — same value, both required.
+  Leave empty to disable.
+- `SENTRY_ENVIRONMENT` — optional override (defaults to `VERCEL_ENV`).
+- `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` — build-time only,
+  for source-map upload.
+
 ### App / misc
 
 - `APP_URL` — public origin. Auto-derived from `VERCEL_PROJECT_PRODUCTION_URL`
@@ -178,8 +186,11 @@ when you start building them.
 - **Accountant export ZIP** — CSV export exists at
   `/api/owner/payments/export`. Adding the ZIP-with-PDFs combo for the
   accountant is post-MVP.
-- **Sentry / observability** — error boundaries log to console only. Wire
-  `@sentry/nextjs` before the first paying customer.
+- **Sentry / observability** — `@sentry/nextjs` is wired
+  (`instrumentation.ts`, `instrumentation-client.ts`, error boundaries
+  call `captureException`). To activate: create a Sentry project, set the
+  DSN env vars in §2, and add `SENTRY_AUTH_TOKEN` on Vercel for source-map
+  upload at build time. Until the DSN is set the SDK no-ops.
 - **Multi-tenant** — the schema has `gym_id` everywhere but the auth flow,
   the legal footer, and the gym/profile resolution all assume "the one and
   only gym". Multi-tenant requires a dedicated `gyms` selection screen and

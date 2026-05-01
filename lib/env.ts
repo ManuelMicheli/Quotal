@@ -83,6 +83,28 @@ export const env = createEnv({
      * the platform's cut. Set to 0 to disable (zero-fee mode).
      */
     QUOTAL_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(2000).default(200),
+    /**
+     * Sentry server-side DSN. Optional — when unset the SDK no-ops on the
+     * server. The browser bundle uses `NEXT_PUBLIC_SENTRY_DSN` (set both to
+     * the same value).
+     */
+    SENTRY_DSN: z.string().url().optional(),
+    /**
+     * Environment label sent with every event (e.g. `production`,
+     * `preview`, `development`). Falls back to `VERCEL_ENV`, then to
+     * `NODE_ENV`.
+     */
+    SENTRY_ENVIRONMENT: z.string().min(1).optional(),
+    /**
+     * Auth token used by `@sentry/nextjs` at build time to upload source
+     * maps. Required only on the production build that should produce
+     * symbolicated stack traces; CI / local builds can omit it.
+     */
+    SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
+    /** Sentry org slug, used together with `SENTRY_AUTH_TOKEN`. */
+    SENTRY_ORG: z.string().min(1).optional(),
+    /** Sentry project slug, used together with `SENTRY_AUTH_TOKEN`. */
+    SENTRY_PROJECT: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -103,6 +125,11 @@ export const env = createEnv({
      * "abilita notifiche" flow stays disabled.
      */
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+    /**
+     * Sentry browser DSN. Same value as `SENTRY_DSN` — exposed to the
+     * client bundle so `instrumentation-client.ts` can initialise.
+     */
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   },
   runtimeEnv: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -111,6 +138,7 @@ export const env = createEnv({
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
@@ -126,6 +154,11 @@ export const env = createEnv({
     ACCESS_CONTROL_BASE_URL: process.env.ACCESS_CONTROL_BASE_URL,
     ACCESS_CONTROL_API_KEY: process.env.ACCESS_CONTROL_API_KEY,
     QUOTAL_APPLICATION_FEE_BPS: process.env.QUOTAL_APPLICATION_FEE_BPS,
+    SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
+    SENTRY_ORG: process.env.SENTRY_ORG,
+    SENTRY_PROJECT: process.env.SENTRY_PROJECT,
   },
   // Skip validation when running in CI / build with no real env (e.g. Docker
   // build phase). Set SKIP_ENV_VALIDATION=true in those contexts.

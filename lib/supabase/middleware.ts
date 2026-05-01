@@ -45,6 +45,9 @@ const PUBLIC_PATHS = [
   '/robots.txt',
   '/sitemap.xml',
   '/offline',
+  // Sentry tunnel route (configured via withSentryConfig.tunnelRoute).
+  // Browsers POST events here from any page, including pre-login.
+  '/monitoring',
 ] as const
 
 function isPublicPath(pathname: string): boolean {
