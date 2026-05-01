@@ -13,6 +13,26 @@ import 'server-only'
 import type Stripe from 'stripe'
 
 import { getStripe } from '@/lib/stripe/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+
+type AdminClient = ReturnType<typeof createAdminClient>
+
+/**
+ * Resolve the connected Stripe account id for a gym, or null if the gym has
+ * not finished Connect onboarding. Used by every Stripe API call that mutates
+ * money so the right tenant's ledger is hit.
+ */
+export async function getGymStripeAccountId(
+  gymId: string,
+  admin: AdminClient = createAdminClient(),
+): Promise<string | null> {
+  const { data } = await admin
+    .from('gyms')
+    .select('stripe_account_id')
+    .eq('id', gymId)
+    .maybeSingle()
+  return data?.stripe_account_id ?? null
+}
 
 /**
  * Create a fresh Express account for a gym and return the id. The caller is

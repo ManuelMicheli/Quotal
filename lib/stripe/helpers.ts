@@ -37,18 +37,28 @@ export function generatePaymentSessionToken(): string {
 export async function getOrCreateStripeCustomer(
   member: Profile,
   admin: AdminClient = createAdminClient(),
+  /**
+   * Optional Connect account id. When set, the Stripe Customer is created on
+   * (and lives only on) the connected account — this is the "direct charge"
+   * model. Without it the customer is created on the platform account
+   * (legacy single-tenant behaviour).
+   */
+  stripeAccountId?: string | null,
 ): Promise<string> {
   if (member.stripe_customer_id) return member.stripe_customer_id
 
   const stripe = getStripe()
-  const customer = await stripe.customers.create({
-    email: member.email,
-    name: member.full_name,
-    metadata: {
-      profile_id: member.id,
-      gym_id: member.gym_id,
+  const customer = await stripe.customers.create(
+    {
+      email: member.email,
+      name: member.full_name,
+      metadata: {
+        profile_id: member.id,
+        gym_id: member.gym_id,
+      },
     },
-  })
+    stripeAccountId ? { stripeAccount: stripeAccountId } : undefined,
+  )
 
   const { error } = await admin
     .from('profiles')

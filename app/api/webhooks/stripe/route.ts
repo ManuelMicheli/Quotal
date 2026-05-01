@@ -85,6 +85,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     return new Response('ok (duplicate)', { status: 200 })
   }
 
+  // Connect events carry `event.account` — the connected account that
+  // emitted the event. Every Stripe SDK retrieval inside the handlers must
+  // be scoped to that account, otherwise we look up resources on the
+  // platform account and get 404s.
+  const connectOpts = event.account
+    ? ({ stripeAccount: event.account } as const)
+    : undefined
+
   try {
     switch (event.type) {
       case 'payment_intent.succeeded':
@@ -92,6 +100,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           event.data.object as Stripe.PaymentIntent,
           admin,
           stripe,
+          connectOpts,
         )
         break
       case 'payment_intent.payment_failed':
@@ -105,6 +114,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           event.data.object as Stripe.SetupIntent,
           admin,
           stripe,
+          connectOpts,
         )
         break
       case 'setup_intent.setup_failed':
@@ -157,10 +167,13 @@ export async function POST(req: NextRequest): Promise<Response> {
 // Handlers
 // ---------------------------------------------------------------------------
 
+type ConnectOpts = { readonly stripeAccount: string } | undefined
+
 async function handlePaymentSucceeded(
   pi: Stripe.PaymentIntent,
   admin: AdminClient,
   stripe: Stripe,
+  connectOpts: ConnectOpts,
 ): Promise<void> {
   const sessionId = pi.metadata?.payment_session_id
   if (!sessionId) {
@@ -180,7 +193,11 @@ async function handlePaymentSucceeded(
   }
   if (!pmType && pi.payment_method) {
     if (typeof pi.payment_method === 'string') {
-      const pm = await stripe.paymentMethods.retrieve(pi.payment_method)
+      const pm = await stripe.paymentMethods.retrieve(
+        pi.payment_method,
+        undefined,
+        connectOpts,
+      )
       pmType = pm.type
     } else {
       pmType = pi.payment_method.type
@@ -331,6 +348,7 @@ async function handleSetupIntentSucceeded(
   si: Stripe.SetupIntent,
   admin: AdminClient,
   stripe: Stripe,
+  connectOpts: ConnectOpts,
 ): Promise<void> {
   const sessionId = si.metadata?.payment_session_id
   if (!sessionId) {
@@ -352,7 +370,7 @@ async function handleSetupIntentSucceeded(
     throw new Error(`setup_intent.succeeded ${si.id} has no payment_method`)
   }
   const pmId = typeof si.payment_method === 'string' ? si.payment_method : si.payment_method.id
-  const pm = await stripe.paymentMethods.retrieve(pmId)
+  const pm = await stripe.paymentMethods.retrieve(pmId, undefined, connectOpts)
 
   const sepa = pm.sepa_debit
   if (!sepa) {
@@ -407,23 +425,26 @@ async function handleSetupIntentSucceeded(
     throw new Error(`setup_intent ${si.id} has no customer`)
   }
 
-  const pi = await stripe.paymentIntents.create({
-    amount: session.amount_cents,
-    currency: 'eur',
-    customer: customerId,
-    payment_method: pmId,
-    payment_method_types: ['sepa_debit'],
-    mandate: mandateId.startsWith('pending_') ? undefined : mandateId,
-    confirm: true,
-    off_session: autoRenew,
-    metadata: {
-      gym_id: session.gym_id,
-      member_id: session.member_id,
-      plan_id: session.plan_id,
-      payment_session_id: session.id,
-      auto_renew: autoRenew ? 'true' : 'false',
+  const pi = await stripe.paymentIntents.create(
+    {
+      amount: session.amount_cents,
+      currency: 'eur',
+      customer: customerId,
+      payment_method: pmId,
+      payment_method_types: ['sepa_debit'],
+      mandate: mandateId.startsWith('pending_') ? undefined : mandateId,
+      confirm: true,
+      off_session: autoRenew,
+      metadata: {
+        gym_id: session.gym_id,
+        member_id: session.member_id,
+        plan_id: session.plan_id,
+        payment_session_id: session.id,
+        auto_renew: autoRenew ? 'true' : 'false',
+      },
     },
-  })
+    connectOpts,
+  )
 
   await admin
     .from('payment_sessions')

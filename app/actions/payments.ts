@@ -26,6 +26,7 @@ import {
   generateAndStoreReceipt,
 } from '@/lib/pdf/generate-receipt'
 import { generateAndStoreDailyReport } from '@/lib/pdf/generate-daily-report'
+import { getGymStripeAccountId } from '@/lib/stripe/connect'
 import {
   generatePaymentSessionToken,
   getOrCreateStripeCustomer,
@@ -253,6 +254,10 @@ export async function initiateCardPaymentAction(
   if (!member) return { ok: false, error: 'Membro non trovato' }
 
   const stripe = getStripe()
+  const stripeAccountId = await getGymStripeAccountId(session.gym_id, admin)
+  const connectOpts = stripeAccountId
+    ? ({ stripeAccount: stripeAccountId } as const)
+    : undefined
 
   let clientSecret: string
 
@@ -260,6 +265,8 @@ export async function initiateCardPaymentAction(
   if (session.stripe_payment_intent_id) {
     const pi = await stripe.paymentIntents.retrieve(
       session.stripe_payment_intent_id,
+      undefined,
+      connectOpts,
     )
     if (pi.status === 'succeeded') {
       return { ok: false, error: 'Pagamento già completato' }
@@ -269,19 +276,22 @@ export async function initiateCardPaymentAction(
     }
     clientSecret = pi.client_secret
   } else {
-    const pi = await stripe.paymentIntents.create({
-      amount: session.amount_cents,
-      currency: 'eur',
-      payment_method_types: ['card'],
-      receipt_email: member.email,
-      metadata: {
-        gym_id: session.gym_id,
-        member_id: session.member_id,
-        plan_id: session.plan_id,
-        payment_session_id: session.id,
-        auto_renew: 'false',
+    const pi = await stripe.paymentIntents.create(
+      {
+        amount: session.amount_cents,
+        currency: 'eur',
+        payment_method_types: ['card'],
+        receipt_email: member.email,
+        metadata: {
+          gym_id: session.gym_id,
+          member_id: session.member_id,
+          plan_id: session.plan_id,
+          payment_session_id: session.id,
+          auto_renew: 'false',
+        },
       },
-    })
+      connectOpts,
+    )
 
     await admin
       .from('payment_sessions')
@@ -321,12 +331,24 @@ export async function initiateSepaSetupAction(
     .single()
   if (!member) return { ok: false, error: 'Membro non trovato' }
 
-  const customerId = await getOrCreateStripeCustomer(member, admin)
+  const stripeAccountId = await getGymStripeAccountId(session.gym_id, admin)
+  const connectOpts = stripeAccountId
+    ? ({ stripeAccount: stripeAccountId } as const)
+    : undefined
+  const customerId = await getOrCreateStripeCustomer(
+    member,
+    admin,
+    stripeAccountId,
+  )
   const stripe = getStripe()
 
   // Reuse the SetupIntent if we already created one for this session.
   if (session.stripe_setup_intent_id) {
-    const si = await stripe.setupIntents.retrieve(session.stripe_setup_intent_id)
+    const si = await stripe.setupIntents.retrieve(
+      session.stripe_setup_intent_id,
+      undefined,
+      connectOpts,
+    )
     if (si.status === 'succeeded') {
       return {
         ok: false,
@@ -342,18 +364,21 @@ export async function initiateSepaSetupAction(
     }
   }
 
-  const si = await stripe.setupIntents.create({
-    customer: customerId,
-    payment_method_types: ['sepa_debit'],
-    usage: auto_renew ? 'off_session' : 'on_session',
-    metadata: {
-      gym_id: session.gym_id,
-      member_id: session.member_id,
-      plan_id: session.plan_id,
-      payment_session_id: session.id,
-      auto_renew: auto_renew ? 'true' : 'false',
+  const si = await stripe.setupIntents.create(
+    {
+      customer: customerId,
+      payment_method_types: ['sepa_debit'],
+      usage: auto_renew ? 'off_session' : 'on_session',
+      metadata: {
+        gym_id: session.gym_id,
+        member_id: session.member_id,
+        plan_id: session.plan_id,
+        payment_session_id: session.id,
+        auto_renew: auto_renew ? 'true' : 'false',
+      },
     },
-  })
+    connectOpts,
+  )
 
   await admin
     .from('payment_sessions')
@@ -427,11 +452,15 @@ export async function refundPaymentAction(
   }
 
   const stripe = getStripe()
-  await stripe.refunds.create({
-    payment_intent: payment.stripe_payment_intent_id,
-    reason: 'requested_by_customer',
-    metadata: { gym_id: profile.gym_id, requested_by: profile.id },
-  })
+  const stripeAccountId = await getGymStripeAccountId(profile.gym_id, admin)
+  await stripe.refunds.create(
+    {
+      payment_intent: payment.stripe_payment_intent_id,
+      reason: 'requested_by_customer',
+      metadata: { gym_id: profile.gym_id, requested_by: profile.id },
+    },
+    stripeAccountId ? { stripeAccount: stripeAccountId } : undefined,
+  )
 
   // Webhook `charge.refunded` will mark the row in DB.
   revalidatePath('/dashboard/pagamenti')
@@ -525,24 +554,31 @@ export async function triggerSepaRenewalAction(
   }
 
   const stripe = getStripe()
-  const pi = await stripe.paymentIntents.create({
-    amount: plan.price_cents,
-    currency: 'eur',
-    customer: member.stripe_customer_id,
-    payment_method: mandate.stripe_payment_method_id,
-    payment_method_types: ['sepa_debit'],
-    confirm: true,
-    off_session: true,
-    receipt_email: member.email,
-    metadata: {
-      gym_id: profile.gym_id,
-      member_id: member.id,
-      plan_id: plan.id,
-      payment_session_id: session.id,
-      auto_renew: 'true',
-      renewal: 'true',
+  const stripeAccountId = await getGymStripeAccountId(profile.gym_id, admin)
+  const connectOpts = stripeAccountId
+    ? ({ stripeAccount: stripeAccountId } as const)
+    : undefined
+  const pi = await stripe.paymentIntents.create(
+    {
+      amount: plan.price_cents,
+      currency: 'eur',
+      customer: member.stripe_customer_id,
+      payment_method: mandate.stripe_payment_method_id,
+      payment_method_types: ['sepa_debit'],
+      confirm: true,
+      off_session: true,
+      receipt_email: member.email,
+      metadata: {
+        gym_id: profile.gym_id,
+        member_id: member.id,
+        plan_id: plan.id,
+        payment_session_id: session.id,
+        auto_renew: 'true',
+        renewal: 'true',
+      },
     },
-  })
+    connectOpts,
+  )
 
   await admin
     .from('payment_sessions')
@@ -569,10 +605,14 @@ export async function createBillingPortalSessionAction(): Promise<
     return { ok: false, error: 'Nessun account Stripe collegato' }
   }
   const stripe = getStripe()
-  const portal = await stripe.billingPortal.sessions.create({
-    customer: profile.stripe_customer_id,
-    return_url: `${env.APP_URL}/app`,
-  })
+  const stripeAccountId = await getGymStripeAccountId(profile.gym_id)
+  const portal = await stripe.billingPortal.sessions.create(
+    {
+      customer: profile.stripe_customer_id,
+      return_url: `${env.APP_URL}/app`,
+    },
+    stripeAccountId ? { stripeAccount: stripeAccountId } : undefined,
+  )
   return { ok: true, data: { url: portal.url } }
 }
 

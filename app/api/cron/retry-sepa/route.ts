@@ -23,6 +23,7 @@ import { NextResponse } from 'next/server'
 import { checkCronAuth } from '@/lib/notifications/cron-auth'
 import { dispatchNotification } from '@/lib/notifications/dispatcher'
 import { fanoutOwnerNotification } from '@/lib/notifications/owner-inbox'
+import { getGymStripeAccountId } from '@/lib/stripe/connect'
 import { getStripe } from '@/lib/stripe/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -118,23 +119,27 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     try {
-      const intent = await stripe.paymentIntents.create({
-        amount: p.amount_cents,
-        currency: 'eur',
-        customer: memberRow.stripe_customer_id,
-        payment_method: mandate.stripe_payment_method_id,
-        payment_method_types: ['sepa_debit'],
-        mandate: mandate.stripe_mandate_id.startsWith('pending_')
-          ? undefined
-          : mandate.stripe_mandate_id,
-        confirm: true,
-        off_session: true,
-        metadata: {
-          retry_of_payment_id: p.id,
-          gym_id: p.gym_id,
-          member_id: p.member_id,
+      const stripeAccountId = await getGymStripeAccountId(p.gym_id, admin)
+      const intent = await stripe.paymentIntents.create(
+        {
+          amount: p.amount_cents,
+          currency: 'eur',
+          customer: memberRow.stripe_customer_id,
+          payment_method: mandate.stripe_payment_method_id,
+          payment_method_types: ['sepa_debit'],
+          mandate: mandate.stripe_mandate_id.startsWith('pending_')
+            ? undefined
+            : mandate.stripe_mandate_id,
+          confirm: true,
+          off_session: true,
+          metadata: {
+            retry_of_payment_id: p.id,
+            gym_id: p.gym_id,
+            member_id: p.member_id,
+          },
         },
-      })
+        stripeAccountId ? { stripeAccount: stripeAccountId } : undefined,
+      )
       await admin
         .from('payments')
         .update({
