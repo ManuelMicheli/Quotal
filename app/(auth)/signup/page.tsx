@@ -113,7 +113,7 @@ export default async function SignupPage({
         </div>
 
         <div className="mt-10 space-y-6">
-          <OAuthButtons />
+          <OAuthButtons gymSlug={gymSlug} />
           <AuthDivider label="oppure" />
           <SignupForm initialError={initialError} gymSlug={gymSlug} />
         </div>

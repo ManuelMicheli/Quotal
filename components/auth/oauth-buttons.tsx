@@ -10,7 +10,13 @@ import {
   type OAuthProvider,
 } from '@/lib/auth/providers'
 
-export function OAuthButtons({ next }: { next?: string }) {
+export function OAuthButtons({
+  next,
+  gymSlug,
+}: {
+  next?: string
+  gymSlug?: string
+}) {
   const [pending, startTransition] = useTransition()
   const [activeProvider, setActiveProvider] = useState<OAuthProvider | null>(
     null,
@@ -20,7 +26,7 @@ export function OAuthButtons({ next }: { next?: string }) {
     if (!enabledOAuthProviders[provider]) return
     setActiveProvider(provider)
     startTransition(async () => {
-      await signInWithProviderAction(provider, next)
+      await signInWithProviderAction(provider, next, gymSlug)
     })
   }
 

@@ -236,12 +236,13 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
 
 /**
  * Kick off an OAuth sign-in via Supabase. We rebuild the redirect URL on
- * the server so the `next` query param is preserved through the provider
- * round-trip.
+ * the server so the `next` query param (and the optional gym slug used by
+ * the multi-tenant signup flow) is preserved through the provider round-trip.
  */
 export async function signInWithProviderAction(
   provider: OAuthProvider,
   next?: string,
+  gymSlug?: string,
 ): Promise<ActionResult> {
   if (!enabledOAuthProviders[provider]) {
     return {
@@ -262,6 +263,7 @@ export async function signInWithProviderAction(
 
   const redirectTo = new URL('/auth/callback', origin)
   if (next) redirectTo.searchParams.set('next', next)
+  if (gymSlug) redirectTo.searchParams.set('gym', gymSlug)
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
