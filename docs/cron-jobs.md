@@ -1,13 +1,14 @@
-# Cron jobs (Phase 09)
+# Cron jobs
 
-Quotal exposes four cron-callable HTTP endpoints under `/api/cron/*`:
+Quotal exposes five cron-callable HTTP endpoints under `/api/cron/*`:
 
-| Endpoint                        | Cadence (Europe/Rome) | What it does                                                                 |
-| ------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
-| `POST /api/cron/update-expired` | 00:30 daily           | Calls `update_expired_subscriptions()` to flip past-grace-period subs.       |
-| `POST /api/cron/owner-digest`   | 08:00 daily           | Inserts in-app notifications + sends `daily_digest_owner` email per gym.     |
-| `POST /api/cron/notify-expiring`| 09:00 daily           | Sends `expiry_7d`/`expiry_3d`/`expiry_today`/`post_expiry_3d` reminders.     |
-| `POST /api/cron/retry-sepa`     | 09:15 daily           | Retries failed SEPA payments (≤3 attempts via Stripe).                       |
+| Endpoint                                | Cadence (Europe/Rome) | What it does                                                                  |
+| --------------------------------------- | --------------------- | ----------------------------------------------------------------------------- |
+| `POST /api/cron/update-expired`         | 00:30 daily           | Calls `update_expired_subscriptions()` to flip past-grace-period subs.        |
+| `POST /api/cron/purge-deleted-accounts` | 03:00 daily           | Auto-anonymises GDPR deletion requests pending > 30 days (Phase 11).          |
+| `POST /api/cron/owner-digest`           | 08:00 daily           | Inserts in-app notifications + sends `daily_digest_owner` email per gym.      |
+| `POST /api/cron/notify-expiring`        | 09:00 daily           | Sends `expiry_7d`/`expiry_3d`/`expiry_today`/`post_expiry_3d` reminders.      |
+| `POST /api/cron/retry-sepa`             | 09:15 daily           | Retries failed SEPA payments (≤3 attempts via Stripe).                        |
 
 There's also a generic `POST /api/cron/dispatch` that accepts a JSON
 body matching `DispatchInput` — useful for ad-hoc / one-off sends from
@@ -84,10 +85,11 @@ endpoints from any external scheduler:
   ```json
   {
     "crons": [
-      { "path": "/api/cron/update-expired", "schedule": "30 22 * * *" },
-      { "path": "/api/cron/owner-digest",   "schedule": "0 6 * * *" },
-      { "path": "/api/cron/notify-expiring","schedule": "0 7 * * *" },
-      { "path": "/api/cron/retry-sepa",     "schedule": "15 7 * * *" }
+      { "path": "/api/cron/update-expired",         "schedule": "30 22 * * *" },
+      { "path": "/api/cron/purge-deleted-accounts", "schedule": "0 1 * * *" },
+      { "path": "/api/cron/owner-digest",           "schedule": "0 6 * * *" },
+      { "path": "/api/cron/notify-expiring",        "schedule": "0 7 * * *" },
+      { "path": "/api/cron/retry-sepa",             "schedule": "15 7 * * *" }
     ]
   }
   ```

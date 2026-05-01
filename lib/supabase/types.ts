@@ -1215,6 +1215,10 @@ export type Database = {
         Returns: Json
       }
       update_expired_subscriptions: { Args: never; Returns: undefined }
+      process_expired_deletion_requests: {
+        Args: { retention_days?: number }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

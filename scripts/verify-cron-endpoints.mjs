@@ -23,6 +23,7 @@ const ENDPOINTS = [
   { method: 'POST', path: '/api/cron/update-expired', body: undefined },
   { method: 'POST', path: '/api/cron/owner-digest', body: undefined },
   { method: 'POST', path: '/api/cron/retry-sepa', body: undefined },
+  { method: 'POST', path: '/api/cron/purge-deleted-accounts', body: undefined },
   {
     method: 'POST',
     path: '/api/cron/dispatch',

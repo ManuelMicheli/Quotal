@@ -100,7 +100,7 @@ The webhook (`app/api/webhooks/stripe/route.ts`) listens to platform + Connect e
 
 ### Notifications (Phase 09)
 
-`lib/notifications/dispatcher.ts` is the single send pipeline (email via Resend, web-push via VAPID). Templates in `emails/` (React Email). Cron routes under `app/api/cron/*` are auth-gated by `CRON_SECRET` (bearer token, `lib/notifications/cron-auth.ts`) and called from pg_cron jobs defined in `..._phase09_pg_cron_schedule.sql`. Owner inbox state lives in `owner_notifications` (`lib/notifications/owner-inbox.ts`). Preference storage: `notification_preferences`.
+`lib/notifications/dispatcher.ts` is the single send pipeline (email via Resend, web-push via VAPID). Templates in `emails/` (React Email). Cron routes under `app/api/cron/*` are auth-gated by `CRON_SECRET` (bearer token, `lib/notifications/cron-auth.ts`) and called from pg_cron jobs defined in `..._phase09_pg_cron_schedule.sql` (notifications) and `..._phase11_account_deletion_auto_purge.sql` (GDPR auto-purge). Owner inbox state lives in `owner_notifications` (`lib/notifications/owner-inbox.ts`). Preference storage: `notification_preferences`.
 
 ### Access control (Phase 08)
 

@@ -202,9 +202,13 @@ when you start building them.
 - **Iubenda Cookie Solution** — the in-app banner is informational only
   (no profilation cookies). If analytics are introduced later, swap to
   Iubenda or Cookiebot.
-- **Account deletion: scheduled cron-purge** — currently a manual
-  owner-side action via `/dashboard/impostazioni/gdpr-richieste`. A
-  cron-based purger that auto-anonymises after 30 days is post-MVP.
+- **Account deletion: scheduled cron-purge** — auto-purge wired (Phase
+  11). The titolare's manual queue at
+  `/dashboard/impostazioni/gdpr-richieste` is still the primary path;
+  `/api/cron/purge-deleted-accounts` (daily 03:00 Europe/Rome via pg_cron)
+  enforces the 30-day GDPR SLA by anonymising any pending request older
+  than 30 days. Function `process_expired_deletion_requests` is service-
+  role only.
 - **Rate limiter — Redis backend** — current implementation is in-memory
   per Lambda. Acceptable for one-gym MVP; before scaling, swap for
   `@upstash/ratelimit`.
