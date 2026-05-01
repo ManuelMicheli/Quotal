@@ -9,9 +9,12 @@ import { PlusIcon, UsersIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { EmptyState } from '@/components/owner/empty-state'
+import { InviteLinkCard } from '@/components/owner/invite-link-card'
 import { MembersFilterBar } from '@/components/owner/members-filter-bar'
 import { MembersTable } from '@/components/owner/members-table'
 import { Button } from '@/components/ui/button'
+import { env } from '@/lib/env'
+import { getCurrentGym } from '@/lib/queries/gym'
 import {
   getMembersList,
   type MemberFilter,
@@ -51,8 +54,14 @@ export default async function MembersListPage({
     search: sp.search ?? '',
     page: sp.page ? Math.max(1, Number(sp.page) || 1) : 1,
   }
-  const { members, total, page, pageSize } = await getMembersList(params)
+  const [{ members, total, page, pageSize }, gym] = await Promise.all([
+    getMembersList(params),
+    getCurrentGym(),
+  ])
   const lastPage = Math.max(1, Math.ceil(total / pageSize))
+  const inviteUrl = gym?.slug
+    ? `${env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')}/signup?gym=${gym.slug}`
+    : null
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
@@ -68,6 +77,8 @@ export default async function MembersListPage({
           </Link>
         </Button>
       </header>
+
+      {inviteUrl ? <InviteLinkCard inviteUrl={inviteUrl} /> : null}
 
       <MembersFilterBar
         currentFilter={params.filter ?? 'all'}
