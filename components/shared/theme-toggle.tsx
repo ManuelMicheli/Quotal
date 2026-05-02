@@ -88,7 +88,11 @@ export function ThemeToggle({
     <button
       type="button"
       onClick={() => setTheme(next)}
-      aria-label={`Cambia tema (attuale: ${theme ?? 'sistema'})`}
+      aria-label={
+        mounted
+          ? `Cambia tema (attuale: ${theme ?? 'system'})`
+          : 'Cambia tema'
+      }
       className={cn(
         'tap-shrink relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-card/80 text-foreground backdrop-blur transition-colors hover:bg-muted',
         className,
