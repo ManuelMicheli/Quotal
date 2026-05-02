@@ -13,20 +13,21 @@ export const metadata = {
 
 export default function UpdatePasswordPage() {
   return (
-    <AuthShell>
-      <div className="w-full">
+    <AuthShell width="md">
+      <div className="glass-strong w-full rounded-2xl p-7 md:p-9">
         <QuotalLogoCard />
 
-        <div className="space-y-2 text-center">
-          <h1 className="font-display text-[28px] font-medium leading-tight text-white md:text-[32px]">
+        <div className="space-y-3 text-center">
+          <p className="eyebrow">Sicurezza account</p>
+          <h1 className="heading-display text-foreground text-balance text-4xl md:text-[2.5rem]">
             Imposta nuova password
           </h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             Scegli una password sicura per il tuo account.
           </p>
         </div>
 
-        <div className="mt-10">
+        <div className="mt-8">
           <UpdatePasswordForm />
         </div>
       </div>

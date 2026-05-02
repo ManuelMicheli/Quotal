@@ -16,12 +16,15 @@ import Link from 'next/link'
 
 import { PageHeader } from '@/components/member/page-header'
 import { PaymentHistoryItem } from '@/components/member/payment-history-item'
+import { EmptyState } from '@/components/shared/empty-state'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { requireMember } from '@/lib/auth'
 import {
   getMemberPaymentHistory,
   getMemberPaymentYears,
 } from '@/lib/queries/member'
+import type { Payment } from '@/lib/domain-types'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +39,21 @@ const PORTAL_ERROR_MESSAGES: Record<string, string> = {
   error:
     'Portale pagamenti non disponibile in questo momento. Riprova più tardi.',
 }
+
+const MONTH_LABELS = [
+  'Gennaio',
+  'Febbraio',
+  'Marzo',
+  'Aprile',
+  'Maggio',
+  'Giugno',
+  'Luglio',
+  'Agosto',
+  'Settembre',
+  'Ottobre',
+  'Novembre',
+  'Dicembre',
+] as const
 
 export default async function MemberPaymentsPage({
   searchParams,
@@ -65,6 +83,8 @@ export default async function MemberPaymentsPage({
     .filter((p) => p.status === 'succeeded')
     .reduce((sum, p) => sum + p.amount_cents, 0)
 
+  const grouped = groupByMonth(payments)
+
   return (
     <div className="flex flex-col gap-5 md:gap-8">
       <PageHeader
@@ -74,114 +94,125 @@ export default async function MemberPaymentsPage({
       />
 
       {portalError ? (
-        <div
-          role="alert"
-          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-        >
-          {portalError}
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{portalError}</AlertDescription>
+        </Alert>
       ) : null}
 
       <div className="grid gap-5 md:grid-cols-12 md:gap-6 lg:gap-8">
-      <section className="ring-elevated relative overflow-hidden rounded-[28px] bg-foreground p-6 text-background md:col-span-5 md:p-8 lg:col-span-4">
-        <div
-          aria-hidden="true"
-          className="absolute -right-12 -top-12 h-44 w-44 rounded-full opacity-70"
-          style={{
-            background:
-              'radial-gradient(closest-side, color-mix(in oklab, var(--accent) 60%, transparent), transparent)',
-          }}
-        />
-        <div className="relative">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-background/60">
-            {validYear ? `Speso nel ${validYear}` : 'Totale incassato'}
-          </p>
-          <p className="tabular mt-2 text-4xl font-semibold tracking-tight md:text-5xl lg:text-6xl">
-            {formatTotal(totalPaid)}
-          </p>
-          <p className="mt-1 text-xs text-background/60">
-            {payments.length}{' '}
-            {payments.length === 1 ? 'pagamento' : 'pagamenti'}
-            {validYear ? ` · ${validYear}` : ''}
-          </p>
+        <section className="ring-elevated relative overflow-hidden rounded-3xl bg-foreground p-6 text-background sheen md:col-span-5 md:p-8 lg:col-span-4">
+          <div
+            aria-hidden="true"
+            className="pulse-glow pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full opacity-80"
+            style={{
+              background:
+                'radial-gradient(closest-side, color-mix(in oklab, var(--accent) 65%, transparent), transparent)',
+            }}
+          />
+          <div className="relative">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-background/60">
+              {validYear ? `Speso nel ${validYear}` : 'Totale incassato'}
+            </p>
+            <p className="number mt-2 text-4xl font-semibold md:text-5xl lg:text-6xl">
+              {formatTotal(totalPaid)}
+            </p>
+            <p className="mt-1 text-xs text-background/60">
+              {payments.length}{' '}
+              {payments.length === 1 ? 'pagamento' : 'pagamenti'}
+              {validYear ? ` · ${validYear}` : ''}
+            </p>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Button
-              asChild
-              size="sm"
-              className="rounded-full bg-background text-foreground hover:bg-background/90"
-            >
-              <Link href="/app/abbonamento/rinnova">
-                <RefreshCwIcon size={14} />
-                Rinnova ora
-                <ArrowUpRightIcon size={12} />
-              </Link>
-            </Button>
-            {hasStripeCustomer ? (
+            <div className="mt-5 flex flex-wrap gap-2">
               <Button
                 asChild
                 size="sm"
-                variant="secondary"
-                className="rounded-full bg-background/10 text-background hover:bg-background/20"
+                className="rounded-full bg-background text-foreground hover:bg-background/92"
               >
-                <Link href="/app/pagamenti/portal" prefetch={false}>
-                  <CreditCardIcon size={14} />
-                  Gestisci metodo
+                <Link href="/app/abbonamento/rinnova">
+                  <RefreshCwIcon size={14} />
+                  Rinnova ora
+                  <ArrowUpRightIcon size={12} />
                 </Link>
               </Button>
-            ) : null}
+              {hasStripeCustomer ? (
+                <Button
+                  asChild
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-full bg-background/10 text-background hover:bg-background/20"
+                >
+                  <Link href="/app/pagamenti/portal" prefetch={false}>
+                    <CreditCardIcon size={14} />
+                    Gestisci metodo
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="md:col-span-7 lg:col-span-8">
-      {years.length > 1 ? (
-        <div
-          className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1"
-          aria-label="Filtra per anno"
-        >
-          <YearChip
-            href="/app/pagamenti"
-            label="Tutti"
-            active={!validYear}
-          />
-          {years.map((y) => (
-            <YearChip
-              key={y}
-              href={`/app/pagamenti?year=${y}`}
-              label={String(y)}
-              active={validYear === y}
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {payments.length === 0 ? (
-        <div className="ring-soft flex flex-col items-center gap-3 rounded-3xl bg-card px-5 py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-            <ReceiptIcon size={20} />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {validYear
-              ? `Nessun pagamento nel ${validYear}.`
-              : 'Non hai ancora effettuato pagamenti.'}
-          </p>
-          {!validYear ? (
-            <Button asChild size="sm" className="rounded-full">
-              <Link href="/app/abbonamento/rinnova">
-                Effettua il primo pagamento
-              </Link>
-            </Button>
+        <div className="md:col-span-7 lg:col-span-8">
+          {years.length > 1 ? (
+            <div
+              className="mask-fade-x -mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1"
+              aria-label="Filtra per anno"
+            >
+              <YearChip
+                href="/app/pagamenti"
+                label="Tutti"
+                active={!validYear}
+              />
+              {years.map((y) => (
+                <YearChip
+                  key={y}
+                  href={`/app/pagamenti?year=${y}`}
+                  label={String(y)}
+                  active={validYear === y}
+                />
+              ))}
+            </div>
           ) : null}
+
+          {payments.length === 0 ? (
+            <div className="ring-soft rounded-3xl bg-card">
+              <EmptyState
+                icon={<ReceiptIcon />}
+                title={
+                  validYear
+                    ? `Nessun pagamento nel ${validYear}.`
+                    : 'Non hai ancora effettuato pagamenti.'
+                }
+                action={
+                  !validYear ? (
+                    <Button
+                      asChild
+                      variant="accent"
+                      size="lg"
+                      className="rounded-full"
+                    >
+                      <Link href="/app/abbonamento/rinnova">
+                        Effettua il primo pagamento
+                      </Link>
+                    </Button>
+                  ) : undefined
+                }
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {grouped.map((group) => (
+                <section key={group.key}>
+                  <p className="eyebrow mb-2 px-1">{group.label}</p>
+                  <div className="flex flex-col gap-3">
+                    {group.items.map((p) => (
+                      <PaymentHistoryItem key={p.id} payment={p} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {payments.map((p) => (
-            <PaymentHistoryItem key={p.id} payment={p} />
-          ))}
-        </div>
-      )}
-      </div>
       </div>
     </div>
   )
@@ -194,6 +225,29 @@ function formatTotal(cents: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(cents / 100)
+}
+
+function groupByMonth(
+  payments: Payment[],
+): Array<{ key: string; label: string; items: Payment[] }> {
+  const map = new Map<string, { label: string; items: Payment[] }>()
+  for (const p of payments) {
+    const date = new Date(p.paid_at ?? p.created_at)
+    if (Number.isNaN(date.getTime())) continue
+    const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`
+    const label = `${MONTH_LABELS[date.getMonth()]} ${date.getFullYear()}`
+    const bucket = map.get(key)
+    if (bucket) {
+      bucket.items.push(p)
+    } else {
+      map.set(key, { label, items: [p] })
+    }
+  }
+  return Array.from(map.entries()).map(([key, { label, items }]) => ({
+    key,
+    label,
+    items,
+  }))
 }
 
 function YearChip({

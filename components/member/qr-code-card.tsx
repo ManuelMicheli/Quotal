@@ -3,14 +3,15 @@
 /**
  * Member access QR card.
  *
- * Premium minimalist treatment: white inset QR panel framed by hairline
- * corner crosshairs, status pill, soft scan-line animation, ghost
- * refresh affordance. Refresh policy and offline cache behaviour are
- * unchanged from the prior implementation.
+ * iOS-grade treatment: glass-strong frame, soft float on the QR panel,
+ * pulse-glow halo when access is allowed, scan-line sweep over the code.
+ * Refresh policy + offline cache behaviour are unchanged.
  */
+import { motion } from 'framer-motion'
 import { RefreshCwIcon, ShieldCheckIcon, WifiOffIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { spring } from '@/lib/motion'
 import { useOnlineStatus } from '@/lib/hooks/use-online-status'
 import { cn } from '@/lib/utils'
 
@@ -58,8 +59,6 @@ export function QrCodeCard({
   isAccessAllowed: boolean
 }) {
   const online = useOnlineStatus()
-  // State must match SSR output (no localStorage on server). The cached
-  // QR is hydrated in a post-mount effect to avoid hydration mismatch.
   const [qr, setQr] = useState<QrResponse | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -69,7 +68,6 @@ export function QrCodeCard({
   useEffect(() => {
     const cached = readCached()
     if (!cached) return
-    // Hydrating from localStorage on mount — runs once, not a cascade.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setQr(cached)
     setLoading(false)
@@ -136,14 +134,24 @@ export function QrCodeCard({
     }
   }, [fetchQr])
 
-  const cornerClass =
-    'absolute h-4 w-4 border-foreground/80'
+  const cornerClass = 'absolute h-4 w-4 border-foreground/70'
 
   return (
     <section
       aria-labelledby="qr-card-title"
-      className="ring-elevated relative h-full overflow-hidden rounded-[28px] bg-card p-6 md:p-7"
+      className="glass-strong relative h-full overflow-hidden rounded-3xl p-6 md:p-7"
     >
+      {isAccessAllowed && !stale ? (
+        <div
+          aria-hidden="true"
+          className="pulse-glow pointer-events-none absolute -inset-12 -z-10 rounded-full opacity-60"
+          style={{
+            background:
+              'radial-gradient(closest-side, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%)',
+          }}
+        />
+      ) : null}
+
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p
@@ -152,7 +160,7 @@ export function QrCodeCard({
           >
             Il tuo accesso
           </p>
-          <p className="mt-1 truncate font-display text-lg tracking-tight">
+          <p className="heading-display mt-1 truncate text-xl">
             {qr?.fullName ?? initialFullName}
           </p>
         </div>
@@ -160,8 +168,8 @@ export function QrCodeCard({
           className={cn(
             'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset',
             isAccessAllowed
-              ? 'bg-success/10 text-success ring-success/20'
-              : 'bg-destructive/10 text-destructive ring-destructive/25',
+              ? 'bg-success-soft text-success ring-success/25'
+              : 'bg-destructive-soft text-destructive ring-destructive/25',
           )}
         >
           <span
@@ -177,13 +185,33 @@ export function QrCodeCard({
         </span>
       </div>
 
-      <div className="relative mx-auto mt-5 aspect-square w-full max-w-[280px] md:mt-6 md:max-w-[320px]">
-        <span aria-hidden="true" className={cn(cornerClass, 'left-0 top-0 border-l-2 border-t-2 rounded-tl-md')} />
-        <span aria-hidden="true" className={cn(cornerClass, 'right-0 top-0 border-r-2 border-t-2 rounded-tr-md')} />
-        <span aria-hidden="true" className={cn(cornerClass, 'bottom-0 left-0 border-b-2 border-l-2 rounded-bl-md')} />
-        <span aria-hidden="true" className={cn(cornerClass, 'bottom-0 right-0 border-b-2 border-r-2 rounded-br-md')} />
+      <motion.div
+        className={cn(
+          'relative mx-auto mt-5 aspect-square w-full max-w-[280px] md:mt-6 md:max-w-[320px]',
+          isAccessAllowed && 'float',
+        )}
+        initial={{ opacity: 0, scale: 0.94 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={spring.bouncy}
+      >
+        <span
+          aria-hidden="true"
+          className={cn(cornerClass, 'left-0 top-0 rounded-tl-md border-l-2 border-t-2')}
+        />
+        <span
+          aria-hidden="true"
+          className={cn(cornerClass, 'right-0 top-0 rounded-tr-md border-r-2 border-t-2')}
+        />
+        <span
+          aria-hidden="true"
+          className={cn(cornerClass, 'bottom-0 left-0 rounded-bl-md border-b-2 border-l-2')}
+        />
+        <span
+          aria-hidden="true"
+          className={cn(cornerClass, 'bottom-0 right-0 rounded-br-md border-b-2 border-r-2')}
+        />
 
-        <div className="absolute inset-2 overflow-hidden rounded-2xl bg-white p-3">
+        <div className="absolute inset-2 overflow-hidden rounded-2xl bg-white p-3 shadow-[var(--shadow-2)]">
           {loading && !qr ? (
             <div className="shimmer relative h-full w-full overflow-hidden rounded-xl bg-muted" />
           ) : qr ? (
@@ -198,7 +226,7 @@ export function QrCodeCard({
                   className="pointer-events-none absolute inset-x-3 top-3 h-12 rounded-full"
                   style={{
                     background:
-                      'linear-gradient(180deg, color-mix(in oklab, var(--accent) 35%, transparent), transparent)',
+                      'linear-gradient(180deg, color-mix(in oklab, var(--accent) 40%, transparent), transparent)',
                     animation: 'scan 3.2s ease-in-out infinite',
                   }}
                 />
@@ -210,7 +238,7 @@ export function QrCodeCard({
             </p>
           )}
         </div>
-      </div>
+      </motion.div>
 
       <p className="mt-5 text-center text-xs text-muted-foreground">
         Avvicina il telefono al lettore alla porta.
@@ -232,7 +260,7 @@ export function QrCodeCard({
             setLoading(true)
             void fetchQr()
           }}
-          className="tap-shrink inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="tap-shrink inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label="Rigenera QR code"
         >
           <RefreshCwIcon size={12} className={cn(loading && 'animate-spin')} />

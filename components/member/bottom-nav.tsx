@@ -1,11 +1,11 @@
 'use client'
 
 /**
- * Floating bottom navigation for the member PWA.
+ * Floating bottom dock for the member PWA.
  *
- * Pill-shaped, glass-blurred dock. Active tab gets a filled accent pill
- * with the label visible only when active (tab-bar idiom). Bottom safe
- * area is honoured via env(safe-area-inset-bottom).
+ * Apple-grade tab bar: glass-strong surface, 5 icon-label cells, an active
+ * pill that slides between cells via framer-motion `layoutId`. Tactile press
+ * feedback via `tap-shrink`. Honours `env(safe-area-inset-bottom)`.
  */
 import {
   ClipboardListIcon,
@@ -15,9 +15,11 @@ import {
   UserIcon,
   type LucideIcon,
 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import { spring } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type Tab = {
@@ -40,15 +42,14 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navigazione principale"
-      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 md:hidden"
       style={{
-        paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.625rem)',
       }}
     >
       <ul
         className={cn(
-          'ring-floating flex w-full max-w-sm items-center justify-between gap-1 rounded-full p-1.5',
-          'bg-card/85 backdrop-blur-xl supports-[backdrop-filter]:bg-card/70',
+          'glass-strong relative flex w-full max-w-md items-stretch justify-between gap-0.5 rounded-full p-1.5',
         )}
       >
         {TABS.map((tab) => {
@@ -58,31 +59,32 @@ export function BottomNav() {
               : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
           const Icon = tab.icon
           return (
-            <li key={tab.href} className="flex-1">
+            <li key={tab.href} className="relative flex-1">
               <Link
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
                 aria-label={tab.label}
                 className={cn(
-                  'tap-shrink relative flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-full text-sm font-medium transition-colors',
+                  'tap-shrink relative z-10 flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-[10px] font-medium leading-none tracking-tight transition-colors',
                   active
-                    ? 'bg-foreground text-background'
+                    ? 'text-background'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
+                {active ? (
+                  <motion.span
+                    layoutId="member-bottom-nav-pill"
+                    aria-hidden="true"
+                    className="absolute inset-0 -z-10 rounded-full bg-foreground"
+                    transition={spring.snappy}
+                  />
+                ) : null}
                 <Icon
-                  size={18}
+                  size={20}
                   strokeWidth={active ? 2.25 : 1.75}
                   aria-hidden="true"
                 />
-                <span
-                  className={cn(
-                    'overflow-hidden whitespace-nowrap text-[13px] tracking-tight transition-[max-width,opacity] duration-300',
-                    active ? 'max-w-[120px] opacity-100' : 'max-w-0 opacity-0',
-                  )}
-                >
-                  {tab.label}
-                </span>
+                <span className="px-1">{tab.label}</span>
               </Link>
             </li>
           )

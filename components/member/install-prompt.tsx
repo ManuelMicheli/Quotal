@@ -104,24 +104,20 @@ export function InstallPrompt() {
 
   return (
     <div
-      // Sits above the bottom nav (h-16) + safe-area; calc keeps clear.
-      className={cn(
-        'fixed inset-x-0 z-30 flex justify-center px-4',
-      )}
+      className={cn('fixed inset-x-0 z-30 flex justify-center px-3 md:hidden')}
       style={{
-        bottom:
-          'calc(4rem + env(safe-area-inset-bottom) + 0.5rem)',
+        bottom: 'calc(4.5rem + env(safe-area-inset-bottom) + 0.5rem)',
       }}
       role="region"
       aria-label="Installa l'app sulla schermata Home"
     >
-      <div className="pointer-events-auto w-full max-w-sm rounded-2xl border border-border bg-background/95 p-3 shadow-lg backdrop-blur">
+      <div className="glass-strong pointer-events-auto w-full max-w-sm rounded-3xl p-3.5">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+          <div className="bg-accent-soft text-accent flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl">
             <ShareIcon size={16} />
           </div>
           <div className="min-w-0 flex-1 text-sm">
-            <p className="font-medium">Installa Quotal</p>
+            <p className="font-semibold tracking-tight">Installa Quotal</p>
             {showApple ? (
               <p className="mt-0.5 text-xs text-muted-foreground">
                 Tocca il pulsante &laquo;Condividi&raquo; e poi
@@ -134,8 +130,14 @@ export function InstallPrompt() {
               </p>
             )}
             {!showApple ? (
-              <div className="mt-2 flex gap-2">
-                <Button size="sm" type="button" onClick={install}>
+              <div className="mt-3 flex gap-2">
+                <Button
+                  size="sm"
+                  variant="accent"
+                  type="button"
+                  onClick={install}
+                  className="rounded-full"
+                >
                   Installa
                 </Button>
                 <Button
@@ -143,17 +145,19 @@ export function InstallPrompt() {
                   variant="outline"
                   type="button"
                   onClick={dismiss}
+                  className="rounded-full"
                 >
                   Più tardi
                 </Button>
               </div>
             ) : (
-              <div className="mt-2">
+              <div className="mt-3">
                 <Button
                   size="sm"
                   variant="outline"
                   type="button"
                   onClick={dismiss}
+                  className="rounded-full"
                 >
                   Ho capito
                 </Button>
@@ -164,7 +168,7 @@ export function InstallPrompt() {
             type="button"
             onClick={dismiss}
             aria-label="Chiudi"
-            className="text-muted-foreground hover:text-foreground"
+            className="tap-shrink text-muted-foreground hover:text-foreground"
           >
             <XIcon size={16} />
           </button>

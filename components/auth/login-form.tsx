@@ -1,7 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useForm } from 'react-hook-form'
@@ -9,6 +9,8 @@ import { useForm } from 'react-hook-form'
 import { loginAction } from '@/app/actions/auth'
 import { AuthInput } from '@/components/auth/auth-input'
 import { AuthSubmitButton } from '@/components/auth/auth-submit-button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { fadeUp, listStagger } from '@/lib/motion'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
 
 export function LoginForm({ initialError }: { initialError?: string }) {
@@ -39,32 +41,34 @@ export function LoginForm({ initialError }: { initialError?: string }) {
     <motion.form
       onSubmit={form.handleSubmit(onSubmit)}
       noValidate
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      variants={listStagger}
+      initial="hidden"
+      animate="visible"
       className="space-y-5"
     >
-      <AuthInput
-        label="Email"
-        type="email"
-        autoComplete="email"
-        placeholder="alan.turing@example.com"
-        autoFocus
-        {...form.register('email')}
-        error={form.formState.errors.email?.message}
-      />
+      <motion.div variants={fadeUp}>
+        <AuthInput
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="alan.turing@example.com"
+          autoFocus
+          {...form.register('email')}
+          error={form.formState.errors.email?.message}
+        />
+      </motion.div>
 
-      <div className="space-y-1.5">
+      <motion.div variants={fadeUp} className="space-y-1.5">
         <div className="flex items-baseline justify-between">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-zinc-300"
+            className="text-foreground/85 block text-sm font-medium"
           >
             Password
           </label>
           <Link
             href="/reset-password"
-            className="text-xs text-zinc-400 transition-colors hover:text-teal-400"
+            className="text-muted-foreground hover:text-accent text-xs font-medium transition-colors"
           >
             Password dimenticata?
           </Link>
@@ -80,20 +84,26 @@ export function LoginForm({ initialError }: { initialError?: string }) {
           {...form.register('password')}
           error={form.formState.errors.password?.message}
         />
-      </div>
+      </motion.div>
 
-      {serverError ? (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-500/20"
-          role="alert"
-        >
-          {serverError}
-        </motion.div>
-      ) : null}
+      <AnimatePresence>
+        {serverError ? (
+          <motion.div
+            initial={{ opacity: 0, height: 0, y: -4 }}
+            animate={{ opacity: 1, height: 'auto', y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -4 }}
+            className="overflow-hidden"
+          >
+            <Alert variant="destructive">
+              <AlertDescription>{serverError}</AlertDescription>
+            </Alert>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-      <AuthSubmitButton pending={pending}>Accedi</AuthSubmitButton>
+      <motion.div variants={fadeUp}>
+        <AuthSubmitButton pending={pending}>Accedi</AuthSubmitButton>
+      </motion.div>
     </motion.form>
   )
 }

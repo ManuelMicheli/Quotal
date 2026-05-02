@@ -3,44 +3,56 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import { AuthBackground } from '@/components/auth/auth-background'
-import { ThemeForcer } from '@/components/auth/theme-forcer'
+import { ThemeToggle } from '@/components/shared/theme-toggle'
 
 /**
- * Premium dark shell for the public auth pages. Forces dark theme,
- * renders the silky mesh background, exposes a "back to home" affordance,
- * and centres the page content in a `max-w-md` column.
+ * Premium auth shell. Aurora + mesh + grain backdrop, glass card centered,
+ * generous whitespace, theme-aware (dark mode flawless). Each auth page
+ * supplies its own glass card via children.
  */
-export function AuthShell({ children }: { children: ReactNode }) {
+export function AuthShell({
+  children,
+  width = 'md',
+}: {
+  children: ReactNode
+  /** Card max-width — `md` for login/reset/verify, `lg` for signup, `xl` for onboarding. */
+  width?: 'md' | 'lg' | 'xl'
+}) {
+  const widthClass =
+    width === 'xl'
+      ? 'max-w-2xl'
+      : width === 'lg'
+        ? 'max-w-lg'
+        : 'max-w-md'
+
   return (
-    <>
-      <ThemeForcer theme="dark" />
-      <div className="relative min-h-svh overflow-hidden bg-[#0A0A0A] text-zinc-50">
-        <AuthBackground />
+    <div className="bg-background text-foreground relative isolate min-h-svh overflow-hidden">
+      <AuthBackground />
 
-        <a
-          href="#auth-main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-zinc-100 focus:px-3 focus:py-1.5 focus:text-zinc-900"
+      <a
+        href="#auth-main"
+        className="bg-foreground text-background sr-only rounded-md px-3 py-1.5 text-sm font-medium focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50"
+      >
+        Salta al contenuto
+      </a>
+
+      <header className="pt-safe relative z-10 flex h-16 items-center justify-between px-4 md:px-8">
+        <Link
+          href="/"
+          className="text-muted-foreground hover:text-foreground tap-shrink group inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors"
         >
-          Salta al contenuto
-        </a>
+          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
+          <span className="font-medium">Home</span>
+        </Link>
+        <ThemeToggle />
+      </header>
 
-        <header className="relative z-10 flex h-16 items-center px-6 md:px-10">
-          <Link
-            href="/"
-            className="group inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-zinc-100"
-          >
-            <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-            <span className="font-medium">Home</span>
-          </Link>
-        </header>
-
-        <main
-          id="auth-main"
-          className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md flex-col items-center justify-center px-6 pb-16"
-        >
-          {children}
-        </main>
-      </div>
-    </>
+      <main
+        id="auth-main"
+        className={`pb-safe relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] w-full ${widthClass} flex-col items-center justify-center px-4 pb-12 sm:px-6`}
+      >
+        {children}
+      </main>
+    </div>
   )
 }

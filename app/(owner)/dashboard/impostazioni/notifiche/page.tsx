@@ -8,6 +8,14 @@ import { ArrowLeftIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { OwnerNotificationPreferencesForm } from '@/components/owner/owner-notification-preferences-form'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireOwnerOrStaff } from '@/lib/auth'
 import { getNotificationPreferences } from '@/lib/queries/notifications'
@@ -24,24 +32,31 @@ export default async function OwnerNotificationsSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <Link
-        href="/dashboard/impostazioni"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
       >
-        <ArrowLeftIcon size={14} /> Impostazioni
-      </Link>
-      <header className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">Configurazione</p>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Notifiche</h1>
-        <p className="text-sm text-muted-foreground">
-          Scegli quali email ricevere. Le impostazioni sono per-utente:
-          ogni titolare e collaboratore decide da sé.
-        </p>
-      </header>
+        <Link href="/dashboard/impostazioni">
+          <ArrowLeftIcon className="size-3.5" />
+          Tutte le impostazioni
+        </Link>
+      </Button>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Impostazioni</PageHeaderEyebrow>
+          <PageHeaderHeading>Notifiche</PageHeaderHeading>
+          <PageHeaderDescription>
+            Scegli quali email ricevere. Le impostazioni sono per-utente:
+            ogni titolare e collaboratore decide da sé.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Le tue preferenze</CardTitle>
+          <CardTitle>Le tue preferenze</CardTitle>
         </CardHeader>
         <CardContent>
           <OwnerNotificationPreferencesForm initial={prefs} />

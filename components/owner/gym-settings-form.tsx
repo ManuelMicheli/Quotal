@@ -71,12 +71,12 @@ export function GymSettingsForm({ gym }: { gym: Gym }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <Card>
           <CardHeader>
             <CardTitle>Anagrafica</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-5 md:grid-cols-2">
             <FormField
               control={form.control}
               name="name"
@@ -145,7 +145,7 @@ export function GymSettingsForm({ gym }: { gym: Gym }) {
           <CardHeader>
             <CardTitle>Indirizzo</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-5 md:grid-cols-2">
             <FormField
               control={form.control}
               name="address"
@@ -247,8 +247,8 @@ export function GymSettingsForm({ gym }: { gym: Gym }) {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-2">
-          <Button type="submit" disabled={isPending}>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="submit" disabled={isPending} size="lg">
             {isPending ? 'Salvataggio…' : 'Salva modifiche'}
           </Button>
         </div>

@@ -1,7 +1,8 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { CheckCircle2 } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
@@ -9,6 +10,8 @@ import { signupAction } from '@/app/actions/auth'
 import { AuthInput } from '@/components/auth/auth-input'
 import { AuthSubmitButton } from '@/components/auth/auth-submit-button'
 import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { fadeUp, listStagger, scaleIn } from '@/lib/motion'
 import { signupSchema, type SignupInput } from '@/lib/validations/auth'
 
 export function SignupForm({
@@ -48,7 +51,6 @@ export function SignupForm({
     formData.set('password', values.password)
     formData.set('password_confirm', values.password_confirm)
     formData.set('gym_slug', gymSlug)
-    // Member signup implies acceptance — checkbox lives in the page footer copy.
     formData.set('terms', 'true')
 
     const honeypot = (
@@ -71,16 +73,21 @@ export function SignupForm({
   if (confirmationSent) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-xl bg-teal-500/10 px-4 py-5 text-sm text-teal-200 ring-1 ring-teal-500/20"
+        variants={scaleIn}
+        initial="hidden"
+        animate="visible"
+        className="bg-success-soft border-success/20 flex flex-col items-center gap-3 rounded-xl border px-5 py-7 text-center"
         role="status"
       >
-        <p className="mb-1 font-medium text-teal-100">
+        <div className="bg-success/15 ring-success/30 flex size-11 items-center justify-center rounded-full ring-1">
+          <CheckCircle2 className="text-success size-5" aria-hidden="true" />
+        </div>
+        <p className="text-foreground font-semibold">
           Controlla la tua casella email
         </p>
-        <p className="text-teal-200/80">{confirmationSent}</p>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {confirmationSent}
+        </p>
       </motion.div>
     )
   }
@@ -89,9 +96,9 @@ export function SignupForm({
     <motion.form
       onSubmit={form.handleSubmit(onSubmit)}
       noValidate
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      variants={listStagger}
+      initial="hidden"
+      animate="visible"
       className="space-y-5"
     >
       <input
@@ -111,34 +118,40 @@ export function SignupForm({
         }}
       />
 
-      <AuthInput
-        label="Nome completo"
-        autoComplete="name"
-        autoFocus
-        placeholder="Mario Rossi"
-        {...form.register('full_name')}
-        error={form.formState.errors.full_name?.message}
-      />
+      <motion.div variants={fadeUp}>
+        <AuthInput
+          label="Nome completo"
+          autoComplete="name"
+          autoFocus
+          placeholder="Mario Rossi"
+          {...form.register('full_name')}
+          error={form.formState.errors.full_name?.message}
+        />
+      </motion.div>
 
-      <AuthInput
-        label="Email"
-        type="email"
-        autoComplete="email"
-        placeholder="alan.turing@example.com"
-        {...form.register('email')}
-        error={form.formState.errors.email?.message}
-      />
+      <motion.div variants={fadeUp}>
+        <AuthInput
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="alan.turing@example.com"
+          {...form.register('email')}
+          error={form.formState.errors.email?.message}
+        />
+      </motion.div>
 
-      <AuthInput
-        label="Telefono (opzionale)"
-        type="tel"
-        autoComplete="tel"
-        placeholder="+39 333 1234567"
-        {...form.register('phone')}
-        error={form.formState.errors.phone?.message}
-      />
+      <motion.div variants={fadeUp}>
+        <AuthInput
+          label="Telefono (opzionale)"
+          type="tel"
+          autoComplete="tel"
+          placeholder="+39 333 1234567"
+          {...form.register('phone')}
+          error={form.formState.errors.phone?.message}
+        />
+      </motion.div>
 
-      <div className="space-y-2">
+      <motion.div variants={fadeUp} className="space-y-2">
         <AuthInput
           label="Password"
           type="password"
@@ -150,29 +163,38 @@ export function SignupForm({
           error={form.formState.errors.password?.message}
         />
         <PasswordStrengthMeter password={password ?? ''} />
-      </div>
+      </motion.div>
 
-      <AuthInput
-        label="Conferma password"
-        type="password"
-        autoComplete="new-password"
-        placeholder="••••••••••"
-        {...form.register('password_confirm')}
-        error={form.formState.errors.password_confirm?.message}
-      />
+      <motion.div variants={fadeUp}>
+        <AuthInput
+          label="Conferma password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="••••••••••"
+          {...form.register('password_confirm')}
+          error={form.formState.errors.password_confirm?.message}
+        />
+      </motion.div>
 
-      {serverError ? (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-500/20"
-          role="alert"
-        >
-          {serverError}
-        </motion.div>
-      ) : null}
+      <AnimatePresence>
+        {serverError ? (
+          <motion.div
+            initial={{ opacity: 0, height: 0, y: -4 }}
+            animate={{ opacity: 1, height: 'auto', y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -4 }}
+            className="overflow-hidden"
+          >
+            <Alert variant="destructive">
+              <AlertTitle>Non è stato possibile creare l’account</AlertTitle>
+              <AlertDescription>{serverError}</AlertDescription>
+            </Alert>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-      <AuthSubmitButton pending={pending}>Crea account</AuthSubmitButton>
+      <motion.div variants={fadeUp}>
+        <AuthSubmitButton pending={pending}>Crea account</AuthSubmitButton>
+      </motion.div>
     </motion.form>
   )
 }

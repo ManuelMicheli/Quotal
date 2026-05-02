@@ -8,10 +8,11 @@
  * so we never client-fetch.
  */
 import { motion } from 'framer-motion'
-import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from 'lucide-react'
+import { ArrowDownRightIcon, ArrowRightIcon, ArrowUpRightIcon } from 'lucide-react'
 import * as React from 'react'
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer } from 'recharts'
 
+import { spring } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type SparklineDatum = { date: string; value: number }
@@ -42,101 +43,118 @@ export function KpiCard({
     trend === null || trend === undefined
       ? null
       : trend > 0
-        ? ArrowUpIcon
+        ? ArrowUpRightIcon
         : trend < 0
-          ? ArrowDownIcon
+          ? ArrowDownRightIcon
           : ArrowRightIcon
-  const trendColor =
+  const trendTone =
     trend === null || trend === undefined
-      ? 'text-muted-foreground'
+      ? 'neutral'
       : trend > 0
-        ? 'text-success'
+        ? 'up'
         : trend < 0
-          ? 'text-destructive'
-          : 'text-muted-foreground'
+          ? 'down'
+          : 'neutral'
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: 'easeOut' }}
+      transition={{ ...spring.gentle, delay }}
+      className="h-full"
     >
       <div
         className={cn(
-          'ring-elevated relative h-full overflow-hidden rounded-3xl p-6 lg:p-7',
-          emphasize ? 'bg-foreground text-background' : 'bg-card',
+          'group/kpi relative h-full overflow-hidden rounded-2xl p-6 transition-[transform,box-shadow,border-color] duration-300 lg:p-7',
+          emphasize
+            ? 'bg-foreground text-background shadow-[var(--shadow-3)]'
+            : 'border border-border bg-card shadow-[var(--shadow-1)] hover:border-border-strong hover:shadow-[var(--shadow-2)]',
         )}
       >
         {emphasize ? (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-70"
-            style={{
-              background:
-                'radial-gradient(closest-side, color-mix(in oklab, var(--accent) 60%, transparent), transparent)',
-            }}
-          />
+          <>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-80"
+              style={{
+                background:
+                  'radial-gradient(closest-side, color-mix(in oklab, var(--accent) 70%, transparent), transparent)',
+              }}
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-background/30 to-transparent"
+            />
+          </>
         ) : null}
+
         <div className="relative flex h-full flex-col gap-3">
-          <p
-            className={cn(
-              'text-[11px] font-medium uppercase tracking-[0.12em] md:text-xs',
-              emphasize ? 'text-background/70' : 'text-muted-foreground',
-            )}
-          >
-            {title}
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p
+              className={cn(
+                'text-[11px] font-semibold uppercase tracking-[0.14em]',
+                emphasize ? 'text-background/70' : 'text-muted-foreground',
+              )}
+            >
+              {title}
+            </p>
+            {TrendIcon && trend !== null && trend !== undefined ? (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.6875rem] font-semibold leading-none',
+                  emphasize
+                    ? 'bg-background/15 text-background'
+                    : trendTone === 'up'
+                      ? 'bg-success-soft text-success'
+                      : trendTone === 'down'
+                        ? 'bg-destructive-soft text-destructive'
+                        : 'bg-muted text-muted-foreground',
+                )}
+              >
+                <TrendIcon className="size-3" />
+                {trend > 0 ? '+' : ''}
+                {Math.round(trend)}%
+              </span>
+            ) : null}
+          </div>
+
           <div className="flex items-baseline gap-2">
             <span
               className={cn(
-                'tabular font-display text-4xl tracking-tight sm:text-5xl lg:text-6xl',
+                'number font-display text-[2.75rem] leading-[1] tracking-tight md:text-5xl lg:text-[3.5rem]',
                 emphasize ? 'text-background' : 'text-foreground',
               )}
             >
               {value}
             </span>
-            {TrendIcon ? (
-              <span
-                className={cn(
-                  'flex items-center',
-                  emphasize ? 'text-background/80' : trendColor,
-                )}
-              >
-                <TrendIcon className="size-4" />
-              </span>
-            ) : null}
           </div>
+
           {subtitle ? (
             <div
               className={cn(
-                'text-sm',
+                'text-sm leading-snug',
                 emphasize ? 'text-background/70' : 'text-muted-foreground',
               )}
             >
               {subtitle}
             </div>
           ) : null}
+
           {sparkline && sparkline.length > 0 ? (
-            <div className="mt-auto h-14">
+            <div className="mt-auto h-14 pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={sparkline}
                   margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient
-                      id="kpi-spark"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
+                    <linearGradient id="kpi-spark" x1="0" y1="0" x2="0" y2="1">
                       <stop
                         offset="0%"
                         stopColor={
                           emphasize ? 'var(--background)' : 'var(--color-accent)'
                         }
-                        stopOpacity={emphasize ? 0.6 : 0.4}
+                        stopOpacity={emphasize ? 0.55 : 0.35}
                       />
                       <stop
                         offset="100%"
@@ -161,7 +179,7 @@ export function KpiCard({
             </div>
           ) : null}
           {bars && bars.length > 0 ? (
-            <div className="mt-auto h-14">
+            <div className="mt-auto h-14 pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={bars}
@@ -172,7 +190,7 @@ export function KpiCard({
                     fill={
                       emphasize ? 'var(--background)' : 'var(--color-accent)'
                     }
-                    radius={[4, 4, 0, 0]}
+                    radius={[3, 3, 0, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>

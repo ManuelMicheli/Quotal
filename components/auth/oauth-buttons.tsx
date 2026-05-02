@@ -5,10 +5,12 @@ import { useState, useTransition, type ReactNode } from 'react'
 
 import { signInWithProviderAction } from '@/app/actions/auth'
 import { AppleIcon, GoogleIcon } from '@/components/auth/brand-icons'
+import { Button } from '@/components/ui/button'
 import {
   enabledOAuthProviders,
   type OAuthProvider,
 } from '@/lib/auth/providers'
+import { fadeUp, listStagger, spring } from '@/lib/motion'
 
 export function OAuthButtons({
   next,
@@ -32,9 +34,9 @@ export function OAuthButtons({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      variants={listStagger}
+      initial="hidden"
+      animate="visible"
       className="grid grid-cols-1 gap-3 sm:grid-cols-2"
     >
       <OAuthButton
@@ -69,29 +71,35 @@ function OAuthButton({
   onClick: () => void
 }) {
   return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      disabled={!enabled || loading}
-      whileHover={enabled && !loading ? { scale: 1.01 } : undefined}
-      whileTap={enabled && !loading ? { scale: 0.99 } : undefined}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className="group relative flex h-11 items-center justify-center gap-2.5 rounded-xl bg-zinc-900/60 px-4 ring-1 ring-white/[0.08] backdrop-blur-sm transition-all duration-200 hover:bg-zinc-800/80 hover:ring-white/[0.16] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/60 disabled:hover:ring-white/[0.08] focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+    <motion.div
+      variants={fadeUp}
+      whileHover={enabled && !loading ? { y: -1 } : undefined}
+      whileTap={enabled && !loading ? { scale: 0.985 } : undefined}
+      transition={spring.press}
     >
-      {loading ? (
-        <Spinner className="size-4 text-zinc-100" />
-      ) : (
-        <>
-          {icon}
-          <span className="text-sm font-medium text-zinc-100">{label}</span>
-          {!enabled ? (
-            <span className="ml-1 rounded-md bg-zinc-700/60 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-zinc-300">
-              Presto
-            </span>
-          ) : null}
-        </>
-      )}
-    </motion.button>
+      <Button
+        type="button"
+        onClick={onClick}
+        disabled={!enabled || loading}
+        variant="outline"
+        size="lg"
+        className="bg-card/40 hover:bg-card/80 dark:bg-card/30 dark:hover:bg-card/60 h-11 w-full gap-2.5 backdrop-blur-md"
+      >
+        {loading ? (
+          <Spinner className="text-foreground size-4" />
+        ) : (
+          <>
+            {icon}
+            <span className="text-foreground text-sm font-medium">{label}</span>
+            {!enabled ? (
+              <span className="bg-muted text-muted-foreground ml-1 rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider">
+                Presto
+              </span>
+            ) : null}
+          </>
+        )}
+      </Button>
+    </motion.div>
   )
 }
 

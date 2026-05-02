@@ -2,9 +2,17 @@
  * Create a new workout plan. Member is selected from the dropdown — defaults
  * from `?member=<id>` so the owner can deep-link from a member detail page.
  */
+import { ArrowLeftIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { WorkoutPlanForm } from '@/components/owner/workout-plan-form'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { Button } from '@/components/ui/button'
 import { getMembersList } from '@/lib/queries/owner'
 
 export const dynamic = 'force-dynamic'
@@ -27,20 +35,23 @@ export default async function NewWorkoutPlanPage({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div>
-        <Link
-          href="/dashboard/schede"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Torna alle schede
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
+      >
+        <Link href="/dashboard/schede">
+          <ArrowLeftIcon className="size-3.5" />
+          Torna alle schede
         </Link>
-      </div>
-      <header>
-        <p className="text-sm text-muted-foreground">Allenamenti</p>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
-          Nuova scheda
-        </h1>
-      </header>
+      </Button>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Allenamenti</PageHeaderEyebrow>
+          <PageHeaderHeading>Nuova scheda</PageHeaderHeading>
+        </PageHeaderContent>
+      </PageHeader>
       <WorkoutPlanForm
         mode="create"
         members={lightweight}

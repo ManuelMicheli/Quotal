@@ -4,6 +4,14 @@
  * Server-friendly. Single source of truth for "carta", "SEPA", "contanti",
  * "bonifico" — used in payment lists, receipts, dashboards.
  */
+import {
+  BanknoteIcon,
+  CreditCardIcon,
+  EuroIcon,
+  LandmarkIcon,
+  type LucideIcon,
+} from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { PAYMENT_METHODS, type PaymentMethod } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -15,19 +23,19 @@ const METHOD_LABEL: Record<string, string> = {
   [PAYMENT_METHODS.BANK_TRANSFER]: 'Bonifico',
 }
 
-const METHOD_ICON: Record<string, string> = {
-  [PAYMENT_METHODS.CARD]: '💳',
-  [PAYMENT_METHODS.SEPA]: '🏦',
-  [PAYMENT_METHODS.CASH]: '💶',
-  [PAYMENT_METHODS.BANK_TRANSFER]: '🏧',
+const METHOD_ICON: Record<string, LucideIcon> = {
+  [PAYMENT_METHODS.CARD]: CreditCardIcon,
+  [PAYMENT_METHODS.SEPA]: LandmarkIcon,
+  [PAYMENT_METHODS.CASH]: EuroIcon,
+  [PAYMENT_METHODS.BANK_TRANSFER]: BanknoteIcon,
 }
 
 const METHOD_CLASS: Record<string, string> = {
-  [PAYMENT_METHODS.CARD]: 'bg-accent/10 text-accent border-accent/20',
-  [PAYMENT_METHODS.SEPA]: 'bg-chart-4/10 text-chart-4 border-chart-4/20',
-  [PAYMENT_METHODS.CASH]: 'bg-warning/10 text-warning border-warning/20',
+  [PAYMENT_METHODS.CARD]: 'bg-accent-soft text-accent border-accent/20',
+  [PAYMENT_METHODS.SEPA]: 'bg-info-soft text-info border-info/20',
+  [PAYMENT_METHODS.CASH]: 'bg-warning-soft text-warning border-warning/30',
   [PAYMENT_METHODS.BANK_TRANSFER]:
-    'bg-muted text-muted-foreground border-border',
+    'bg-secondary text-secondary-foreground border-border/60',
 }
 
 export function PaymentMethodBadge({
@@ -39,12 +47,17 @@ export function PaymentMethodBadge({
   className?: string
   showIcon?: boolean
 }) {
+  const Icon = METHOD_ICON[method] ?? EuroIcon
   return (
     <Badge
       variant="outline"
-      className={cn(METHOD_CLASS[method] ?? METHOD_CLASS.cash, className)}
+      className={cn(
+        'gap-1',
+        METHOD_CLASS[method] ?? METHOD_CLASS.cash,
+        className,
+      )}
     >
-      {showIcon ? <span className="mr-1">{METHOD_ICON[method] ?? '💶'}</span> : null}
+      {showIcon ? <Icon className="size-3" /> : null}
       {METHOD_LABEL[method] ?? method}
     </Badge>
   )

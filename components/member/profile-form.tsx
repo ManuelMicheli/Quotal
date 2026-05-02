@@ -222,8 +222,10 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
         <Button
           type="submit"
+          variant="accent"
+          size="lg"
           disabled={isPending || !form.formState.isDirty}
-          className="w-full"
+          className="w-full rounded-full"
         >
           {isPending ? 'Salvataggio…' : 'Salva modifiche'}
         </Button>

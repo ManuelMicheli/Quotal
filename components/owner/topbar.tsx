@@ -10,7 +10,7 @@
  * Mobile presentation: the breadcrumb collapses to the page title only and a
  * compact action cluster (theme toggle + bell + avatar trigger).
  */
-import { SearchIcon } from 'lucide-react'
+import { ChevronRightIcon, SearchIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
@@ -33,7 +33,14 @@ const SEGMENT_LABELS: Record<string, string> = {
   regole: 'Regole',
   profilo: 'Profilo',
   nuovo: 'Nuovo',
+  nuova: 'Nuova',
   cassa: 'Cassa',
+  schede: 'Schede',
+  notifiche: 'Notifiche',
+  dispositivi: 'Dispositivi',
+  stripe: 'Stripe',
+  'gdpr-richieste': 'Richieste GDPR',
+  return: 'Conferma',
 }
 
 function humaniseSegment(seg: string): string {
@@ -69,11 +76,10 @@ export function OwnerTopbar({
 
   return (
     <header
-      className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 md:h-20 md:gap-4 md:px-8 lg:px-12 xl:px-16"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/50 bg-background/70 px-4 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/55 md:h-16 md:gap-4 md:px-8 lg:px-10 xl:px-14 pt-safe"
     >
       <nav
-        className="hidden flex-1 items-center gap-2 text-sm md:flex"
+        className="hidden min-w-0 flex-1 items-center gap-1.5 text-sm md:flex"
         aria-label="Breadcrumb"
       >
         {segments.map((seg, idx) => {
@@ -83,16 +89,19 @@ export function OwnerTopbar({
           return (
             <React.Fragment key={href}>
               {idx > 0 ? (
-                <span className="text-muted-foreground/40">/</span>
+                <ChevronRightIcon
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-foreground/40"
+                />
               ) : null}
               {isLast ? (
-                <span className="font-display text-base font-medium text-foreground tracking-tight md:text-lg">
+                <span className="truncate text-[0.9375rem] font-semibold tracking-tight text-foreground">
                   {label}
                 </span>
               ) : (
                 <Link
                   href={href}
-                  className="text-muted-foreground transition-colors hover:text-foreground"
+                  className="truncate rounded-sm px-1 py-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
                 >
                   {label}
                 </Link>
@@ -102,7 +111,7 @@ export function OwnerTopbar({
         })}
       </nav>
 
-      <p className="font-display text-base font-medium tracking-tight md:hidden">
+      <p className="truncate font-semibold tracking-tight md:hidden">
         {humaniseSegment(lastSeg)}
       </p>
 
@@ -110,18 +119,18 @@ export function OwnerTopbar({
         <button
           type="button"
           disabled
-          className="hidden h-10 w-80 items-center gap-2 rounded-full border border-border/70 bg-card/60 px-4 text-sm text-muted-foreground transition-colors hover:bg-card disabled:cursor-not-allowed md:flex"
+          className="hidden h-9 w-80 items-center gap-2 rounded-full border border-border/70 bg-card/60 px-3.5 text-[0.8125rem] text-muted-foreground transition-colors hover:bg-card disabled:cursor-not-allowed md:flex"
           title="Disponibile prossimamente"
         >
           <SearchIcon className="size-4" />
-          <span>Cerca membri, pagamenti, abbonamenti…</span>
-          <kbd className="ml-auto rounded border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-medium">
+          <span className="truncate">Cerca membri, pagamenti, abbonamenti…</span>
+          <kbd className="ml-auto rounded border border-border/60 bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
             ⌘K
           </kbd>
         </button>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-1.5 md:gap-2">
         <ThemeToggle />
         <OwnerNotificationsBell
           initialNotifications={initialNotifications}
@@ -134,12 +143,12 @@ export function OwnerTopbar({
         >
           <button
             type="button"
-            className="tap-shrink md:hidden"
+            className="tap-shrink rounded-full focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 md:hidden"
             aria-label="Apri profilo"
           >
-            <Avatar className="size-9">
+            <Avatar className="size-9 ring-1 ring-border/60">
               {ownerAvatarUrl ? <AvatarImage src={ownerAvatarUrl} alt={ownerName} /> : null}
-              <AvatarFallback className="bg-muted text-xs">
+              <AvatarFallback className="bg-muted text-xs font-semibold">
                 {initialsFor(ownerName)}
               </AvatarFallback>
             </Avatar>

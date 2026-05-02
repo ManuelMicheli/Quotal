@@ -108,10 +108,10 @@ export function NotificationPreferencesForm({ initial }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <section className="space-y-3">
+      <section className="space-y-2.5">
         <header>
-          <h3 className="text-sm font-medium">Canali</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="eyebrow">Canali</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
             Disattivare un canale silenzia tutte le notifiche su quel canale.
           </p>
         </header>
@@ -131,9 +131,9 @@ export function NotificationPreferencesForm({ initial }: Props) {
 
       <Separator />
 
-      <section className="space-y-3">
+      <section className="space-y-2.5">
         <header>
-          <h3 className="text-sm font-medium">Email — eventi</h3>
+          <h3 className="eyebrow">Email — eventi</h3>
         </header>
         {EMAIL_EVENTS.map((e) => (
           <ToggleRow
@@ -149,9 +149,9 @@ export function NotificationPreferencesForm({ initial }: Props) {
 
       <Separator />
 
-      <section className="space-y-3">
+      <section className="space-y-2.5">
         <header>
-          <h3 className="text-sm font-medium">Push — eventi</h3>
+          <h3 className="eyebrow">Push — eventi</h3>
         </header>
         {PUSH_EVENTS.map((e) => (
           <ToggleRow
@@ -166,7 +166,13 @@ export function NotificationPreferencesForm({ initial }: Props) {
       </section>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={pending}>
+        <Button
+          type="submit"
+          variant="accent"
+          size="lg"
+          disabled={pending}
+          className="rounded-full"
+        >
           {pending ? 'Salvataggio…' : 'Salva preferenze'}
         </Button>
       </div>
@@ -189,11 +195,11 @@ function ToggleRow({
 }) {
   return (
     <div
-      className={`flex items-start justify-between gap-4 rounded-md border border-border px-3 py-2.5 ${disabled ? 'opacity-50' : ''}`}
+      className={`ring-soft flex items-start justify-between gap-4 rounded-2xl bg-card px-4 py-3 ${disabled ? 'opacity-50' : ''}`}
     >
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
       </div>
       <Switch
         checked={checked}

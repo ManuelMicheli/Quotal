@@ -5,7 +5,6 @@
  */
 import { Badge } from '@/components/ui/badge'
 import { SUBSCRIPTION_STATUS, type SubscriptionStatus } from '@/lib/constants'
-import { cn } from '@/lib/utils'
 
 const STATUS_LABEL: Record<string, string> = {
   [SUBSCRIPTION_STATUS.ACTIVE]: 'Attivo',
@@ -15,16 +14,15 @@ const STATUS_LABEL: Record<string, string> = {
   none: 'Senza abbonamento',
 }
 
-const STATUS_CLASS: Record<string, string> = {
-  [SUBSCRIPTION_STATUS.ACTIVE]:
-    'bg-success/10 text-success border-success/20',
-  [SUBSCRIPTION_STATUS.EXPIRED]:
-    'bg-destructive/10 text-destructive border-destructive/20',
-  [SUBSCRIPTION_STATUS.SUSPENDED]:
-    'bg-warning/10 text-warning border-warning/20',
-  [SUBSCRIPTION_STATUS.CANCELLED]:
-    'bg-muted text-muted-foreground border-border',
-  none: 'bg-muted text-muted-foreground border-border',
+const STATUS_VARIANT: Record<
+  string,
+  'success' | 'destructive' | 'warning' | 'secondary' | 'outline'
+> = {
+  [SUBSCRIPTION_STATUS.ACTIVE]: 'success',
+  [SUBSCRIPTION_STATUS.EXPIRED]: 'destructive',
+  [SUBSCRIPTION_STATUS.SUSPENDED]: 'warning',
+  [SUBSCRIPTION_STATUS.CANCELLED]: 'secondary',
+  none: 'outline',
 }
 
 export function SubscriptionStatusBadge({
@@ -36,10 +34,7 @@ export function SubscriptionStatusBadge({
 }) {
   const key = status ?? 'none'
   return (
-    <Badge
-      variant="outline"
-      className={cn(STATUS_CLASS[key] ?? STATUS_CLASS.none, className)}
-    >
+    <Badge variant={STATUS_VARIANT[key] ?? STATUS_VARIANT.none} className={className}>
       {STATUS_LABEL[key] ?? STATUS_LABEL.none}
     </Badge>
   )
@@ -51,11 +46,15 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
   failed: 'Fallito',
   refunded: 'Rimborsato',
 }
-const PAYMENT_STATUS_CLASS: Record<string, string> = {
-  succeeded: 'bg-success/10 text-success border-success/20',
-  pending: 'bg-warning/10 text-warning border-warning/20',
-  failed: 'bg-destructive/10 text-destructive border-destructive/20',
-  refunded: 'bg-muted text-muted-foreground border-border',
+
+const PAYMENT_STATUS_VARIANT: Record<
+  string,
+  'success' | 'destructive' | 'warning' | 'secondary'
+> = {
+  succeeded: 'success',
+  pending: 'warning',
+  failed: 'destructive',
+  refunded: 'secondary',
 }
 
 export function PaymentStatusBadge({
@@ -67,11 +66,8 @@ export function PaymentStatusBadge({
 }) {
   return (
     <Badge
-      variant="outline"
-      className={cn(
-        PAYMENT_STATUS_CLASS[status] ?? PAYMENT_STATUS_CLASS.pending,
-        className,
-      )}
+      variant={PAYMENT_STATUS_VARIANT[status] ?? 'warning'}
+      className={className}
     >
       {PAYMENT_STATUS_LABEL[status] ?? status}
     </Badge>

@@ -1,50 +1,48 @@
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-import { Logo } from '@/components/shared/logo'
+import { AuthBackground } from '@/components/auth/auth-background'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { APP_NAME } from '@/lib/constants'
 
 /**
- * Warm light shell used only by the one-shot owner onboarding page. Same
- * aurora + grain treatment the rest of the owner app uses, so the bootstrap
- * flow doesn't feel disconnected from the dashboard it leads into.
+ * Wide shell for the public owner-onboarding flow. Same aurora/mesh/grain
+ * backdrop as the rest of the auth group; just generous extra width to fit
+ * the multi-section setup form and a Stepper at the top.
  */
 export function OnboardingShell({ children }: { children: ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6 py-10 md:py-16">
-      <div
-        aria-hidden="true"
-        className="bg-aurora pointer-events-none fixed inset-x-0 top-0 h-[70vh]"
-      />
-      <div
-        aria-hidden="true"
-        className="bg-grain pointer-events-none fixed inset-0 opacity-40 mix-blend-multiply"
-      />
+    <div className="bg-background text-foreground relative isolate min-h-svh overflow-hidden">
+      <AuthBackground />
 
-      <div className="absolute right-4 top-4 md:right-6 md:top-6">
+      <header className="pt-safe relative z-10 flex h-16 items-center justify-between px-4 md:px-8">
+        <Link
+          href="/"
+          className="text-muted-foreground hover:text-foreground tap-shrink group inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors"
+        >
+          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
+          <span className="font-medium">Home</span>
+        </Link>
         <ThemeToggle />
-      </div>
+      </header>
 
-      <Link
-        href="/"
-        className="relative mb-10 inline-flex items-center justify-center"
-        aria-label="Quotal — torna alla home"
-      >
-        <Logo size="md" />
-      </Link>
+      <main className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-12 pt-4 sm:px-6">
+        {children}
+      </main>
 
-      <main className="relative w-full max-w-[440px]">{children}</main>
-
-      <footer className="relative mt-12 flex flex-col items-center gap-2 text-xs text-muted-foreground">
+      <footer className="text-muted-foreground pb-safe relative z-10 mt-4 flex flex-col items-center gap-2 pb-8 text-xs">
         <nav className="flex gap-4">
-          <Link href="/privacy" className="hover:text-foreground">
+          <Link href="/privacy" className="hover:text-foreground transition-colors">
             Privacy
           </Link>
-          <Link href="/termini" className="hover:text-foreground">
+          <Link href="/termini" className="hover:text-foreground transition-colors">
             Termini
           </Link>
-          <Link href="/cookie-policy" className="hover:text-foreground">
+          <Link
+            href="/cookie-policy"
+            className="hover:text-foreground transition-colors"
+          >
             Cookie
           </Link>
         </nav>

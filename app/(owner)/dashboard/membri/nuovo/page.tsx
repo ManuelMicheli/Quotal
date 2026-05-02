@@ -2,9 +2,18 @@
  * Create-member form. Loads the active plans server-side so the dropdown
  * is server-rendered with stable data.
  */
+import { ArrowLeftIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { MemberForm } from '@/components/owner/member-form'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { Button } from '@/components/ui/button'
 import { getActiveSubscriptionPlans } from '@/lib/queries/owner'
 
 export default async function NewMemberPage() {
@@ -12,19 +21,27 @@ export default async function NewMemberPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <header className="flex flex-col gap-1">
-        <Link
-          href="/dashboard/membri"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Torna alla lista
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
+      >
+        <Link href="/dashboard/membri">
+          <ArrowLeftIcon className="size-3.5" />
+          Torna alla lista
         </Link>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Nuovo membro</h1>
-        <p className="text-sm text-muted-foreground">
-          Aggiungi un membro alla palestra. Riceverà un&apos;email con un link
-          per impostare la sua password.
-        </p>
-      </header>
+      </Button>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Membri</PageHeaderEyebrow>
+          <PageHeaderHeading>Nuovo membro</PageHeaderHeading>
+          <PageHeaderDescription>
+            Aggiungi un membro alla palestra. Riceverà un&apos;email con un link
+            per impostare la sua password.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
       <MemberForm mode="create" plans={plans} />
     </div>
   )

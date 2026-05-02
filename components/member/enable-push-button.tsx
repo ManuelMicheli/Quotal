@@ -162,9 +162,10 @@ export function EnablePushButton({ vapidPublicKey }: Props) {
       <Button
         type="button"
         variant="outline"
+        size="lg"
         onClick={disable}
         disabled={pending}
-        className="w-full justify-start"
+        className="w-full justify-start rounded-full"
       >
         <BellOffIcon size={16} />
         {pending ? 'Disattivazione…' : 'Disattiva notifiche push'}
@@ -175,9 +176,11 @@ export function EnablePushButton({ vapidPublicKey }: Props) {
   return (
     <Button
       type="button"
+      variant="accent"
+      size="lg"
       onClick={enable}
       disabled={pending || permission === 'denied'}
-      className="w-full justify-start"
+      className="w-full justify-start rounded-full"
     >
       <BellIcon size={16} />
       {permission === 'denied'

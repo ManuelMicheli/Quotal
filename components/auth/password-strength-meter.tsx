@@ -1,7 +1,10 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+
+import { ease, duration, spring } from '@/lib/motion'
+import { cn } from '@/lib/utils'
 
 /**
  * Lazy-loads zxcvbn so the ~400KB dictionary stays out of the initial
@@ -26,37 +29,67 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
   }, [password])
 
   const visibleScore = password ? score : 0
-
   const labels = ['', 'Debole', 'Bassa', 'Media', 'Forte', 'Robusta']
-  const colors = [
-    'bg-zinc-700',
-    'bg-red-500/70',
-    'bg-orange-500/70',
-    'bg-yellow-500/70',
-    'bg-teal-400/70',
-    'bg-teal-400',
+  const tones = [
+    'text-muted-foreground',
+    'text-destructive',
+    'text-warning',
+    'text-warning',
+    'text-success',
+    'text-success',
+  ]
+  const fills = [
+    'bg-border',
+    'bg-destructive',
+    'bg-warning',
+    'bg-warning',
+    'bg-success',
+    'bg-success',
   ]
 
-  if (!password) return null
-
   return (
-    <div className="space-y-1.5" aria-live="polite">
-      <div className="grid grid-cols-4 gap-1.5">
-        {[1, 2, 3, 4].map((i) => (
-          <motion.div
-            key={i}
-            initial={false}
-            animate={{ opacity: i <= visibleScore ? 1 : 0.3 }}
-            className={`h-1 rounded-full ${
-              i <= visibleScore ? colors[score] : 'bg-zinc-800'
-            }`}
-          />
-        ))}
-      </div>
-      <p className="text-xs text-zinc-500">
-        Sicurezza:{' '}
-        <span className="text-zinc-300">{labels[visibleScore] || '—'}</span>
-      </p>
-    </div>
+    <AnimatePresence>
+      {password ? (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: duration.fast, ease: ease.soft }}
+          className="space-y-2 overflow-hidden pt-1"
+          aria-live="polite"
+        >
+          <div
+            className="grid grid-cols-4 gap-1.5"
+            role="meter"
+            aria-valuemin={0}
+            aria-valuemax={4}
+            aria-valuenow={visibleScore}
+            aria-label="Sicurezza password"
+          >
+            {[1, 2, 3, 4].map((i) => (
+              <motion.span
+                key={i}
+                initial={false}
+                animate={{
+                  opacity: i <= visibleScore ? 1 : 0.35,
+                  scaleX: i <= visibleScore ? 1 : 0.95,
+                }}
+                transition={spring.snappy}
+                className={cn(
+                  'h-1 origin-left rounded-full',
+                  i <= visibleScore ? fills[visibleScore] : 'bg-border/60',
+                )}
+              />
+            ))}
+          </div>
+          <div className="text-xs">
+            <span className="text-muted-foreground">Sicurezza:</span>{' '}
+            <span className={cn('font-medium', tones[visibleScore])}>
+              {labels[visibleScore] || '—'}
+            </span>
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   )
 }

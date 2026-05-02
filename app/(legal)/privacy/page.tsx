@@ -8,6 +8,7 @@
  */
 import type { Metadata } from 'next'
 
+import { LegalDocument } from '@/components/shared/legal-document'
 import { LEGAL_CONFIG } from '@/lib/legal/config'
 
 export const metadata: Metadata = {
@@ -15,6 +16,19 @@ export const metadata: Metadata = {
   description:
     'Come Quotal raccoglie, utilizza e protegge i dati personali ai sensi del GDPR.',
 }
+
+const TOC = [
+  { id: 'titolare', label: 'Titolare del trattamento' },
+  { id: 'categorie', label: 'Categorie di dati trattati' },
+  { id: 'finalita', label: 'Finalità e basi giuridiche' },
+  { id: 'modalita', label: 'Modalità del trattamento' },
+  { id: 'conservazione', label: 'Periodo di conservazione' },
+  { id: 'comunicazione', label: 'Comunicazione e diffusione' },
+  { id: 'diritti', label: "Diritti dell'interessato" },
+  { id: 'extra-ue', label: 'Trasferimento dati extra UE' },
+  { id: 'conferimento', label: 'Conferimento dei dati' },
+  { id: 'modifiche', label: "Modifiche all'informativa" },
+]
 
 export default function PrivacyPage() {
   const updatedAt = new Date('2026-04-29').toLocaleDateString('it-IT', {
@@ -27,12 +41,12 @@ export default function PrivacyPage() {
   const addr = c.headquarters
 
   return (
-    <>
-      <h1>Informativa sulla privacy</h1>
-      <p className="text-sm text-muted-foreground">
-        Ultimo aggiornamento: {updatedAt}
-      </p>
-
+    <LegalDocument
+      eyebrow="Informativa"
+      title="Informativa sulla privacy"
+      updatedAt={updatedAt}
+      toc={TOC}
+    >
       <p>
         La presente informativa è resa ai sensi dell&apos;art. 13 del
         Regolamento (UE) 2016/679 (&quot;GDPR&quot;) e del D.Lgs. 196/2003
@@ -41,7 +55,7 @@ export default function PrivacyPage() {
         palestra.
       </p>
 
-      <h2>1. Titolare del trattamento</h2>
+      <h2 id="titolare">1. Titolare del trattamento</h2>
       <p>
         Il <strong>Titolare del trattamento</strong> è {c.name} (
         {c.legal_form}), con sede in {addr.address}, {addr.postal_code}{' '}
@@ -50,8 +64,7 @@ export default function PrivacyPage() {
       </p>
       <p>
         Per qualsiasi richiesta in materia di protezione dei dati è possibile
-        contattare {dpc.name} (
-        {dpc.role}) all&apos;indirizzo{' '}
+        contattare {dpc.name} ({dpc.role}) all&apos;indirizzo{' '}
         <a href={`mailto:${dpc.email}`}>{dpc.email}</a>.
       </p>
       {LEGAL_CONFIG.dpo ? (
@@ -70,7 +83,7 @@ export default function PrivacyPage() {
         </p>
       )}
 
-      <h2>2. Categorie di dati trattati</h2>
+      <h2 id="categorie">2. Categorie di dati trattati</h2>
       <ul>
         <li>
           <strong>Dati identificativi e di contatto:</strong> nome, cognome,
@@ -100,7 +113,7 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>3. Finalità e basi giuridiche</h2>
+      <h2 id="finalita">3. Finalità e basi giuridiche</h2>
       <ol>
         <li>
           <strong>Esecuzione del contratto</strong> di tesseramento e
@@ -124,7 +137,7 @@ export default function PrivacyPage() {
         </li>
       </ol>
 
-      <h2>4. Modalità del trattamento</h2>
+      <h2 id="modalita">4. Modalità del trattamento</h2>
       <p>
         I dati sono trattati con strumenti elettronici, conservati su server
         gestiti da provider che garantiscono adeguate misure tecniche e
@@ -137,7 +150,7 @@ export default function PrivacyPage() {
         Comunicazioni cifrate in transito (TLS 1.2+) e a riposo (AES-256).
       </p>
 
-      <h2>5. Periodo di conservazione</h2>
+      <h2 id="conservazione">5. Periodo di conservazione</h2>
       <ul>
         <li>
           <strong>Dati anagrafici e di contatto:</strong> per tutta la durata
@@ -157,7 +170,7 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>6. Comunicazione e diffusione dei dati</h2>
+      <h2 id="comunicazione">6. Comunicazione e diffusione dei dati</h2>
       <p>
         I dati non sono diffusi né ceduti a terzi per finalità commerciali.
         Vengono comunicati esclusivamente a:
@@ -176,7 +189,7 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>7. Diritti dell&apos;interessato</h2>
+      <h2 id="diritti">7. Diritti dell&apos;interessato</h2>
       <p>
         In ogni momento è possibile esercitare i diritti previsti dagli artt.
         15-22 GDPR:
@@ -212,7 +225,7 @@ export default function PrivacyPage() {
         (art. 77 GDPR).
       </p>
 
-      <h2>8. Trasferimento dati extra UE</h2>
+      <h2 id="extra-ue">8. Trasferimento dati extra UE</h2>
       <p>
         Alcuni fornitori (Vercel Inc., Resend Inc.) hanno sede negli Stati
         Uniti d&apos;America. Il trasferimento avviene sulla base delle
@@ -221,7 +234,9 @@ export default function PrivacyPage() {
         garanzia di un livello di protezione adeguato.
       </p>
 
-      <h2>9. Conferimento dei dati e conseguenze del rifiuto</h2>
+      <h2 id="conferimento">
+        9. Conferimento dei dati e conseguenze del rifiuto
+      </h2>
       <p>
         Il conferimento dei dati indicati in fase di registrazione è
         necessario per fruire del servizio: il rifiuto comporta
@@ -231,11 +246,11 @@ export default function PrivacyPage() {
         fiscale per emissione fattura.
       </p>
 
-      <h2>10. Modifiche alla presente informativa</h2>
+      <h2 id="modifiche">10. Modifiche alla presente informativa</h2>
       <p>
         La presente informativa può essere aggiornata: ogni modifica
         sostanziale verrà notificata via email e in app.
       </p>
-    </>
+    </LegalDocument>
   )
 }

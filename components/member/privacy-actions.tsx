@@ -74,7 +74,8 @@ export function PrivacyActions() {
       <div className="flex flex-col gap-2">
         <Button
           variant="outline"
-          className="w-full justify-start"
+          size="lg"
+          className="w-full justify-start rounded-full"
           onClick={onExportClick}
           disabled={exportPending}
         >
@@ -84,7 +85,7 @@ export function PrivacyActions() {
         {downloadUrl ? (
           <a
             href={downloadUrl}
-            className="text-xs text-accent underline"
+            className="text-accent text-xs underline"
             download
             rel="noreferrer noopener"
           >
@@ -101,7 +102,8 @@ export function PrivacyActions() {
         <DialogTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-start text-destructive hover:text-destructive"
+            size="lg"
+            className="w-full justify-start rounded-full text-destructive hover:text-destructive"
           >
             <Trash2Icon size={16} />
             Richiedi cancellazione account

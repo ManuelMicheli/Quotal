@@ -32,6 +32,15 @@ const STATUSES = [
   { value: 'refunded', label: 'Rimborsati' },
 ] as const
 
+function chipClass(active: boolean) {
+  return cn(
+    'tap-shrink inline-flex h-8 items-center rounded-full border px-3.5 text-[0.8125rem] font-medium transition-all duration-200',
+    active
+      ? 'border-foreground bg-foreground text-background shadow-[var(--shadow-1)]'
+      : 'border-border bg-card text-muted-foreground hover:border-border-strong hover:bg-secondary hover:text-foreground',
+  )
+}
+
 export function PaymentsFilterBar({
   currentMethod,
   currentStatus,
@@ -58,56 +67,52 @@ export function PaymentsFilterBar({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        {METHODS.map((m) => (
-          <Button
-            key={m.value}
-            type="button"
-            size="sm"
-            variant={currentMethod === m.value ? 'default' : 'outline'}
-            className={cn(
-              'rounded-full',
-              currentMethod === m.value ? '' : 'bg-background',
-            )}
-            onClick={() =>
-              applyParams((p) => {
-                if (m.value === 'all') p.delete('method')
-                else p.set('method', m.value)
-              })
-            }
-          >
-            {m.label}
-          </Button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-wrap gap-2">
-          {STATUSES.map((s) => (
-            <Button
-              key={s.value}
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-1)]">
+      <div className="flex flex-col gap-2">
+        <p className="eyebrow">Metodo</p>
+        <div className="flex flex-wrap gap-1.5">
+          {METHODS.map((m) => (
+            <button
+              key={m.value}
               type="button"
-              size="sm"
-              variant={currentStatus === s.value ? 'default' : 'outline'}
-              className={cn(
-                'rounded-full',
-                currentStatus === s.value ? '' : 'bg-background',
-              )}
               onClick={() =>
                 applyParams((p) => {
-                  if (s.value === 'all') p.delete('status')
-                  else p.set('status', s.value)
+                  if (m.value === 'all') p.delete('method')
+                  else p.set('method', m.value)
                 })
               }
+              className={chipClass(currentMethod === m.value)}
             >
-              {s.label}
-            </Button>
+              {m.label}
+            </button>
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="flex flex-col gap-2">
+          <p className="eyebrow">Stato</p>
+          <div className="flex flex-wrap gap-1.5">
+            {STATUSES.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() =>
+                  applyParams((p) => {
+                    if (s.value === 'all') p.delete('status')
+                    else p.set('status', s.value)
+                  })
+                }
+                className={chipClass(currentStatus === s.value)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="ml-auto flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="payments-from" className="text-xs text-muted-foreground">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="payments-from" className="eyebrow">
               Da
             </Label>
             <Input
@@ -123,8 +128,8 @@ export function PaymentsFilterBar({
               className="h-9 w-40"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="payments-to" className="text-xs text-muted-foreground">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="payments-to" className="eyebrow">
               A
             </Label>
             <Input

@@ -6,10 +6,20 @@
  * (`processAccountDeletionAction`) or to mark a request as rejected with
  * a motivation.
  */
+import { ArrowLeftIcon } from 'lucide-react'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 import { GdprDeletionTable } from '@/components/owner/gdpr-deletion-table'
 import { GdprExportsTable } from '@/components/owner/gdpr-exports-table'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireOwnerOrStaff } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -56,22 +66,31 @@ export default async function GdprRequestsPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <header className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">Privacy</p>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
-          Richieste GDPR
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Coda di richieste di portabilità (Art. 20) e cancellazione (Art.
-          17) inoltrate dai membri. Da processare entro 30 giorni.
-        </p>
-      </header>
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
+      >
+        <Link href="/dashboard/impostazioni">
+          <ArrowLeftIcon className="size-3.5" />
+          Tutte le impostazioni
+        </Link>
+      </Button>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Privacy</PageHeaderEyebrow>
+          <PageHeaderHeading>Richieste GDPR</PageHeaderHeading>
+          <PageHeaderDescription>
+            Coda di richieste di portabilità (Art. 20) e cancellazione (Art.
+            17) inoltrate dai membri. Da processare entro 30 giorni.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            Richieste di cancellazione
-          </CardTitle>
+          <CardTitle>Richieste di cancellazione</CardTitle>
         </CardHeader>
         <CardContent>
           <GdprDeletionTable
@@ -89,9 +108,7 @@ export default async function GdprRequestsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            Esportazioni dati richieste
-          </CardTitle>
+          <CardTitle>Esportazioni dati richieste</CardTitle>
         </CardHeader>
         <CardContent>
           <GdprExportsTable

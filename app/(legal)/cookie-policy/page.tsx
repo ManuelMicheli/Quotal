@@ -9,6 +9,7 @@
  */
 import type { Metadata } from 'next'
 
+import { LegalDocument } from '@/components/shared/legal-document'
 import { LEGAL_CONFIG } from '@/lib/legal/config'
 
 export const metadata: Metadata = {
@@ -16,6 +17,14 @@ export const metadata: Metadata = {
   description:
     'Informativa sui cookie utilizzati da Quotal: solo cookie tecnici essenziali, nessuna profilazione.',
 }
+
+const TOC = [
+  { id: 'cosa-sono', label: 'Cosa sono i cookie' },
+  { id: 'utilizzati', label: 'Quali cookie utilizziamo' },
+  { id: 'disabilitare', label: 'Disabilitare i cookie' },
+  { id: 'aggiornamenti', label: 'Aggiornamenti' },
+  { id: 'contatti', label: 'Contatti' },
+]
 
 export default function CookiePolicyPage() {
   const updatedAt = new Date('2026-04-29').toLocaleDateString('it-IT', {
@@ -25,12 +34,12 @@ export default function CookiePolicyPage() {
   })
 
   return (
-    <>
-      <h1>Cookie Policy</h1>
-      <p className="text-sm text-muted-foreground">
-        Ultimo aggiornamento: {updatedAt}
-      </p>
-
+    <LegalDocument
+      eyebrow="Cookie policy"
+      title="Cookie policy"
+      updatedAt={updatedAt}
+      toc={TOC}
+    >
       <p>
         La presente policy descrive l&apos;uso di cookie e tecnologie simili
         sul sito {LEGAL_CONFIG.app.url} ai sensi del Provvedimento del
@@ -39,7 +48,7 @@ export default function CookiePolicyPage() {
         Codice Privacy.
       </p>
 
-      <h2>1. Cosa sono i cookie</h2>
+      <h2 id="cosa-sono">1. Cosa sono i cookie</h2>
       <p>
         I cookie sono piccoli file di testo che i siti visitati inviano al
         terminale dell&apos;utente, dove vengono memorizzati per essere
@@ -49,7 +58,7 @@ export default function CookiePolicyPage() {
         analisi statistica avanzata).
       </p>
 
-      <h2>2. Quali cookie utilizziamo</h2>
+      <h2 id="utilizzati">2. Quali cookie utilizziamo</h2>
       <p>
         Quotal utilizza <strong>esclusivamente cookie tecnici</strong>{' '}
         essenziali al funzionamento del servizio. Per questi cookie non è
@@ -103,7 +112,7 @@ export default function CookiePolicyPage() {
         </tbody>
       </table>
 
-      <h2>3. Disabilitare i cookie</h2>
+      <h2 id="disabilitare">3. Disabilitare i cookie</h2>
       <p>
         L&apos;utente può disabilitare i cookie attraverso le impostazioni
         del proprio browser. Tuttavia, la disabilitazione dei cookie tecnici
@@ -150,7 +159,7 @@ export default function CookiePolicyPage() {
         </li>
       </ul>
 
-      <h2>4. Aggiornamenti</h2>
+      <h2 id="aggiornamenti">4. Aggiornamenti</h2>
       <p>
         Qualora venissero introdotti cookie di terze parti che richiedono
         consenso (es. strumenti analitici), questa pagina sarà aggiornata e
@@ -158,14 +167,15 @@ export default function CookiePolicyPage() {
         Garante.
       </p>
 
-      <h2>5. Contatti</h2>
+      <h2 id="contatti">5. Contatti</h2>
       <p>
         Per ulteriori informazioni sulla protezione dei dati e sui cookie:{' '}
         <a href={`mailto:${LEGAL_CONFIG.data_controller.email}`}>
           {LEGAL_CONFIG.data_controller.email}
         </a>
-        . Si rimanda altresì all&apos;<a href="/privacy">informativa privacy</a>.
+        . Si rimanda altresì all&apos;
+        <a href="/privacy">informativa privacy</a>.
       </p>
-    </>
+    </LegalDocument>
   )
 }

@@ -5,12 +5,16 @@
  * each training day as its own card with weekday chip, day notes and the
  * exercise breakdown.
  */
-import { CalendarIcon, ClockIcon, DumbbellIcon, RepeatIcon } from 'lucide-react'
+import {
+  CalendarIcon,
+  ClockIcon,
+  DumbbellIcon,
+  RepeatIcon,
+} from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { PageHeader } from '@/components/member/page-header'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireMember } from '@/lib/auth'
 import type { WorkoutDay, WorkoutExercise } from '@/lib/domain-types'
 import { formatDate } from '@/lib/format'
@@ -60,40 +64,26 @@ export default async function MemberWorkoutPlanDetailPage({
         }
         action={
           plan.is_active ? (
-            <Badge
-              variant="outline"
-              className="bg-success/10 text-success border-success/20"
-            >
-              Attiva
-            </Badge>
+            <Badge variant="success">Attiva</Badge>
           ) : (
-            <Badge
-              variant="outline"
-              className="bg-muted text-muted-foreground"
-            >
-              Archiviata
-            </Badge>
+            <Badge variant="outline">Archiviata</Badge>
           )
         }
       />
 
       {plan.notes ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Note del trainer</CardTitle>
-          </CardHeader>
-          <CardContent className="whitespace-pre-wrap text-sm text-muted-foreground">
+        <section className="ring-soft rounded-3xl bg-card p-5 md:p-6">
+          <p className="eyebrow">Note del trainer</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
             {plan.notes}
-          </CardContent>
-        </Card>
+          </p>
+        </section>
       ) : null}
 
       {days.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            Nessun giorno di allenamento configurato.
-          </CardContent>
-        </Card>
+        <div className="ring-soft rounded-3xl bg-card p-10 text-center text-sm text-muted-foreground">
+          Nessun giorno di allenamento configurato.
+        </div>
       ) : (
         <ol className="flex flex-col gap-4">
           {days.map((day, dayIdx) => {
@@ -106,17 +96,19 @@ export default async function MemberWorkoutPlanDetailPage({
                 : null
             return (
               <li key={day.id ?? dayIdx}>
-                <Card>
-                  <CardHeader>
+                <article className="ring-soft overflow-hidden rounded-3xl bg-card">
+                  <header className="flex flex-col gap-1 px-5 pb-3 pt-5 md:px-6">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <CardTitle className="text-base">
-                        {day.label || `Giorno ${dayIdx + 1}`}
-                      </CardTitle>
+                      <div className="flex items-center gap-3">
+                        <span className="bg-foreground text-background number flex h-9 w-9 items-center justify-center rounded-2xl text-sm font-semibold">
+                          {String(dayIdx + 1).padStart(2, '0')}
+                        </span>
+                        <h2 className="heading-display text-xl md:text-2xl">
+                          {day.label || `Giorno ${dayIdx + 1}`}
+                        </h2>
+                      </div>
                       {weekday ? (
-                        <Badge
-                          variant="outline"
-                          className="inline-flex items-center gap-1"
-                        >
+                        <Badge variant="outline" className="gap-1">
                           <CalendarIcon className="size-3" />
                           {weekday}
                         </Badge>
@@ -127,10 +119,11 @@ export default async function MemberWorkoutPlanDetailPage({
                         {day.notes}
                       </p>
                     ) : null}
-                  </CardHeader>
-                  <CardContent className="space-y-2">
+                  </header>
+
+                  <div className="px-5 pb-5 md:px-6">
                     {exercises.length === 0 ? (
-                      <p className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                      <p className="rounded-2xl border border-dashed border-border bg-muted/30 p-5 text-center text-sm text-muted-foreground">
                         Nessun esercizio per questo giorno.
                       </p>
                     ) : (
@@ -140,38 +133,42 @@ export default async function MemberWorkoutPlanDetailPage({
                           return (
                             <li
                               key={exIdx}
-                              className="rounded-lg border border-border bg-background/50 p-3"
+                              className="ring-soft tap-shrink rounded-2xl bg-background/60 p-3.5"
                             >
                               <div className="flex items-baseline gap-2">
-                                <span className="text-xs font-medium text-muted-foreground tabular-nums">
+                                <span className="number text-xs font-semibold text-muted-foreground">
                                   {String(exIdx + 1).padStart(2, '0')}
                                 </span>
-                                <h3 className="text-sm font-semibold">
+                                <h3 className="text-sm font-semibold tracking-tight">
                                   {ex.name}
                                 </h3>
                               </div>
-                              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                              <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                 {typeof ex.sets === 'number' && ex.sets > 0 ? (
                                   <span className="inline-flex items-center gap-1">
                                     <DumbbellIcon className="size-3.5" />
-                                    {ex.sets} serie
+                                    <span className="tabular">
+                                      {ex.sets} serie
+                                    </span>
                                   </span>
                                 ) : null}
                                 {ex.reps ? (
                                   <span className="inline-flex items-center gap-1">
                                     <RepeatIcon className="size-3.5" />
-                                    {ex.reps}
+                                    <span className="tabular">{ex.reps}</span>
                                   </span>
                                 ) : null}
                                 {rest ? (
                                   <span className="inline-flex items-center gap-1">
                                     <ClockIcon className="size-3.5" />
-                                    Recupero {rest}
+                                    <span className="tabular">
+                                      Recupero {rest}
+                                    </span>
                                   </span>
                                 ) : null}
                               </div>
                               {ex.notes ? (
-                                <p className="mt-2 whitespace-pre-wrap text-xs">
+                                <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
                                   {ex.notes}
                                 </p>
                               ) : null}
@@ -180,8 +177,8 @@ export default async function MemberWorkoutPlanDetailPage({
                         })}
                       </ol>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </article>
               </li>
             )
           })}

@@ -8,7 +8,15 @@
 import { ClipboardListIcon, PencilIcon, PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import { EmptyState } from '@/components/owner/empty-state'
+import { EmptyState } from '@/components/shared/empty-state'
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,24 +37,29 @@ export default async function WorkoutPlansPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">Allenamenti</p>
-          <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
-            Schede allenamento
-          </h1>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/schede/nuova">
-            <PlusIcon className="size-4" />
-            Nuova scheda
-          </Link>
-        </Button>
-      </header>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Allenamenti</PageHeaderEyebrow>
+          <PageHeaderHeading>Schede allenamento</PageHeaderHeading>
+          <PageHeaderDescription>
+            Crea e assegna programmi personalizzati. I membri li vedranno
+            nella loro app.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+        <PageHeaderActions>
+          <Button asChild>
+            <Link href="/dashboard/schede/nuova">
+              <PlusIcon className="size-4" />
+              Nuova scheda
+            </Link>
+          </Button>
+        </PageHeaderActions>
+      </PageHeader>
 
       {plans.length === 0 ? (
         <EmptyState
-          icon={ClipboardListIcon}
+          variant="bordered"
+          icon={<ClipboardListIcon />}
           title="Nessuna scheda creata"
           description="Crea la prima scheda di allenamento e assegnala a un membro. La vedrà subito nella sua app."
           action={
@@ -59,10 +72,10 @@ export default async function WorkoutPlansPage() {
           }
         />
       ) : (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-1)]">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead>Titolo</TableHead>
                 <TableHead>Membro</TableHead>
                 <TableHead>Split</TableHead>
@@ -74,15 +87,13 @@ export default async function WorkoutPlansPage() {
             </TableHeader>
             <TableBody>
               {plans.map((plan) => {
-                const dayCount = Array.isArray(plan.days)
-                  ? plan.days.length
-                  : 0
+                const dayCount = Array.isArray(plan.days) ? plan.days.length : 0
                 return (
                   <TableRow key={plan.id}>
-                    <TableCell className="font-medium">
+                    <TableCell>
                       <Link
                         href={`/dashboard/schede/${plan.id}`}
-                        className="hover:underline"
+                        className="font-semibold tracking-tight transition-colors hover:text-accent"
                       >
                         {plan.title}
                       </Link>
@@ -91,31 +102,28 @@ export default async function WorkoutPlansPage() {
                       {plan.member ? (
                         <Link
                           href={`/dashboard/membri/${plan.member.id}`}
-                          className="hover:underline"
+                          className="text-[0.8125rem] transition-colors hover:text-accent hover:underline"
                         >
                           {plan.member.full_name}
                         </Link>
                       ) : (
-                        '—'
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-[0.8125rem] text-muted-foreground">
                       {plan.split ?? '—'}
                     </TableCell>
-                    <TableCell className="tabular-nums">{dayCount}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          plan.is_active
-                            ? 'bg-success/10 text-success border-success/20'
-                            : 'bg-muted text-muted-foreground'
-                        }
-                      >
-                        {plan.is_active ? 'Attiva' : 'Archiviata'}
-                      </Badge>
+                    <TableCell className="tabular text-[0.8125rem]">
+                      {dayCount}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell>
+                      {plan.is_active ? (
+                        <Badge variant="success">Attiva</Badge>
+                      ) : (
+                        <Badge variant="secondary">Archiviata</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="tabular text-[0.8125rem] text-muted-foreground">
                       {formatDate(plan.updated_at, 'short')}
                     </TableCell>
                     <TableCell className="text-right">

@@ -1,11 +1,9 @@
 export function AuthDivider({ label }: { label: string }) {
   return (
     <div className="relative flex items-center" aria-hidden="true">
-      <div className="flex-1 border-t border-white/[0.08]" />
-      <span className="px-4 text-xs uppercase tracking-wider text-zinc-500">
-        {label}
-      </span>
-      <div className="flex-1 border-t border-white/[0.08]" />
+      <div className="border-border/70 flex-1 border-t" />
+      <span className="text-muted-foreground eyebrow px-4">{label}</span>
+      <div className="border-border/70 flex-1 border-t" />
     </div>
   )
 }

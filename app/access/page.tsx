@@ -13,7 +13,10 @@
  * tight: hardware vendors can use the same flow without running a
  * browser.
  */
+import { ShieldAlertIcon } from 'lucide-react'
+
 import { AccessTerminal } from '@/components/access/access-terminal'
+import { Logo } from '@/components/shared/logo'
 import { verifyDeviceToken } from '@/lib/access/device-auth'
 
 export const dynamic = 'force-dynamic'
@@ -53,10 +56,24 @@ export default async function AccessKioskPage({
 
 function KioskError({ message }: { message: string }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-8 text-center text-zinc-100">
-      <div className="max-w-md space-y-3">
-        <h1 className="font-display text-3xl tracking-tight">Errore</h1>
-        <p className="text-zinc-300">{message}</p>
+    <div className="bg-aurora-soft relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-16">
+      <div className="bg-grain pointer-events-none absolute inset-0 opacity-40" />
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center gap-8 text-center">
+        <Logo size="md" />
+        <div className="glass-strong relative flex flex-col items-center gap-5 rounded-3xl px-8 py-12">
+          <div className="bg-destructive-soft text-destructive ring-soft flex size-16 items-center justify-center rounded-2xl">
+            <ShieldAlertIcon className="size-8" aria-hidden />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="eyebrow">Errore terminale</p>
+            <h1 className="heading-display text-3xl text-balance md:text-4xl">
+              Accesso non disponibile
+            </h1>
+            <p className="text-muted-foreground text-pretty text-sm leading-relaxed md:text-base">
+              {message}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

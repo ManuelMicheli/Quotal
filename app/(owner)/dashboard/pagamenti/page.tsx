@@ -1,15 +1,32 @@
 /**
  * Payments registry. Server-rendered table + monthly KPI strip.
  */
-import { DownloadIcon, ReceiptIcon } from 'lucide-react'
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  CreditCardIcon,
+  DownloadIcon,
+  EuroIcon,
+  ReceiptIcon,
+  TrendingUpIcon,
+} from 'lucide-react'
 import Link from 'next/link'
 
-import { EmptyState } from '@/components/owner/empty-state'
 import { PaymentMethodBadge } from '@/components/owner/payment-method-badge'
 import { PaymentsFilterBar } from '@/components/owner/payments-filter-bar'
 import { PaymentStatusBadge } from '@/components/owner/subscription-status-badge'
+import { EmptyState } from '@/components/shared/empty-state'
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { StatCard } from '@/components/shared/stat-card'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -72,12 +89,15 @@ export default async function PaymentsPage({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">Contabilità</p>
-          <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Pagamenti</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Contabilità</PageHeaderEyebrow>
+          <PageHeaderHeading>Pagamenti</PageHeaderHeading>
+          <PageHeaderDescription>
+            Registro completo. Filtra per metodo, stato e periodo.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+        <PageHeaderActions>
           <Button asChild variant="outline">
             <a href={monthCsvUrl} download>
               <DownloadIcon className="size-4" />
@@ -93,20 +113,34 @@ export default async function PaymentsPage({
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              Disponibile dopo il primo pagamento (Phase 06).
+              Disponibile dopo il primo pagamento.
             </TooltipContent>
           </Tooltip>
-        </div>
-      </header>
+        </PageHeaderActions>
+      </PageHeader>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiTile label="Incassato questo mese" value={result.totalAmountCents} />
-        <KpiTile label="Contanti" value={result.cashAmountCents} />
-        <KpiTile label="Digitale" value={result.digitalAmountCents} />
-        <KpiTile
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+        <StatCard
+          icon={<TrendingUpIcon />}
+          label="Incassato questo mese"
+          value={formatCurrency(result.totalAmountCents)}
+          tone="accent"
+        />
+        <StatCard
+          icon={<EuroIcon />}
+          label="Contanti"
+          value={formatCurrency(result.cashAmountCents)}
+        />
+        <StatCard
+          icon={<CreditCardIcon />}
+          label="Digitale"
+          value={formatCurrency(result.digitalAmountCents)}
+        />
+        <StatCard
+          icon={<ClockIcon />}
           label="In attesa"
-          value={result.pendingAmountCents}
-          variant="warning"
+          value={formatCurrency(result.pendingAmountCents)}
+          tone="warning"
         />
       </section>
 
@@ -119,16 +153,17 @@ export default async function PaymentsPage({
 
       {result.payments.length === 0 ? (
         <EmptyState
-          icon={ReceiptIcon}
+          variant="bordered"
+          icon={<ReceiptIcon />}
           title="Nessun pagamento"
           description="I pagamenti registrati appariranno qui."
         />
       ) : (
         <>
-          <div className="rounded-lg border border-border bg-card">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-1)]">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-transparent">
                   <TableHead>Data</TableHead>
                   <TableHead>Membro</TableHead>
                   <TableHead className="text-right">Importo</TableHead>
@@ -141,19 +176,21 @@ export default async function PaymentsPage({
               <TableBody>
                 {result.payments.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="text-sm">
+                    <TableCell className="tabular text-[0.8125rem]">
                       {formatDate(p.paid_at ?? p.created_at, 'short')}
                     </TableCell>
                     <TableCell>
                       <Link
                         href={`/dashboard/membri/${p.member_id}`}
-                        className="font-medium hover:underline"
+                        className="font-semibold tracking-tight transition-colors hover:text-accent"
                       >
                         {p.member?.full_name ?? '—'}
                       </Link>
                     </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums">
-                      {formatCurrency(p.amount_cents)}
+                    <TableCell className="text-right">
+                      <span className="number font-semibold">
+                        {formatCurrency(p.amount_cents)}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <PaymentMethodBadge method={p.payment_method} />
@@ -161,10 +198,10 @@ export default async function PaymentsPage({
                     <TableCell>
                       <PaymentStatusBadge status={p.status} />
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="font-mono text-xs text-muted-foreground">
                       {p.receipt_number ?? '—'}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="font-mono text-xs text-muted-foreground">
                       {p.invoice_number ?? '—'}
                     </TableCell>
                   </TableRow>
@@ -174,11 +211,14 @@ export default async function PaymentsPage({
           </div>
 
           {lastPage > 1 ? (
-            <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-              <p>
-                Pagina {result.page} di {lastPage} · {result.total} pagamenti
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <p className="tabular text-xs text-muted-foreground">
+                Pagina <span className="font-medium text-foreground">{result.page}</span>{' '}
+                di <span className="font-medium text-foreground">{lastPage}</span>
+                <span className="mx-2 text-border">·</span>
+                {result.total} pagamenti
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {result.page > 1 ? (
                   <Button asChild variant="outline" size="sm">
                     <Link
@@ -187,7 +227,8 @@ export default async function PaymentsPage({
                         query: { ...sp, page: result.page - 1 },
                       }}
                     >
-                      ← Precedente
+                      <ChevronLeftIcon className="size-3.5" />
+                      Precedente
                     </Link>
                   </Button>
                 ) : null}
@@ -199,7 +240,8 @@ export default async function PaymentsPage({
                         query: { ...sp, page: result.page + 1 },
                       }}
                     >
-                      Successiva →
+                      Successiva
+                      <ChevronRightIcon className="size-3.5" />
                     </Link>
                   </Button>
                 ) : null}
@@ -209,34 +251,5 @@ export default async function PaymentsPage({
         </>
       )}
     </div>
-  )
-}
-
-function KpiTile({
-  label,
-  value,
-  variant,
-}: {
-  label: string
-  value: number
-  variant?: 'default' | 'warning'
-}) {
-  return (
-    <Card>
-      <CardContent className="flex flex-col gap-1 p-5">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <p
-          className={
-            variant === 'warning'
-              ? 'font-display text-2xl tabular-nums text-warning'
-              : 'font-display text-2xl tabular-nums'
-          }
-        >
-          {formatCurrency(value)}
-        </p>
-      </CardContent>
-    </Card>
   )
 }

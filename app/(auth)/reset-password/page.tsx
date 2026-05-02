@@ -17,34 +17,35 @@ export const metadata = {
 
 export default function ResetPasswordPage() {
   return (
-    <AuthShell>
-      <div className="w-full">
+    <AuthShell width="md">
+      <div className="glass-strong w-full rounded-2xl p-7 md:p-9">
         <QuotalLogoCard />
 
-        <div className="space-y-2 text-center">
-          <h1 className="font-display text-[28px] font-medium leading-tight text-white md:text-[32px]">
+        <div className="space-y-3 text-center">
+          <p className="eyebrow">Recupero account</p>
+          <h1 className="heading-display text-foreground text-balance text-4xl md:text-[2.5rem]">
             Reimposta la password
           </h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-muted-foreground text-pretty mx-auto max-w-sm text-sm leading-relaxed">
             Inserisci la tua email. Ti invieremo un link per reimpostare la
             password.
           </p>
         </div>
 
-        <div className="mt-10">
+        <div className="mt-8">
           <ResetPasswordForm />
         </div>
-
-        <p className="mt-8 text-center text-sm text-zinc-400">
-          Ti sei ricordato la password?{' '}
-          <Link
-            href="/login"
-            className="font-medium text-zinc-100 transition-colors hover:text-teal-400"
-          >
-            Torna al login
-          </Link>
-        </p>
       </div>
+
+      <p className="text-muted-foreground mt-6 text-center text-sm">
+        Ti sei ricordato la password?{' '}
+        <Link
+          href="/login"
+          className="text-foreground hover:text-accent font-medium transition-colors"
+        >
+          Torna al login
+        </Link>
+      </p>
     </AuthShell>
   )
 }

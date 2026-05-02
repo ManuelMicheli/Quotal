@@ -28,7 +28,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
         {label && !hideLabel ? (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-zinc-300"
+            className="text-foreground/85 block text-sm font-medium"
           >
             {label}
           </label>
@@ -42,14 +42,16 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
             aria-label={hideLabel ? label : undefined}
             aria-invalid={error ? true : undefined}
             className={cn(
-              'block h-11 w-full rounded-xl bg-zinc-900/50 px-4',
-              'text-sm text-zinc-50 placeholder:text-zinc-600',
-              'ring-1 ring-white/[0.08] backdrop-blur-sm transition-all duration-200',
-              'hover:ring-white/[0.16]',
-              'focus:bg-zinc-900/70 focus:outline-none focus:ring-2 focus:ring-teal-400/60',
-              error && 'ring-red-500/60 focus:ring-red-500/80',
+              'border-border/80 bg-card/50 text-foreground placeholder:text-muted-foreground/60',
+              'block h-11 w-full rounded-md border px-3.5 text-sm',
+              'shadow-[inset_0_1px_2px_rgb(0_0_0/0.04)] backdrop-blur-md',
+              'transition-[color,border-color,box-shadow,background-color] duration-200',
+              'hover:border-border-strong',
+              'focus:bg-card/80 focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30',
+              'dark:bg-card/40 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.02)]',
+              error &&
+                'border-destructive/60 focus-visible:border-destructive focus-visible:ring-destructive/25',
               isPassword && 'pr-11',
-              type === 'email' && 'font-mono text-[13px]',
               className,
             )}
             {...props}
@@ -60,7 +62,7 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               tabIndex={-1}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300 focus:outline-none focus-visible:text-zinc-100"
+              className="text-muted-foreground hover:text-foreground focus-visible:text-foreground absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-sm transition-colors focus:outline-none"
               aria-label={
                 showPassword ? 'Nascondi password' : 'Mostra password'
               }
@@ -76,16 +78,16 @@ export const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(
 
         {error ? (
           <p
-            className="flex items-center gap-1.5 text-xs text-red-400"
+            className="text-destructive flex items-center gap-1.5 text-xs"
             role="alert"
           >
-            <span className="inline-block size-1 rounded-full bg-red-400" />
+            <span className="bg-destructive inline-block size-1 rounded-full" />
             {error}
           </p>
         ) : null}
 
         {hint && !error ? (
-          <p className="text-xs text-zinc-500">{hint}</p>
+          <p className="text-muted-foreground text-xs">{hint}</p>
         ) : null}
       </div>
     )

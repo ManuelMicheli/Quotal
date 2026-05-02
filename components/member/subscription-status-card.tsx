@@ -2,9 +2,9 @@
  * Hero card on /app: subscription status at a glance.
  *
  * Server component (pure presentation). Renders one of seven states.
- * Active state shows a featured dark hero with ambient accent glow and
- * a large days-remaining counter. Other states use lighter cards tuned
- * to the semantic colour of the alert.
+ * Active → contrast-tone hero with pulse-glow accent + sheen sweep.
+ * Expiring/Grace/Expired → tinted hero with semantic colour. Suspended
+ * and cancelled → muted neutral.
  */
 import {
   AlertTriangleIcon,
@@ -49,27 +49,33 @@ function getVariant(status: MemberHomeData['status']): Variant {
   }
 }
 
-const TONE_CLASSES: Record<Tone, { card: string; eyebrow: string; chip: string; cta: string; progress: string }> = {
+const TONE_CLASSES: Record<
+  Tone,
+  { card: string; eyebrow: string; chip: string; cta: string; progress: string; track: string }
+> = {
   featured: {
     card: 'bg-foreground text-background',
     eyebrow: 'text-background/70',
     chip: 'bg-background/10 text-background ring-1 ring-inset ring-background/15',
-    cta: 'bg-background text-foreground hover:bg-background/90',
+    cta: 'bg-background text-foreground hover:bg-background/92',
     progress: 'bg-[color:var(--accent)]',
+    track: 'bg-background/15',
   },
   warning: {
     card: 'bg-card text-foreground ring-1 ring-inset ring-warning/30',
     eyebrow: 'text-warning',
-    chip: 'bg-warning/10 text-warning ring-1 ring-inset ring-warning/20',
-    cta: 'bg-warning text-warning-foreground hover:bg-warning/90',
+    chip: 'bg-warning-soft text-warning ring-1 ring-inset ring-warning/25',
+    cta: 'bg-warning text-warning-foreground hover:bg-warning/92',
     progress: 'bg-warning',
+    track: 'bg-warning/15',
   },
   destructive: {
     card: 'bg-card text-foreground ring-1 ring-inset ring-destructive/30',
     eyebrow: 'text-destructive',
-    chip: 'bg-destructive/10 text-destructive ring-1 ring-inset ring-destructive/20',
-    cta: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+    chip: 'bg-destructive-soft text-destructive ring-1 ring-inset ring-destructive/25',
+    cta: 'bg-destructive text-destructive-foreground hover:bg-destructive/92',
     progress: 'bg-destructive',
+    track: 'bg-destructive/15',
   },
   muted: {
     card: 'bg-card text-foreground ring-1 ring-inset ring-border',
@@ -77,6 +83,7 @@ const TONE_CLASSES: Record<Tone, { card: string; eyebrow: string; chip: string; 
     chip: 'bg-muted text-muted-foreground',
     cta: '',
     progress: 'bg-muted-foreground',
+    track: 'bg-muted',
   },
 }
 
@@ -98,7 +105,8 @@ export function SubscriptionStatusCard({ data }: { data: MemberHomeData }) {
   return (
     <section
       className={cn(
-        'ring-elevated relative h-full overflow-hidden rounded-[28px] p-6 md:p-8 lg:p-10',
+        'ring-elevated relative h-full overflow-hidden rounded-3xl p-6 md:p-8 lg:p-10',
+        featured && 'sheen',
         tones.card,
       )}
       aria-labelledby="status-eyebrow"
@@ -107,13 +115,19 @@ export function SubscriptionStatusCard({ data }: { data: MemberHomeData }) {
         <>
           <div
             aria-hidden="true"
-            className="pulse-glow absolute -right-16 -top-16 h-64 w-64 rounded-full"
-            style={{ background: 'radial-gradient(closest-side, color-mix(in oklab, var(--accent) 65%, transparent), transparent)' }}
+            className="pulse-glow pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full"
+            style={{
+              background:
+                'radial-gradient(closest-side, color-mix(in oklab, var(--accent) 70%, transparent), transparent)',
+            }}
           />
           <div
             aria-hidden="true"
-            className="absolute inset-x-0 top-0 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, color-mix(in oklab, white 25%, transparent), transparent)' }}
+            className="pointer-events-none absolute inset-x-0 top-0 h-px"
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, color-mix(in oklab, white 28%, transparent), transparent)',
+            }}
           />
         </>
       ) : null}
@@ -134,15 +148,20 @@ export function SubscriptionStatusCard({ data }: { data: MemberHomeData }) {
         <div className="mt-5 space-y-1.5 md:mt-7">
           {data.subscription ? (
             <>
-              <p className={cn('text-xs uppercase tracking-[0.12em]', tones.eyebrow)}>
+              <p
+                className={cn(
+                  'text-[11px] font-medium uppercase tracking-[0.12em]',
+                  tones.eyebrow,
+                )}
+              >
                 {data.gym?.name ?? 'Il tuo piano'}
               </p>
-              <h2 className="font-display text-3xl tracking-tight text-balance md:text-5xl lg:text-[3.25rem]">
+              <h2 className="heading-display text-[2.4rem] text-balance md:text-[3.5rem] lg:text-[3.75rem]">
                 {data.subscription.plan.name}
               </h2>
             </>
           ) : (
-            <h2 className="font-display text-3xl tracking-tight text-balance md:text-5xl">
+            <h2 className="heading-display text-[2.4rem] text-balance md:text-[3.5rem]">
               Non sei iscritto
             </h2>
           )}
@@ -151,19 +170,24 @@ export function SubscriptionStatusCard({ data }: { data: MemberHomeData }) {
         {daysNumber !== null && data.subscription ? (
           <div className="mt-6 flex items-end justify-between gap-4 md:mt-10">
             <div>
-              <p className="tabular text-5xl font-semibold leading-none tracking-tight md:text-7xl lg:text-8xl">
+              <p className="number text-5xl font-semibold leading-none md:text-7xl lg:text-[5rem]">
                 {daysNumber}
               </p>
-              <p className={cn('mt-1 text-xs md:mt-2 md:text-sm', tones.eyebrow)}>
+              <p className={cn('mt-1.5 text-xs md:mt-2.5 md:text-sm', tones.eyebrow)}>
                 {daysNumber === 1 ? 'giorno' : 'giorni'}{' '}
                 {data.status === 'grace_period' ? 'di tolleranza' : 'rimanenti'}
               </p>
             </div>
             <div className="text-right">
-              <p className={cn('text-[11px] uppercase tracking-[0.12em] md:text-xs', tones.eyebrow)}>
+              <p
+                className={cn(
+                  'text-[11px] uppercase tracking-[0.12em] md:text-xs',
+                  tones.eyebrow,
+                )}
+              >
                 Scade
               </p>
-              <p className="text-sm font-medium tabular md:text-lg">
+              <p className="tabular mt-1 text-sm font-medium md:text-lg">
                 {formatDate(data.subscription.end_date, 'short')}
               </p>
             </div>
@@ -172,7 +196,7 @@ export function SubscriptionStatusCard({ data }: { data: MemberHomeData }) {
 
         {data.status === 'active' && data.periodUsedPct !== null ? (
           <div className="mt-5">
-            <div className="h-1 overflow-hidden rounded-full bg-background/15">
+            <div className={cn('h-1 overflow-hidden rounded-full', tones.track)}>
               <div
                 className={cn('h-full rounded-full transition-all', tones.progress)}
                 style={{ width: `${data.periodUsedPct}%` }}
@@ -252,7 +276,7 @@ function PrimaryAction({
   ctaClass: string
 }) {
   const renew = (
-    <Button asChild size="lg" className={cn('mt-6 w-full rounded-full', ctaClass)}>
+    <Button asChild size="xl" className={cn('mt-6 w-full rounded-full', ctaClass)}>
       <Link href="/app/abbonamento/rinnova">
         Rinnova abbonamento
         <ArrowUpRightIcon size={16} />

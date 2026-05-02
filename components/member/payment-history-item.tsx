@@ -47,13 +47,13 @@ export function PaymentHistoryItem({ payment }: { payment: Payment }) {
     : 'Pagamento'
 
   return (
-    <article className="ring-soft tap-shrink rounded-3xl bg-card p-4">
+    <article className="ring-soft hover-lift rounded-3xl bg-card p-4 transition-all">
       <div className="flex items-center gap-4">
         <div
           className={cn(
             'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl',
             isRefund
-              ? 'bg-destructive/10 text-destructive'
+              ? 'bg-destructive-soft text-destructive'
               : 'bg-muted text-muted-foreground',
           )}
         >
@@ -79,7 +79,7 @@ export function PaymentHistoryItem({ payment }: { payment: Payment }) {
         </div>
       </div>
 
-      {(payment.receipt_number || payment.invoice_number) ? (
+      {payment.receipt_number || payment.invoice_number ? (
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 pl-[3.75rem] text-[11px] text-muted-foreground">
           {payment.receipt_number ? (
             <span className="tabular">Ricevuta #{payment.receipt_number}</span>

@@ -6,7 +6,6 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -50,28 +49,31 @@ export function SubscriptionsFilterBar({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="flex flex-wrap gap-2">
-        {STATUSES.map((s) => (
-          <Button
-            key={s.value}
-            type="button"
-            size="sm"
-            variant={currentStatus === s.value ? 'default' : 'outline'}
-            className={cn(
-              'rounded-full',
-              currentStatus === s.value ? '' : 'bg-background',
-            )}
-            onClick={() =>
-              applyParams((p) => {
-                if (s.value === 'all') p.delete('status')
-                else p.set('status', s.value)
-                p.delete('filter')
-              })
-            }
-          >
-            {s.label}
-          </Button>
-        ))}
+      <div className="flex flex-wrap gap-1.5">
+        {STATUSES.map((s) => {
+          const active = currentStatus === s.value
+          return (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() =>
+                applyParams((p) => {
+                  if (s.value === 'all') p.delete('status')
+                  else p.set('status', s.value)
+                  p.delete('filter')
+                })
+              }
+              className={cn(
+                'tap-shrink inline-flex h-8 items-center rounded-full border px-3.5 text-[0.8125rem] font-medium transition-all duration-200',
+                active
+                  ? 'border-foreground bg-foreground text-background shadow-[var(--shadow-1)]'
+                  : 'border-border bg-card text-muted-foreground hover:border-border-strong hover:bg-secondary hover:text-foreground',
+              )}
+            >
+              {s.label}
+            </button>
+          )
+        })}
       </div>
       <div className="ml-auto">
         <Select

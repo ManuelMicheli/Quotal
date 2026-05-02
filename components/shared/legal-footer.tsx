@@ -7,50 +7,76 @@
  */
 import Link from 'next/link'
 
+import { Logo } from '@/components/shared/logo'
 import { LEGAL_CONFIG, legalEntityLine } from '@/lib/legal/config'
+
+const LINKS: { href: string; label: string }[] = [
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/termini', label: 'Termini' },
+  { href: '/cookie-policy', label: 'Cookie Policy' },
+]
 
 export function LegalFooter() {
   const c = LEGAL_CONFIG.company
   return (
-    <footer className="border-t border-border/60 bg-muted/40 px-6 py-8 text-sm text-muted-foreground">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1">
-          <p className="font-medium text-foreground">{c.name}</p>
-          <p>{legalEntityLine()}</p>
-          <p className="space-x-2">
-            {c.email ? (
-              <a
-                href={`mailto:${c.email}`}
-                className="underline-offset-4 hover:underline"
+    <footer className="relative z-10 border-t border-border/60 bg-background/60 px-5 py-12 text-sm text-muted-foreground sm:px-8 sm:py-14">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/"
+              aria-label="Quotal"
+              className="inline-flex w-fit rounded-md focus-glow"
+            >
+              <Logo size="sm" />
+            </Link>
+            <p className="max-w-md text-pretty leading-relaxed">
+              Gestione abbonamenti palestra, pagamenti e accessi.
+              <br />
+              Made in Italy.
+            </p>
+          </div>
+
+          <nav
+            aria-label="Pagine legali"
+            className="flex flex-wrap items-center gap-x-1 gap-y-2"
+          >
+            {LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-secondary hover:text-foreground"
               >
-                {c.email}
-              </a>
-            ) : null}
-            {c.pec ? (
-              <>
-                <span aria-hidden>·</span>
-                <span>PEC: {c.pec}</span>
-              </>
-            ) : null}
-          </p>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <nav className="flex flex-wrap gap-x-4 gap-y-1">
-          <Link href="/privacy" className="hover:text-foreground">
-            Privacy
-          </Link>
-          <Link href="/termini" className="hover:text-foreground">
-            Termini
-          </Link>
-          <Link href="/cookie-policy" className="hover:text-foreground">
-            Cookie Policy
-          </Link>
-        </nav>
-      </div>
+        <hr className="border-border/60" />
 
-      <p className="mx-auto mt-6 max-w-5xl text-xs">
-        © {new Date().getFullYear()} {c.name}. Tutti i diritti riservati.
-      </p>
+        <div className="flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <p className="font-medium text-foreground">{c.name}</p>
+            <p>{legalEntityLine()}</p>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              {c.email ? (
+                <a
+                  href={`mailto:${c.email}`}
+                  className="text-foreground/80 underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                >
+                  {c.email}
+                </a>
+              ) : null}
+              {c.email && c.pec ? <span aria-hidden>·</span> : null}
+              {c.pec ? <span>PEC: {c.pec}</span> : null}
+            </p>
+          </div>
+          <p className="tabular text-muted-foreground/80">
+            © {new Date().getFullYear()} {c.name}. Tutti i diritti riservati.
+          </p>
+        </div>
+      </div>
     </footer>
   )
 }

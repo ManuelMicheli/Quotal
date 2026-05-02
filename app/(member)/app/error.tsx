@@ -7,6 +7,7 @@
 import { AlertTriangleIcon } from 'lucide-react'
 import { useEffect } from 'react'
 
+import { EmptyState } from '@/components/shared/empty-state'
 import { Button } from '@/components/ui/button'
 
 export default function MemberAppError({
@@ -21,22 +22,21 @@ export default function MemberAppError({
   }, [error])
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
-      <AlertTriangleIcon className="size-8 text-destructive" />
-      <h1 className="font-display text-xl tracking-tight">
-        Qualcosa è andato storto
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        Prova a ricaricare. Se continua, controlla la connessione.
-      </p>
-      {error.digest ? (
-        <p className="text-xs text-muted-foreground">
-          ID errore: {error.digest}
-        </p>
-      ) : null}
-      <Button onClick={reset} className="w-full">
-        Riprova
-      </Button>
+    <div className="ring-soft mx-auto mt-6 max-w-md rounded-3xl bg-card md:mt-12">
+      <EmptyState
+        icon={<AlertTriangleIcon className="text-destructive" />}
+        title="Qualcosa è andato storto"
+        description={
+          error.digest
+            ? `Prova a ricaricare. Se continua, controlla la connessione. ID errore: ${error.digest}`
+            : 'Prova a ricaricare. Se continua, controlla la connessione.'
+        }
+        action={
+          <Button onClick={reset} variant="accent" size="lg" className="rounded-full">
+            Riprova
+          </Button>
+        }
+      />
     </div>
   )
 }

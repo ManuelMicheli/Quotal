@@ -38,10 +38,6 @@ function readDismissedServerSnapshot(): boolean {
 }
 
 export function OnboardingCoach({ className }: { className?: string }) {
-  // useSyncExternalStore reads from localStorage without ever calling
-  // setState inside an effect body. Hydration-safe because the server
-  // snapshot returns `true` (hidden), so the banner appears only after
-  // mount when we know whether the user has dismissed it.
   const dismissed = React.useSyncExternalStore(
     subscribeToStorage,
     readDismissedSnapshot,
@@ -51,8 +47,6 @@ export function OnboardingCoach({ className }: { className?: string }) {
   function dismiss() {
     try {
       window.localStorage.setItem(STORAGE_KEY, '1')
-      // Fire a synthetic storage event so subscribers in this same tab
-      // re-read. Native `storage` events only fire across tabs.
       window.dispatchEvent(
         new StorageEvent('storage', { key: STORAGE_KEY, newValue: '1' }),
       )
@@ -66,33 +60,41 @@ export function OnboardingCoach({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-accent/30 bg-accent/5 p-4 sm:flex-row sm:items-center',
+        'relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-br from-accent-soft via-card to-card p-5 shadow-[var(--shadow-1)] sm:p-6',
         className,
       )}
     >
-      <div className="flex shrink-0 items-center gap-2 text-accent">
-        <SparklesIcon className="size-5" />
-        <span className="font-display text-lg">Benvenuto in Quotal!</span>
-      </div>
-      <p className="flex-1 text-sm text-muted-foreground">
-        Per iniziare, aggiungi il tuo primo membro. Hai bisogno di aiuto?
-        Guarda il video tutorial (2 min).
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button asChild size="sm">
-          <Link href="/dashboard/membri/nuovo">+ Aggiungi primo membro</Link>
-        </Button>
-        <Button size="sm" variant="outline" disabled title="Disponibile prossimamente">
-          Guarda tutorial
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={dismiss}
-          aria-label="Chiudi banner di benvenuto"
-        >
-          <XIcon className="size-4" />
-        </Button>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-accent/10 blur-2xl"
+      />
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-[var(--shadow-2)]">
+          <SparklesIcon className="size-5" />
+        </div>
+        <div className="flex-1">
+          <p className="eyebrow text-accent">Benvenuto in Quotal</p>
+          <h2 className="mt-1 text-pretty text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+            Aggiungi il tuo primo membro per iniziare
+          </h2>
+          <p className="mt-1 max-w-xl text-pretty text-sm text-muted-foreground">
+            Crea la prima scheda anagrafica e Quotal si occuperà del resto:
+            QR badge, ricevute, promemoria di scadenza.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="accent" size="sm">
+            <Link href="/dashboard/membri/nuovo">Aggiungi primo membro</Link>
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={dismiss}
+            aria-label="Chiudi banner di benvenuto"
+          >
+            <XIcon className="size-4" />
+          </Button>
+        </div>
       </div>
     </div>
   )

@@ -12,6 +12,7 @@
  */
 import type { Metadata } from 'next'
 
+import { LegalDocument } from '@/components/shared/legal-document'
 import { LEGAL_CONFIG } from '@/lib/legal/config'
 
 export const metadata: Metadata = {
@@ -19,6 +20,21 @@ export const metadata: Metadata = {
   description:
     'Termini e condizioni di utilizzo della piattaforma Quotal per la gestione degli abbonamenti palestra.',
 }
+
+const TOC = [
+  { id: 'definizioni', label: 'Definizioni' },
+  { id: 'oggetto', label: 'Oggetto del servizio' },
+  { id: 'registrazione', label: 'Registrazione e account' },
+  { id: 'pagamenti', label: 'Pagamenti' },
+  { id: 'ripensamento', label: 'Diritto di ripensamento' },
+  { id: 'uso', label: 'Uso accettabile' },
+  { id: 'disponibilita', label: 'Disponibilità del servizio' },
+  { id: 'responsabilita', label: 'Limitazione di responsabilità' },
+  { id: 'modifiche', label: 'Modifiche dei Termini' },
+  { id: 'foro', label: 'Legge applicabile e foro' },
+  { id: 'odr', label: 'Risoluzione delle controversie' },
+  { id: 'contatti', label: 'Contatti' },
+]
 
 export default function TerminiPage() {
   const updatedAt = new Date('2026-04-29').toLocaleDateString('it-IT', {
@@ -29,13 +45,13 @@ export default function TerminiPage() {
   const c = LEGAL_CONFIG.company
 
   return (
-    <>
-      <h1>Termini e condizioni di utilizzo</h1>
-      <p className="text-sm text-muted-foreground">
-        Ultimo aggiornamento: {updatedAt}
-      </p>
-
-      <h2>1. Definizioni</h2>
+    <LegalDocument
+      eyebrow="Termini di servizio"
+      title="Termini e condizioni di utilizzo"
+      updatedAt={updatedAt}
+      toc={TOC}
+    >
+      <h2 id="definizioni">1. Definizioni</h2>
       <ul>
         <li>
           <strong>Quotal</strong>: la piattaforma software accessibile da{' '}
@@ -53,7 +69,7 @@ export default function TerminiPage() {
         </li>
       </ul>
 
-      <h2>2. Oggetto del servizio</h2>
+      <h2 id="oggetto">2. Oggetto del servizio</h2>
       <p>
         Quotal è una piattaforma SaaS che consente alla Palestra di gestire
         anagrafica membri, piani di abbonamento, pagamenti, ricevute,
@@ -68,7 +84,7 @@ export default function TerminiPage() {
         della Palestra.
       </p>
 
-      <h2>3. Registrazione e account</h2>
+      <h2 id="registrazione">3. Registrazione e account</h2>
       <p>
         La registrazione richiede la fornitura dei dati anagrafici corretti e
         l&apos;accettazione della presente informativa e della{' '}
@@ -77,7 +93,7 @@ export default function TerminiPage() {
         tempestivamente alla Palestra ogni accesso non autorizzato.
       </p>
 
-      <h2>4. Pagamenti</h2>
+      <h2 id="pagamenti">4. Pagamenti</h2>
       <p>
         I pagamenti online sono processati da Stripe Payments Europe Ltd.
         Quotal non conserva dati completi di carta o IBAN. Le ricevute sono
@@ -90,7 +106,7 @@ export default function TerminiPage() {
         la normativa SEPA.
       </p>
 
-      <h2>5. Diritto di ripensamento</h2>
+      <h2 id="ripensamento">5. Diritto di ripensamento</h2>
       <p>
         Ai sensi dell&apos;art. 59 del Codice del Consumo, il diritto di
         recesso non si applica ai contratti di prestazione di servizi
@@ -104,7 +120,7 @@ export default function TerminiPage() {
         Palestra.
       </p>
 
-      <h2>6. Uso accettabile</h2>
+      <h2 id="uso">6. Uso accettabile</h2>
       <p>Il Membro si impegna a:</p>
       <ul>
         <li>non condividere il proprio QR di accesso con terzi;</li>
@@ -122,7 +138,7 @@ export default function TerminiPage() {
         </li>
       </ul>
 
-      <h2>7. Disponibilità del servizio e manutenzione</h2>
+      <h2 id="disponibilita">7. Disponibilità del servizio e manutenzione</h2>
       <p>
         Il Fornitore si impegna a garantire la disponibilità del servizio
         secondo i migliori standard di mercato (best effort), senza tuttavia
@@ -131,7 +147,7 @@ export default function TerminiPage() {
         possibile.
       </p>
 
-      <h2>8. Limitazione di responsabilità</h2>
+      <h2 id="responsabilita">8. Limitazione di responsabilità</h2>
       <p>
         Nei limiti consentiti dalla legge, il Fornitore non risponde di danni
         indiretti, perdita di dati o di profitto derivanti dall&apos;utilizzo
@@ -139,7 +155,7 @@ export default function TerminiPage() {
         confronti del Membro per il rapporto associativo.
       </p>
 
-      <h2>9. Modifiche dei Termini</h2>
+      <h2 id="modifiche">9. Modifiche dei Termini</h2>
       <p>
         Il Fornitore può modificare i presenti Termini per adeguamenti
         normativi o di servizio. Le modifiche saranno comunicate via email
@@ -148,7 +164,7 @@ export default function TerminiPage() {
         equivale ad accettazione.
       </p>
 
-      <h2>10. Legge applicabile e foro competente</h2>
+      <h2 id="foro">10. Legge applicabile e foro competente</h2>
       <p>
         I presenti Termini sono regolati dalla legge italiana. Per le
         controversie con consumatori si applica il foro di residenza o
@@ -157,7 +173,7 @@ export default function TerminiPage() {
         esclusiva il Foro di {c.headquarters.city}.
       </p>
 
-      <h2>11. Risoluzione alternativa delle controversie (ODR)</h2>
+      <h2 id="odr">11. Risoluzione alternativa delle controversie (ODR)</h2>
       <p>
         Ai sensi dell&apos;art. 14 del Reg. UE 524/2013, è disponibile la
         piattaforma europea per la risoluzione delle controversie online
@@ -172,7 +188,7 @@ export default function TerminiPage() {
         .
       </p>
 
-      <h2>12. Contatti</h2>
+      <h2 id="contatti">12. Contatti</h2>
       <p>
         Per qualsiasi richiesta è possibile scrivere a{' '}
         <a href={`mailto:${LEGAL_CONFIG.app.support_email}`}>
@@ -180,6 +196,6 @@ export default function TerminiPage() {
         </a>
         .
       </p>
-    </>
+    </LegalDocument>
   )
 }

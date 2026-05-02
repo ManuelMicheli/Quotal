@@ -2,10 +2,19 @@
  * Operating-rules settings: grace period, suspension cap, notification days.
  * Stored in `gyms.settings` JSONB.
  */
+import { ArrowLeftIcon } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { GymRulesForm } from '@/components/owner/gym-rules-form'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { Button } from '@/components/ui/button'
 import { DEFAULT_GYM_SETTINGS } from '@/lib/constants'
 import type { GymSettings } from '@/lib/domain-types'
 import { getCurrentGym } from '@/lib/queries/gym'
@@ -35,20 +44,26 @@ export default async function GymRulesPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div>
-        <Link
-          href="/dashboard/impostazioni"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Tutte le impostazioni
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
+      >
+        <Link href="/dashboard/impostazioni">
+          <ArrowLeftIcon className="size-3.5" />
+          Tutte le impostazioni
         </Link>
-      </div>
-      <header>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Regole operative</h1>
-        <p className="text-sm text-muted-foreground">
-          Tolleranza scadenza, limite sospensioni e promemoria automatici.
-        </p>
-      </header>
+      </Button>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Impostazioni</PageHeaderEyebrow>
+          <PageHeaderHeading>Regole operative</PageHeaderHeading>
+          <PageHeaderDescription>
+            Tolleranza scadenza, limite sospensioni e promemoria automatici.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
       <GymRulesForm settings={settings} />
     </div>
   )

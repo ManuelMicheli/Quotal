@@ -5,17 +5,21 @@
  * `getMemberHomeData()` call so the page paints with no client fetches
  * on the critical path.
  *
- * Responsive layout:
- *   - Phone: stacked single column.
+ * Layout:
+ *   - Phone: stacked single column with a horizontally scrollable quick
+ *     actions strip.
  *   - Tablet+: hero greeting full width, then 12-col grid (status 7, QR 5),
  *     metadata sections aligned in the right column.
  */
 import {
   ArrowUpRightIcon,
   CalendarClockIcon,
+  ClipboardListIcon,
   CreditCardIcon,
   DoorOpenIcon,
   ReceiptIcon,
+  RefreshCwIcon,
+  type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -71,10 +75,8 @@ export default async function MemberHomePage() {
     <div className="flex flex-col gap-5 md:gap-8 lg:gap-10">
       <header className="flex items-start justify-between gap-3 pt-2 md:pt-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground md:text-xs">
-            {todayLabel()}
-          </p>
-          <h1 className="mt-2 font-display text-[2.4rem] leading-[1.05] tracking-tight text-balance md:mt-3 md:text-6xl lg:text-7xl">
+          <p className="eyebrow">{todayLabel()}</p>
+          <h1 className="heading-display mt-2 text-[2.4rem] text-balance md:mt-3 md:text-6xl lg:text-7xl">
             {italianGreeting()},{' '}
             <span className="italic text-muted-foreground">{firstName}</span>
           </h1>
@@ -98,16 +100,16 @@ export default async function MemberHomePage() {
           />
         </div>
 
+        <QuickActions className="md:col-span-7" />
+
         {data.sepaMandate && data.subscription?.auto_renew ? (
           <section className="ring-soft rounded-3xl bg-card p-5 md:col-span-7 md:p-6">
             <div className="flex items-start gap-3 md:gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-[color:var(--accent)] md:h-12 md:w-12">
+              <div className="bg-accent-soft text-accent flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl md:h-12 md:w-12">
                 <CreditCardIcon size={18} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground md:text-xs">
-                  Prossimo addebito SEPA
-                </p>
+                <p className="eyebrow">Prossimo addebito SEPA</p>
                 <p className="mt-1 text-sm leading-snug md:text-base">
                   Il{' '}
                   <span className="font-semibold">
@@ -122,7 +124,7 @@ export default async function MemberHomePage() {
                 </p>
                 <Link
                   href="/app/pagamenti/portal"
-                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[color:var(--accent)] hover:underline md:text-sm"
+                  className="text-accent mt-3 inline-flex items-center gap-1 text-xs font-medium hover:underline md:text-sm"
                 >
                   Modifica metodo
                   <ArrowUpRightIcon size={12} />
@@ -134,10 +136,8 @@ export default async function MemberHomePage() {
 
         {data.lastAccess || data.lastPayment || data.subscription ? (
           <section className="ring-soft overflow-hidden rounded-3xl bg-card md:col-span-5 md:row-span-2">
-            <p className="px-5 pt-4 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground md:px-6 md:pt-5 md:text-xs">
-              Attività recente
-            </p>
-            <ul className="divide-y divide-border/60">
+            <p className="eyebrow px-5 pt-5 md:px-6">Attività recente</p>
+            <ul className="mt-2 divide-y divide-border/60">
               {data.lastAccess ? (
                 <li>
                   <div className="flex items-center gap-3 px-5 py-4 md:px-6 md:py-5">
@@ -157,9 +157,7 @@ export default async function MemberHomePage() {
                       aria-hidden="true"
                       className={
                         'inline-block size-2 rounded-full ' +
-                        (data.lastAccess.granted
-                          ? 'bg-success'
-                          : 'bg-destructive')
+                        (data.lastAccess.granted ? 'bg-success' : 'bg-destructive')
                       }
                     />
                   </div>
@@ -180,9 +178,7 @@ export default async function MemberHomePage() {
                       </p>
                       <p className="truncate text-xs text-muted-foreground md:text-sm">
                         <span className="tabular">
-                          {formatCurrency(
-                            Math.abs(data.lastPayment.amount_cents),
-                          )}
+                          {formatCurrency(Math.abs(data.lastPayment.amount_cents))}
                         </span>{' '}
                         ·{' '}
                         {formatRelativeDate(
@@ -230,5 +226,89 @@ export default async function MemberHomePage() {
         ) : null}
       </div>
     </div>
+  )
+}
+
+type QuickAction = {
+  href: string
+  label: string
+  hint: string
+  icon: LucideIcon
+  tone: 'accent' | 'info' | 'warning' | 'foreground'
+}
+
+const QUICK_ACTIONS: ReadonlyArray<QuickAction> = [
+  {
+    href: '/app/abbonamento/rinnova',
+    label: 'Rinnova',
+    hint: 'Paga ora',
+    icon: RefreshCwIcon,
+    tone: 'accent',
+  },
+  {
+    href: '/app/schede',
+    label: 'Schede',
+    hint: 'Allenamenti',
+    icon: ClipboardListIcon,
+    tone: 'info',
+  },
+  {
+    href: '/app/pagamenti',
+    label: 'Pagamenti',
+    hint: 'Ricevute',
+    icon: ReceiptIcon,
+    tone: 'foreground',
+  },
+  {
+    href: '/app/abbonamento',
+    label: 'Abbonamento',
+    hint: 'Dettagli',
+    icon: CalendarClockIcon,
+    tone: 'warning',
+  },
+]
+
+const TONE_BG: Record<QuickAction['tone'], string> = {
+  accent: 'bg-accent-soft text-accent ring-accent/15',
+  info: 'bg-info-soft text-info ring-info/15',
+  warning: 'bg-warning-soft text-warning ring-warning/15',
+  foreground: 'bg-muted text-foreground ring-border',
+}
+
+function QuickActions({ className }: { className?: string }) {
+  return (
+    <section className={className} aria-label="Azioni rapide">
+      <p className="eyebrow mb-3 px-1 md:px-0">Azioni rapide</p>
+      <div className="mask-fade-x -mx-5 overflow-x-auto px-5 pb-1 md:mx-0 md:px-0">
+        <ul className="flex w-max gap-3 md:w-auto md:grid md:grid-cols-4 md:gap-4">
+          {QUICK_ACTIONS.map((a) => {
+            const Icon = a.icon
+            return (
+              <li key={a.href} className="w-32 md:w-auto">
+                <Link
+                  href={a.href}
+                  className="tap-shrink ring-soft hover-lift relative flex h-full flex-col gap-3 rounded-3xl bg-card p-4 transition-all"
+                >
+                  <span
+                    className={
+                      'flex h-10 w-10 items-center justify-center rounded-2xl ring-1 ring-inset ' +
+                      TONE_BG[a.tone]
+                    }
+                  >
+                    <Icon size={18} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold tracking-tight">{a.label}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      {a.hint}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </section>
   )
 }

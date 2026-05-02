@@ -8,16 +8,26 @@
  */
 import {
   AlertTriangleIcon,
+  ArrowLeftIcon,
   ArrowUpRightIcon,
   BanknoteIcon,
   CheckCircle2Icon,
   CreditCardIcon,
   ExternalLinkIcon,
   LinkIcon,
+  XCircleIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 
 import { ConnectStripeButton } from '@/components/owner/connect-stripe-button'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { Stepper } from '@/components/shared/stepper'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,27 +43,60 @@ export default async function StripeSettingsPage() {
   await requireOwnerOrStaff()
   const snap = await getStripeAccountSnapshot()
 
+  const onboardingStep = !snap.connected
+    ? 0
+    : !snap.account?.details_submitted
+      ? 1
+      : !snap.account?.charges_enabled || !snap.account?.payouts_enabled
+        ? 2
+        : 3
+
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div>
-        <Link
-          href="/dashboard/impostazioni"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Tutte le impostazioni
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
+      >
+        <Link href="/dashboard/impostazioni">
+          <ArrowLeftIcon className="size-3.5" />
+          Tutte le impostazioni
         </Link>
-      </div>
+      </Button>
 
-      <header>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
-          Stripe
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Stato dell&apos;account Stripe collegato. Tutti i dati anagrafici, IBAN
-          per i payout e verifica identità si gestiscono direttamente sulla
-          dashboard Stripe.
-        </p>
-      </header>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Impostazioni</PageHeaderEyebrow>
+          <PageHeaderHeading>Stripe</PageHeaderHeading>
+          <PageHeaderDescription>
+            Stato dell&apos;account Stripe collegato. Tutti i dati anagrafici, IBAN
+            per i payout e verifica identità si gestiscono direttamente sulla
+            dashboard Stripe.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
+
+      {snap.configured ? (
+        <Card>
+          <CardContent className="py-2">
+            <Stepper
+              orientation="horizontal"
+              current={onboardingStep}
+              steps={[
+                { id: 'connect', title: 'Collega Stripe', description: 'Account Express' },
+                { id: 'kyc', title: 'Identità', description: 'KYC + IBAN' },
+                {
+                  id: 'enable',
+                  title: 'Pagamenti attivi',
+                  description: 'Charges + payouts',
+                },
+                { id: 'live', title: 'Operativo', description: 'Pronto a incassare' },
+              ]}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
 
       {!snap.configured ? (
         <Alert variant="destructive">
@@ -62,7 +105,7 @@ export default async function StripeSettingsPage() {
           <AlertDescription>
             <p>
               Manca o non è valida la chiave segreta della piattaforma. Errore:{' '}
-              <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+              <code className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">
                 {snap.error ?? 'STRIPE_SECRET_KEY assente'}
               </code>
             </p>
@@ -92,10 +135,10 @@ export default async function StripeSettingsPage() {
 
 function ConnectCard() {
   return (
-    <Card>
+    <Card tone="accent">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <LinkIcon className="size-5" />
+          <LinkIcon className="size-4 text-accent" />
           Collega il tuo Stripe
         </CardTitle>
       </CardHeader>
@@ -105,14 +148,21 @@ function ConnectCard() {
           Stripe alla tua palestra. Stripe gestisce la verifica dell’identità,
           l’IBAN e i payout — Quotal non vede mai i tuoi soldi.
         </p>
-        <ul className="ml-4 list-disc space-y-1 text-muted-foreground">
-          <li>Apri un account Express in pochi minuti.</li>
-          <li>
-            I pagamenti finiscono direttamente sul tuo conto Stripe e poi sul
-            tuo IBAN.
+        <ul className="space-y-1.5 text-muted-foreground">
+          <li className="flex items-start gap-2">
+            <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-success" />
+            <span>Apri un account Express in pochi minuti.</span>
           </li>
-          <li>
-            Puoi sospendere o riprendere l’onboarding in qualunque momento.
+          <li className="flex items-start gap-2">
+            <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-success" />
+            <span>
+              I pagamenti finiscono direttamente sul tuo conto Stripe e poi sul
+              tuo IBAN.
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-success" />
+            <span>Puoi sospendere o riprendere l’onboarding in qualunque momento.</span>
           </li>
         </ul>
         <ConnectStripeButton label="Connetti la palestra a Stripe" />
@@ -148,10 +198,15 @@ function PlatformFeeCard() {
       <CardHeader>
         <CardTitle>Commissioni Quotal</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 text-sm">
-        <p>
-          <span className="font-display text-2xl">{pct}%</span> trattenuta su
-          ogni pagamento dei tuoi iscritti come commissione di piattaforma.
+      <CardContent className="space-y-3 text-sm">
+        <p className="flex items-baseline gap-2">
+          <span className="number font-display text-3xl font-normal tracking-tight">
+            {pct}%
+          </span>
+          <span className="text-muted-foreground">
+            trattenuta su ogni pagamento dei tuoi iscritti come commissione di
+            piattaforma.
+          </span>
         </p>
         <p className="text-muted-foreground">
           Il costo viene scalato automaticamente da Stripe e non incide sulle
@@ -170,33 +225,33 @@ function StatusCard({
   const a = snap.account!
   const allClear = a.charges_enabled && a.payouts_enabled
   const blocked =
-    a.requirements_disabled_reason ||
-    a.requirements_past_due.length > 0
+    a.requirements_disabled_reason || a.requirements_past_due.length > 0
   const pendingReqs = a.requirements_currently_due.length > 0
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
+      <CardHeader className="flex-row items-center justify-between gap-2">
         <CardTitle className="flex items-center gap-2">
-          <CreditCardIcon className="size-5" />
+          <CreditCardIcon className="size-4 text-accent" />
           Stato account
         </CardTitle>
         {allClear ? (
-          <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15">
-            Operativo
-          </Badge>
+          <Badge variant="success">Operativo</Badge>
         ) : blocked ? (
           <Badge variant="destructive">Bloccato</Badge>
         ) : pendingReqs ? (
-          <Badge className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/15">
-            KYC in corso
-          </Badge>
+          <Badge variant="warning">KYC in corso</Badge>
         ) : (
           <Badge variant="secondary">Non attivato</Badge>
         )}
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        <KV label="Account ID" value={<code className="text-xs">{a.id}</code>} />
+        <KV
+          label="Account ID"
+          value={
+            <code className="font-mono text-xs">{a.id}</code>
+          }
+        />
         <KV label="Email" value={a.email ?? '—'} />
         <KV label="Ragione sociale" value={a.business_name ?? '—'} />
         <KV
@@ -207,11 +262,13 @@ function StatusCard({
           label="Pagamenti abilitati"
           value={
             a.charges_enabled ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600">
+              <span className="inline-flex items-center gap-1 text-success">
                 <CheckCircle2Icon className="size-4" /> Sì
               </span>
             ) : (
-              <span className="text-amber-600">No</span>
+              <span className="inline-flex items-center gap-1 text-warning">
+                <XCircleIcon className="size-4" /> No
+              </span>
             )
           }
         />
@@ -219,38 +276,44 @@ function StatusCard({
           label="Payout abilitati"
           value={
             a.payouts_enabled ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600">
+              <span className="inline-flex items-center gap-1 text-success">
                 <CheckCircle2Icon className="size-4" /> Sì
               </span>
             ) : (
-              <span className="text-amber-600">No</span>
+              <span className="inline-flex items-center gap-1 text-warning">
+                <XCircleIcon className="size-4" /> No
+              </span>
             )
           }
         />
 
         {pendingReqs ? (
-          <div className="sm:col-span-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-            <p className="font-medium text-amber-700 dark:text-amber-400">
-              Da completare su Stripe
-            </p>
-            <ul className="mt-2 list-disc pl-5 text-muted-foreground">
-              {a.requirements_currently_due.slice(0, 8).map((r) => (
-                <li key={r}>
-                  <code className="text-xs">{r}</code>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Alert variant="warning" className="sm:col-span-2">
+            <AlertTriangleIcon className="size-4" />
+            <AlertTitle>Da completare su Stripe</AlertTitle>
+            <AlertDescription>
+              <ul className="ml-4 mt-2 list-disc space-y-1">
+                {a.requirements_currently_due.slice(0, 8).map((r) => (
+                  <li key={r}>
+                    <code className="font-mono text-xs">{r}</code>
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         {a.requirements_disabled_reason ? (
-          <div className="sm:col-span-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
-            <p className="font-medium text-destructive">Account limitato</p>
-            <p className="text-muted-foreground">
+          <Alert variant="destructive" className="sm:col-span-2">
+            <AlertTriangleIcon className="size-4" />
+            <AlertTitle>Account limitato</AlertTitle>
+            <AlertDescription>
               Motivo Stripe:{' '}
-              <code className="text-xs">{a.requirements_disabled_reason}</code>
-            </p>
-          </div>
+              <code className="font-mono text-xs">
+                {a.requirements_disabled_reason}
+              </code>
+            </AlertDescription>
+          </Alert>
         ) : null}
       </CardContent>
     </Card>
@@ -267,15 +330,15 @@ function BalanceCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <BanknoteIcon className="size-5" />
+          <BanknoteIcon className="size-4 text-accent" />
           Saldo
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
+      <CardContent className="grid gap-6 sm:grid-cols-2">
         <KV
           label="Disponibile per payout"
           value={
-            <span className="font-display text-2xl">
+            <span className="number font-display text-3xl font-normal tracking-tight">
               {formatCurrency(Math.round(b.available_eur * 100))}
             </span>
           }
@@ -283,7 +346,7 @@ function BalanceCard({
         <KV
           label="In transito (pending)"
           value={
-            <span className="font-display text-2xl text-muted-foreground">
+            <span className="number font-display text-3xl font-normal tracking-tight text-muted-foreground">
               {formatCurrency(Math.round(b.pending_eur * 100))}
             </span>
           }
@@ -302,7 +365,7 @@ function PayoutsCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ArrowUpRightIcon className="size-5" />
+          <ArrowUpRightIcon className="size-4 text-accent" />
           Ultimi payout
         </CardTitle>
       </CardHeader>
@@ -313,23 +376,24 @@ function PayoutsCard({
             verificato il tuo account e accumulato il saldo iniziale.
           </p>
         ) : (
-          <ul className="divide-y">
+          <ul className="-mx-2 flex flex-col">
             {snap.payouts.map((p) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between gap-3 py-3 text-sm"
+                className="flex items-center justify-between gap-3 rounded-md px-2 py-2.5 text-sm transition-colors hover:bg-secondary/60"
               >
                 <div>
-                  <p className="font-medium">{formatCurrency(Math.round(p.amount_eur * 100))}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(p.arrival_date, 'short')} ·{' '}
-                    <code className="text-xs">{p.id}</code>
+                  <p className="number font-semibold">
+                    {formatCurrency(Math.round(p.amount_eur * 100))}
+                  </p>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {formatDate(p.arrival_date, 'short')} · {p.id}
                   </p>
                 </div>
                 <Badge
                   variant={
                     p.status === 'paid'
-                      ? 'default'
+                      ? 'success'
                       : p.status === 'failed'
                         ? 'destructive'
                         : 'secondary'
@@ -361,8 +425,10 @@ function ActionsCard({
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-2">
         {needsKyc ? (
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <p className="text-sm font-medium">Completa onboarding (KYC)</p>
+          <div className="rounded-lg border border-warning/30 bg-warning-soft p-4">
+            <p className="text-sm font-semibold text-warning">
+              Completa onboarding (KYC)
+            </p>
             <p className="mb-3 text-xs text-muted-foreground">
               Documenti, IBAN, P.IVA: tutto su Stripe.
             </p>
@@ -393,35 +459,32 @@ function ExternalLinkButton({
   href,
   label,
   description,
-  primary = false,
 }: {
   href: string
   label: string
   description: string
-  primary?: boolean
 }) {
   return (
-    <Button
-      asChild
-      variant={primary ? 'default' : 'outline'}
-      className="h-auto flex-col items-start gap-1 py-3 text-left whitespace-normal"
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="tap-shrink group/ext flex flex-col gap-1 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:-translate-y-px hover:border-border-strong hover:shadow-[var(--shadow-2)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30"
     >
-      <a href={href} target="_blank" rel="noreferrer">
-        <span className="flex w-full items-center justify-between gap-2 font-medium">
-          {label}
-          <ExternalLinkIcon className="size-4 opacity-60" />
-        </span>
-        <span className="text-xs font-normal opacity-80">{description}</span>
-      </a>
-    </Button>
+      <span className="flex items-center justify-between gap-2 text-sm font-semibold tracking-tight">
+        {label}
+        <ExternalLinkIcon className="size-3.5 text-muted-foreground transition-colors group-hover/ext:text-foreground" />
+      </span>
+      <span className="text-xs text-muted-foreground">{description}</span>
+    </a>
   )
 }
 
 function KV({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div className="mt-1 text-sm">{value}</div>
+    <div className="flex flex-col gap-1">
+      <p className="eyebrow">{label}</p>
+      <div className="text-sm">{value}</div>
     </div>
   )
 }

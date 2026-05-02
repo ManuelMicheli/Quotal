@@ -5,9 +5,18 @@
  * side editor. The editor handles create/update/toggle/reorder via server
  * actions.
  */
+import { ArrowLeftIcon } from 'lucide-react'
 import Link from 'next/link'
 
 import { PlansEditor } from '@/components/owner/plans-editor'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { Button } from '@/components/ui/button'
 import { getSubscriptionPlans } from '@/lib/queries/owner'
 
 export const dynamic = 'force-dynamic'
@@ -17,23 +26,27 @@ export default async function PlansSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div>
-        <Link
-          href="/dashboard/impostazioni"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Tutte le impostazioni
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
+      >
+        <Link href="/dashboard/impostazioni">
+          <ArrowLeftIcon className="size-3.5" />
+          Tutte le impostazioni
         </Link>
-      </div>
-      <header>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
-          Piani abbonamento
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          I membri sceglieranno tra questi piani. Nuovi piani richiedono di
-          essere riassegnati ai membri esistenti — nessun rinnovo retroattivo.
-        </p>
-      </header>
+      </Button>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Impostazioni</PageHeaderEyebrow>
+          <PageHeaderHeading>Piani abbonamento</PageHeaderHeading>
+          <PageHeaderDescription>
+            I membri sceglieranno tra questi piani. Nuovi piani richiedono di
+            essere riassegnati ai membri esistenti — nessun rinnovo retroattivo.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
       <PlansEditor plans={plans} />
     </div>
   )

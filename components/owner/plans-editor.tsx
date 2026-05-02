@@ -13,7 +13,7 @@
  * UI here uses up/down buttons to call it. Less polished than @dnd-kit but
  * keeps Phase 04 simple and accessible.
  */
-import { ArrowDownIcon, ArrowUpIcon, PencilIcon, PlusIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CreditCardIcon, PencilIcon, PlusIcon } from 'lucide-react'
 import * as React from 'react'
 import { toast } from 'sonner'
 
@@ -24,9 +24,9 @@ import {
   updatePlanAction,
 } from '@/app/actions/owner'
 import { PlanDialog } from '@/components/owner/plan-dialog'
+import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import {
   Table,
@@ -90,7 +90,7 @@ export function PlansEditor({ plans }: { plans: SubscriptionPlan[] }) {
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
         <Button onClick={() => setEditing({ mode: 'create' })}>
           <PlusIcon className="size-4" />
@@ -99,18 +99,24 @@ export function PlansEditor({ plans }: { plans: SubscriptionPlan[] }) {
       </div>
 
       {ordered.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-sm text-muted-foreground">
-            Nessun piano configurato. Crea il primo per iniziare ad accettare
-            iscrizioni.
-          </CardContent>
-        </Card>
+        <EmptyState
+          variant="bordered"
+          icon={<CreditCardIcon />}
+          title="Nessun piano configurato"
+          description="Crea il primo piano per iniziare ad accettare iscrizioni."
+          action={
+            <Button onClick={() => setEditing({ mode: 'create' })}>
+              <PlusIcon className="size-4" />
+              Crea primo piano
+            </Button>
+          }
+        />
       ) : (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-1)]">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-16" />
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-20">Ordine</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Durata</TableHead>
                 <TableHead className="text-right">Prezzo</TableHead>
@@ -122,32 +128,32 @@ export function PlansEditor({ plans }: { plans: SubscriptionPlan[] }) {
               {ordered.map((plan, idx) => (
                 <TableRow key={plan.id}>
                   <TableCell>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5">
                       <Button
-                        size="icon"
+                        size="icon-xs"
                         variant="ghost"
                         disabled={idx === 0 || isPending}
                         onClick={() => move(plan, -1)}
                         aria-label="Sposta su"
-                        className="size-7"
                       >
-                        <ArrowUpIcon className="size-3.5" />
+                        <ArrowUpIcon />
                       </Button>
                       <Button
-                        size="icon"
+                        size="icon-xs"
                         variant="ghost"
                         disabled={idx === ordered.length - 1 || isPending}
                         onClick={() => move(plan, 1)}
                         aria-label="Sposta giù"
-                        className="size-7"
                       >
-                        <ArrowDownIcon className="size-3.5" />
+                        <ArrowDownIcon />
                       </Button>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{plan.name}</span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold tracking-tight">
+                        {plan.name}
+                      </span>
                       {plan.description ? (
                         <span className="text-xs text-muted-foreground">
                           {plan.description}
@@ -155,11 +161,13 @@ export function PlansEditor({ plans }: { plans: SubscriptionPlan[] }) {
                       ) : null}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="tabular text-[0.8125rem]">
                     {plan.duration_days} giorni
                   </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {formatCurrency(plan.price_cents)}
+                  <TableCell className="text-right">
+                    <span className="number font-semibold">
+                      {formatCurrency(plan.price_cents)}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -171,26 +179,19 @@ export function PlansEditor({ plans }: { plans: SubscriptionPlan[] }) {
                           plan.is_active ? 'Disattiva piano' : 'Attiva piano'
                         }
                       />
-                      <Badge
-                        variant="outline"
-                        className={
-                          plan.is_active
-                            ? 'bg-success/10 text-success border-success/20'
-                            : 'bg-muted text-muted-foreground'
-                        }
-                      >
+                      <Badge variant={plan.is_active ? 'success' : 'secondary'}>
                         {plan.is_active ? 'Attivo' : 'Inattivo'}
                       </Badge>
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
-                      size="icon"
+                      size="icon-sm"
                       variant="ghost"
                       onClick={() => setEditing({ mode: 'edit', plan })}
                       aria-label="Modifica piano"
                     >
-                      <PencilIcon className="size-4" />
+                      <PencilIcon />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -206,6 +207,6 @@ export function PlansEditor({ plans }: { plans: SubscriptionPlan[] }) {
         plan={editing?.mode === 'edit' ? editing.plan : null}
         onSave={onSave}
       />
-    </>
+    </div>
   )
 }

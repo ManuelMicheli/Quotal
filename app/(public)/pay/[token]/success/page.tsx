@@ -7,13 +7,15 @@
  *   - pending   → "in elaborazione" with SEPA-specific copy
  *   - failed    → recovery message
  */
-import { CheckCircle2Icon, Clock4Icon } from 'lucide-react'
+import { CheckIcon, Clock4Icon } from 'lucide-react'
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createAdminClient } from '@/lib/supabase/admin'
+
+import { SuccessHeroIcon } from './success-hero-icon'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,13 +40,15 @@ export default async function PaySuccessPage({
 
   if (!session) {
     return (
-      <main className="mx-auto flex w-full max-w-md">
-        <Card className="w-full">
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Sessione non trovata.
-          </CardContent>
-        </Card>
-      </main>
+      <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 text-center">
+        <h1 className="heading-display text-3xl">Sessione non trovata</h1>
+        <p className="text-sm text-muted-foreground">
+          Il link che stai utilizzando non è più valido.
+        </p>
+        <Button asChild variant="outline">
+          <Link href="/">Torna alla home</Link>
+        </Button>
+      </div>
     )
   }
 
@@ -65,55 +69,54 @@ export default async function PaySuccessPage({
   ])
 
   const completed = session.status === 'completed'
-  const isSepa =
-    session.payment_method === 'sepa' || sp.method === 'sepa'
+  const isSepa = session.payment_method === 'sepa' || sp.method === 'sepa'
 
   return (
-    <main className="mx-auto flex w-full max-w-md">
-      <Card className="w-full">
-        <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-          {completed ? (
-            <CheckCircle2Icon className="size-14 text-emerald-600" />
-          ) : (
-            <Clock4Icon className="size-14 text-amber-600" />
-          )}
+    <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-8 text-center">
+      <SuccessHeroIcon
+        tone={completed ? 'success' : 'warning'}
+        icon={completed ? <CheckIcon /> : <Clock4Icon />}
+      />
 
-          <h1 className="font-display text-2xl">
-            {completed
-              ? 'Pagamento ricevuto!'
-              : 'Pagamento in elaborazione'}
-          </h1>
+      <div className="flex flex-col items-center gap-3">
+        <p className="eyebrow">
+          {completed ? 'Pagamento riuscito' : 'In attesa di conferma'}
+        </p>
+        <h1 className="heading-display text-balance text-4xl sm:text-5xl">
+          {completed ? 'Pagamento riuscito!' : 'Pagamento in elaborazione'}
+        </h1>
+        <p className="max-w-md text-pretty text-[0.9375rem] leading-relaxed text-muted-foreground">
+          {completed
+            ? `Il tuo abbonamento ${gym?.name ? `presso ${gym.name}` : ''} è attivo${
+                subscription?.end_date
+                  ? ` fino al ${formatDate(subscription.end_date, 'long')}`
+                  : ''
+              }.`
+            : isSepa
+              ? "Hai autorizzato l'addebito SEPA. La banca completerà l'operazione entro 5 giorni lavorativi. Riceverai conferma via email non appena il pagamento sarà accreditato."
+              : 'Stiamo confermando il pagamento. Aggiorna questa pagina tra qualche secondo.'}
+        </p>
+      </div>
 
-          {completed ? (
-            <p className="text-sm text-muted-foreground">
-              Il tuo abbonamento {gym?.name ? `presso ${gym.name}` : ''} è
-              attivo
-              {subscription?.end_date
-                ? ` fino al ${formatDate(subscription.end_date, 'long')}`
-                : ''}
-              .
-              <br />
-              Importo: <strong>{formatCurrency(session.amount_cents)}</strong>
-            </p>
-          ) : isSepa ? (
-            <p className="text-sm text-muted-foreground">
-              Hai autorizzato l&apos;addebito SEPA. La banca completerà
-              l&apos;operazione entro <strong>5 giorni lavorativi</strong>.
-              Riceverai conferma via email non appena il pagamento sarà
-              accreditato.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Stiamo confermando il pagamento. Aggiorna questa pagina tra
-              qualche secondo.
-            </p>
-          )}
+      {completed ? (
+        <Card variant="glass" className="w-full max-w-sm py-0 gap-0">
+          <CardContent className="flex items-center justify-between gap-3 px-6 py-5 text-sm">
+            <span className="text-muted-foreground">Importo</span>
+            <span className="number heading-display text-xl">
+              {formatCurrency(session.amount_cents)}
+            </span>
+          </CardContent>
+        </Card>
+      ) : null}
 
-          <Button asChild className="mt-2">
-            <Link href="/app">Vai alla mia area</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    </main>
+      <div className="flex flex-col items-center gap-3 sm:flex-row">
+        <Button asChild size="lg" variant="accent">
+          <Link href="/app">Vai alla mia area</Link>
+        </Button>
+        <Button asChild size="lg" variant="ghost">
+          <Link href="/">Torna alla home</Link>
+        </Button>
+      </div>
+    </div>
   )
 }

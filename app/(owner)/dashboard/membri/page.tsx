@@ -5,13 +5,21 @@
  * runs the server query, and renders the table. The client-side filter bar
  * pushes URL changes that re-render this page on the server.
  */
-import { PlusIcon, UsersIcon } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, UsersIcon } from 'lucide-react'
 import Link from 'next/link'
 
-import { EmptyState } from '@/components/owner/empty-state'
 import { InviteLinkCard } from '@/components/owner/invite-link-card'
 import { MembersFilterBar } from '@/components/owner/members-filter-bar'
 import { MembersTable } from '@/components/owner/members-table'
+import { EmptyState } from '@/components/shared/empty-state'
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
 import { env } from '@/lib/env'
 import { getCurrentGym } from '@/lib/queries/gym'
@@ -65,18 +73,24 @@ export default async function MembersListPage({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">Gestione</p>
-          <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Membri</h1>
-        </div>
-        <Button asChild>
-          <Link href="/dashboard/membri/nuovo">
-            <PlusIcon className="size-4" />
-            Nuovo membro
-          </Link>
-        </Button>
-      </header>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Gestione</PageHeaderEyebrow>
+          <PageHeaderHeading>Membri</PageHeaderHeading>
+          <PageHeaderDescription>
+            {total} {total === 1 ? 'membro registrato' : 'membri registrati'} ·
+            Aggiungili manualmente o condividi il link di iscrizione.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+        <PageHeaderActions>
+          <Button asChild>
+            <Link href="/dashboard/membri/nuovo">
+              <PlusIcon className="size-4" />
+              Nuovo membro
+            </Link>
+          </Button>
+        </PageHeaderActions>
+      </PageHeader>
 
       {inviteUrl ? <InviteLinkCard inviteUrl={inviteUrl} /> : null}
 
@@ -87,7 +101,8 @@ export default async function MembersListPage({
 
       {members.length === 0 ? (
         <EmptyState
-          icon={UsersIcon}
+          variant="bordered"
+          icon={<UsersIcon />}
           title={
             params.search || params.filter !== 'all'
               ? 'Nessun membro trovato'
@@ -96,7 +111,7 @@ export default async function MembersListPage({
           description={
             params.search || params.filter !== 'all'
               ? 'Prova a modificare i filtri o la ricerca.'
-              : 'Inizia aggiungendo il primo membro.'
+              : 'Inizia aggiungendo il primo membro alla tua palestra.'
           }
           action={
             <Button asChild>
@@ -111,11 +126,14 @@ export default async function MembersListPage({
         <>
           <MembersTable members={members} />
           {lastPage > 1 ? (
-            <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-              <p>
-                Pagina {page} di {lastPage} · {total} membri
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <p className="tabular text-xs text-muted-foreground">
+                Pagina <span className="font-medium text-foreground">{page}</span> di{' '}
+                <span className="font-medium text-foreground">{lastPage}</span>
+                <span className="mx-2 text-border">·</span>
+                {total} membri
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {page > 1 ? (
                   <Button asChild variant="outline" size="sm">
                     <Link
@@ -124,7 +142,8 @@ export default async function MembersListPage({
                         query: { ...sp, page: page - 1 },
                       }}
                     >
-                      ← Precedente
+                      <ChevronLeftIcon className="size-3.5" />
+                      Precedente
                     </Link>
                   </Button>
                 ) : null}
@@ -136,7 +155,8 @@ export default async function MembersListPage({
                         query: { ...sp, page: page + 1 },
                       }}
                     >
-                      Successiva →
+                      Successiva
+                      <ChevronRightIcon className="size-3.5" />
                     </Link>
                   </Button>
                 ) : null}

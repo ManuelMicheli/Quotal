@@ -5,7 +5,15 @@
  * actions (renew/suspend/resume) live in a client component that reads
  * `?action=` from the URL.
  */
-import { AlertTriangleIcon, DownloadIcon, MailIcon, PhoneIcon } from 'lucide-react'
+import {
+  AlertTriangleIcon,
+  ArrowLeftIcon,
+  DoorOpenIcon,
+  DownloadIcon,
+  MailIcon,
+  PhoneIcon,
+  ReceiptIcon,
+} from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -21,6 +29,7 @@ import {
   SubscriptionStatusBadge,
 } from '@/components/owner/subscription-status-badge'
 import { TriggerRenewalButton } from '@/components/owner/trigger-renewal-button'
+import { EmptyState } from '@/components/shared/empty-state'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -75,47 +84,50 @@ export default async function MemberDetailPage({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div>
-        <Link
-          href="/dashboard/membri"
-          className="text-sm text-muted-foreground hover:underline"
-        >
-          ← Torna ai membri
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-2 w-fit text-muted-foreground"
+      >
+        <Link href="/dashboard/membri">
+          <ArrowLeftIcon className="size-3.5" />
+          Torna ai membri
         </Link>
-      </div>
+      </Button>
 
       <header className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="flex items-center gap-4">
-          <Avatar className="size-16">
+          <Avatar className="size-16 ring-1 ring-border/60">
             {profile.avatar_url ? (
               <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
             ) : null}
-            <AvatarFallback className="bg-muted text-lg">
+            <AvatarFallback className="bg-muted text-lg font-semibold">
               {initialsFor(profile.full_name)}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
+              <h1 className="text-balance font-display text-3xl font-normal leading-tight tracking-tight md:text-4xl">
                 {profile.full_name}
               </h1>
               {profile.is_problematic ? (
-                <Badge
-                  variant="outline"
-                  className="bg-destructive/10 text-destructive border-destructive/20"
-                >
+                <Badge variant="destructive">
                   <AlertTriangleIcon className="size-3" />
                   Problematico
                 </Badge>
               ) : null}
+              <SubscriptionStatusBadge
+                status={active_subscription?.status ?? null}
+              />
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
                 <MailIcon className="size-3.5" />
                 {profile.email}
               </span>
               {profile.phone ? (
-                <span className="inline-flex items-center gap-1">
+                <span className="inline-flex items-center gap-1.5">
                   <PhoneIcon className="size-3.5" />
                   {formatPhone(profile.phone)}
                 </span>
@@ -151,7 +163,7 @@ export default async function MemberDetailPage({
       </header>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList>
+        <TabsList variant="line" className="w-full justify-start">
           <TabsTrigger value="overview">Panoramica</TabsTrigger>
           <TabsTrigger value="subscriptions">Storico abbonamenti</TabsTrigger>
           <TabsTrigger value="payments">Pagamenti</TabsTrigger>
@@ -165,7 +177,7 @@ export default async function MemberDetailPage({
               <CardHeader>
                 <CardTitle>Profilo</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-2 text-sm">
+              <CardContent className="grid gap-0 text-sm">
                 <Row label="Email" value={profile.email} />
                 <Row
                   label="Telefono"
@@ -181,7 +193,15 @@ export default async function MemberDetailPage({
                 />
                 <Row
                   label="Codice fiscale"
-                  value={profile.fiscal_code ?? '—'}
+                  value={
+                    profile.fiscal_code ? (
+                      <span className="font-mono text-xs">
+                        {profile.fiscal_code}
+                      </span>
+                    ) : (
+                      '—'
+                    )
+                  }
                 />
                 <Row
                   label="Indirizzo"
@@ -196,7 +216,18 @@ export default async function MemberDetailPage({
                       .join(', ') || '—'
                   }
                 />
-                <Row label="Badge UID" value={profile.badge_uid ?? '—'} />
+                <Row
+                  label="Badge UID"
+                  value={
+                    profile.badge_uid ? (
+                      <span className="font-mono text-xs">
+                        {profile.badge_uid}
+                      </span>
+                    ) : (
+                      '—'
+                    )
+                  }
+                />
               </CardContent>
             </Card>
             <Card>
@@ -206,14 +237,21 @@ export default async function MemberDetailPage({
                   status={active_subscription?.status ?? null}
                 />
               </CardHeader>
-              <CardContent className="grid gap-2 text-sm">
+              <CardContent className="grid gap-0 text-sm">
                 {active_subscription ? (
                   <>
                     <Row
                       label="Piano"
-                      value={`${active_subscription.plan.name} · ${formatCurrency(
-                        active_subscription.plan.price_cents,
-                      )}`}
+                      value={
+                        <span className="inline-flex items-baseline gap-2">
+                          <span className="font-semibold">
+                            {active_subscription.plan.name}
+                          </span>
+                          <span className="number text-muted-foreground">
+                            {formatCurrency(active_subscription.plan.price_cents)}
+                          </span>
+                        </span>
+                      }
                     />
                     <Row
                       label="Inizio"
@@ -226,9 +264,13 @@ export default async function MemberDetailPage({
                     <Row
                       label="Giorni rimanenti"
                       value={
-                        active_subscription.status === 'active'
-                          ? daysRemainingFor(active_subscription.end_date).toString()
-                          : '—'
+                        active_subscription.status === 'active' ? (
+                          <span className="number font-semibold">
+                            {daysRemainingFor(active_subscription.end_date)}
+                          </span>
+                        ) : (
+                          '—'
+                        )
                       }
                     />
                     <Row
@@ -237,11 +279,15 @@ export default async function MemberDetailPage({
                     />
                     <Row
                       label="Giorni sospensione usati"
-                      value={`${active_subscription.suspension_days_used} / 60`}
+                      value={
+                        <span className="tabular">
+                          {active_subscription.suspension_days_used} / 60
+                        </span>
+                      }
                     />
                   </>
                 ) : (
-                  <p className="text-muted-foreground">
+                  <p className="py-2 text-muted-foreground">
                     Nessun abbonamento attivo. Usa &ldquo;Rinnova&rdquo; per
                     creare il primo.
                   </p>
@@ -254,7 +300,7 @@ export default async function MemberDetailPage({
               <CardHeader>
                 <CardTitle className="text-sm">Note interne</CardTitle>
               </CardHeader>
-              <CardContent className="whitespace-pre-wrap text-sm text-muted-foreground">
+              <CardContent className="whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm text-muted-foreground">
                 {profile.notes}
               </CardContent>
             </Card>
@@ -262,16 +308,19 @@ export default async function MemberDetailPage({
         </TabsContent>
 
         <TabsContent value="subscriptions" className="mt-6">
-          <Card>
+          <Card className="overflow-hidden py-0">
             <CardContent className="p-0">
               {subscriptions.length === 0 ? (
-                <p className="p-8 text-center text-sm text-muted-foreground">
-                  Nessun abbonamento.
-                </p>
+                <EmptyState
+                  variant="default"
+                  icon={<ReceiptIcon />}
+                  title="Nessun abbonamento"
+                  description="Lo storico apparirà qui dopo il primo abbonamento."
+                />
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-transparent">
                       <TableHead>Piano</TableHead>
                       <TableHead>Periodo</TableHead>
                       <TableHead>Stato</TableHead>
@@ -281,18 +330,20 @@ export default async function MemberDetailPage({
                   <TableBody>
                     {subscriptions.map((s) => (
                       <TableRow key={s.id}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-semibold">
                           {s.plan.name}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="tabular text-[0.8125rem]">
                           {formatDate(s.start_date, 'short')} →{' '}
                           {formatDate(s.end_date, 'short')}
                         </TableCell>
                         <TableCell>
                           <SubscriptionStatusBadge status={s.status} />
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatCurrency(s.plan.price_cents)}
+                        <TableCell className="text-right">
+                          <span className="number">
+                            {formatCurrency(s.plan.price_cents)}
+                          </span>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -304,16 +355,19 @@ export default async function MemberDetailPage({
         </TabsContent>
 
         <TabsContent value="payments" className="mt-6">
-          <Card>
+          <Card className="overflow-hidden py-0">
             <CardContent className="p-0">
               {payments.length === 0 ? (
-                <p className="p-8 text-center text-sm text-muted-foreground">
-                  Nessun pagamento registrato.
-                </p>
+                <EmptyState
+                  variant="default"
+                  icon={<ReceiptIcon />}
+                  title="Nessun pagamento"
+                  description="I pagamenti del membro appariranno qui."
+                />
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-transparent">
                       <TableHead>Data</TableHead>
                       <TableHead>Importo</TableHead>
                       <TableHead>Metodo</TableHead>
@@ -329,11 +383,13 @@ export default async function MemberDetailPage({
                         p.payment_method === 'bank_transfer'
                       return (
                         <TableRow key={p.id}>
-                          <TableCell>
+                          <TableCell className="tabular text-[0.8125rem]">
                             {formatDate(p.paid_at ?? p.created_at, 'short')}
                           </TableCell>
-                          <TableCell className="font-medium tabular-nums">
-                            {formatCurrency(p.amount_cents)}
+                          <TableCell>
+                            <span className="number font-semibold">
+                              {formatCurrency(p.amount_cents)}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <PaymentMethodBadge method={p.payment_method} />
@@ -341,9 +397,11 @@ export default async function MemberDetailPage({
                           <TableCell>
                             <PaymentStatusBadge status={p.status} />
                           </TableCell>
-                          <TableCell>{p.receipt_number ?? '—'}</TableCell>
+                          <TableCell className="font-mono text-xs text-muted-foreground">
+                            {p.receipt_number ?? '—'}
+                          </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-1.5">
                               {p.receipt_number ? (
                                 <Button
                                   asChild
@@ -397,16 +455,19 @@ export default async function MemberDetailPage({
         </TabsContent>
 
         <TabsContent value="access" className="mt-6">
-          <Card>
+          <Card className="overflow-hidden py-0">
             <CardContent className="p-0">
               {access_logs.length === 0 ? (
-                <p className="p-8 text-center text-sm text-muted-foreground">
-                  Nessun ingresso registrato (Phase 08).
-                </p>
+                <EmptyState
+                  variant="default"
+                  icon={<DoorOpenIcon />}
+                  title="Nessun ingresso registrato"
+                  description="Quando il tornello sarà connesso, vedrai qui ogni accesso del membro."
+                />
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-transparent">
                       <TableHead>Data e ora</TableHead>
                       <TableHead>Esito</TableHead>
                       <TableHead>Badge</TableHead>
@@ -416,7 +477,7 @@ export default async function MemberDetailPage({
                   <TableBody>
                     {access_logs.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell>
+                        <TableCell className="tabular text-[0.8125rem]">
                           {formatDate(log.accessed_at, 'short')}{' '}
                           {new Date(log.accessed_at).toLocaleTimeString('it-IT', {
                             hour: '2-digit',
@@ -425,23 +486,17 @@ export default async function MemberDetailPage({
                         </TableCell>
                         <TableCell>
                           {log.granted ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-success/10 text-success border-success/20"
-                            >
-                              Consentito
-                            </Badge>
+                            <Badge variant="success">Consentito</Badge>
                           ) : (
-                            <Badge
-                              variant="outline"
-                              className="bg-destructive/10 text-destructive border-destructive/20"
-                            >
-                              Negato
-                            </Badge>
+                            <Badge variant="destructive">Negato</Badge>
                           )}
                         </TableCell>
-                        <TableCell>{log.badge_uid ?? '—'}</TableCell>
-                        <TableCell>{log.denial_reason ?? '—'}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {log.badge_uid ?? '—'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {log.denial_reason ?? '—'}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -462,9 +517,9 @@ export default async function MemberDetailPage({
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-border/40 py-1.5 last:border-b-0">
+    <div className="flex items-baseline justify-between gap-3 border-b border-border/40 py-2.5 last:border-b-0">
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-right">{value}</span>
+      <span className="text-right text-foreground">{value}</span>
     </div>
   )
 }

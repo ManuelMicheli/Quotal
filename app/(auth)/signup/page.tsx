@@ -1,5 +1,5 @@
 /**
- * Member signup page — premium dark.
+ * Member signup page — premium auth shell.
  *
  * Multi-tenant: requires a `?gym=<slug>` query param so the new member is
  * linked to the right gym. Without it (or with an invalid slug) we render a
@@ -8,6 +8,7 @@
  * Owners are NOT created here — see `/onboarding-titolare` for the public
  * gym-creation flow.
  */
+import { Info } from 'lucide-react'
 import Link from 'next/link'
 
 import { AuthDivider } from '@/components/auth/auth-divider'
@@ -32,8 +33,6 @@ export default async function SignupPage({
   const initialError = error ? decodeURIComponent(error) : undefined
   const gymSlug = gymSlugParam?.trim().toLowerCase() || ''
 
-  // Resolve the target gym server-side so we can show a tailored heading
-  // (and refuse to render the form when the slug is missing/invalid).
   let gymName: string | null = null
   if (gymSlug) {
     const admin = createAdminClient()
@@ -47,42 +46,51 @@ export default async function SignupPage({
 
   if (!gymSlug || !gymName) {
     return (
-      <AuthShell>
-        <div className="w-full">
+      <AuthShell width="md">
+        <div className="glass-strong w-full rounded-2xl p-7 md:p-9">
           <QuotalLogoCard />
 
-          <div className="space-y-2 text-center">
-            <h1 className="font-display text-[28px] font-medium leading-tight text-white md:text-[32px]">
+          <div className="space-y-3 text-center">
+            <h1 className="heading-display text-foreground text-balance text-4xl md:text-[2.5rem]">
               Link iscrizione mancante
             </h1>
-            <p className="text-sm text-zinc-400">
+            <p className="text-muted-foreground text-pretty text-sm leading-relaxed">
               Per registrarti come iscritto serve il link condiviso dalla tua
               palestra.
             </p>
           </div>
 
-          <div className="mt-10 rounded-xl bg-zinc-900/60 p-5 text-sm text-zinc-300 ring-1 ring-zinc-800">
-            <p className="mb-2 font-medium text-zinc-100">Cosa fare</p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
-              <li>Chiedi al titolare il link diretto di iscrizione.</li>
-              <li>
-                Se sei un titolare, crea la tua palestra dalla{' '}
-                <Link
-                  href="/onboarding-titolare"
-                  className="text-teal-400 underline underline-offset-2 hover:text-teal-300"
-                >
-                  pagina dedicata
-                </Link>
-                .
+          <div className="bg-card/40 border-border/70 mt-8 rounded-xl border p-5 backdrop-blur-md">
+            <div className="mb-3 flex items-center gap-2">
+              <Info className="text-accent size-4" aria-hidden="true" />
+              <p className="text-foreground text-sm font-medium">Cosa fare</p>
+            </div>
+            <ul className="text-muted-foreground space-y-2 text-sm">
+              <li className="flex gap-2">
+                <span className="text-muted-foreground/60">•</span>
+                <span>Chiedi al titolare il link diretto di iscrizione.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-muted-foreground/60">•</span>
+                <span>
+                  Se sei un titolare, crea la tua palestra dalla{' '}
+                  <Link
+                    href="/onboarding-titolare"
+                    className="text-accent hover:text-accent/80 font-medium underline underline-offset-2 transition-colors"
+                  >
+                    pagina dedicata
+                  </Link>
+                  .
+                </span>
               </li>
             </ul>
           </div>
 
-          <p className="mt-8 text-center text-sm text-zinc-400">
+          <p className="text-muted-foreground mt-8 text-center text-sm">
             Hai già un account?{' '}
             <Link
               href="/login"
-              className="font-medium text-zinc-100 transition-colors hover:text-teal-400"
+              className="text-foreground hover:text-accent font-medium transition-colors"
             >
               Accedi
             </Link>
@@ -93,49 +101,50 @@ export default async function SignupPage({
   }
 
   return (
-    <AuthShell>
-      <div className="w-full">
+    <AuthShell width="md">
+      <div className="glass-strong w-full rounded-2xl p-7 md:p-9">
         <QuotalLogoCard />
 
-        <div className="space-y-2 text-center">
-          <h1 className="font-display text-[28px] font-medium leading-tight text-white md:text-[32px]">
+        <div className="space-y-3 text-center">
+          <p className="eyebrow">Iscrizione palestra</p>
+          <h1 className="heading-display text-foreground text-balance text-4xl md:text-[2.5rem]">
             Iscriviti a {gymName}
           </h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-muted-foreground text-sm">
             Hai già un account?{' '}
             <Link
               href="/login"
-              className="font-medium text-zinc-100 transition-colors hover:text-teal-400"
+              className="text-foreground hover:text-accent font-medium transition-colors"
             >
               Accedi
             </Link>
           </p>
         </div>
 
-        <div className="mt-10 space-y-6">
+        <div className="mt-8 space-y-6">
           <OAuthButtons gymSlug={gymSlug} />
           <AuthDivider label="oppure" />
           <SignupForm initialError={initialError} gymSlug={gymSlug} />
         </div>
-
-        <p className="mt-8 text-center text-xs leading-relaxed text-zinc-500">
-          Iscrivendoti, accetti i nostri{' '}
-          <Link
-            href="/termini"
-            className="text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
-          >
-            Termini
-          </Link>{' '}
-          e la{' '}
-          <Link
-            href="/privacy"
-            className="text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
-          >
-            Privacy Policy
-          </Link>
-          .
-        </p>
       </div>
+
+      <p className="text-muted-foreground mt-6 text-balance text-center text-xs leading-relaxed">
+        Iscrivendoti, accetti i nostri{' '}
+        <Link
+          href="/termini"
+          className="text-foreground hover:text-accent underline underline-offset-2 transition-colors"
+        >
+          Termini
+        </Link>{' '}
+        e la{' '}
+        <Link
+          href="/privacy"
+          className="text-foreground hover:text-accent underline underline-offset-2 transition-colors"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </AuthShell>
   )
 }

@@ -15,10 +15,12 @@
  * visualizzazione dell&apos;avviso.
  */
 import { motion, AnimatePresence } from 'framer-motion'
+import { CookieIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSyncExternalStore, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { spring } from '@/lib/motion'
 
 const STORAGE_KEY = 'quotal-cookie-notice'
 const STORAGE_VALUE = 'acknowledged-v1'
@@ -72,34 +74,47 @@ export function CookieBanner() {
         <motion.div
           role="region"
           aria-label="Avviso sui cookie"
-          initial={{ y: 24, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 24, opacity: 0 }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-xl border border-border bg-card/95 p-4 text-sm shadow-lg backdrop-blur-sm sm:p-5"
+          initial={{ y: 32, opacity: 0 }}
+          animate={{ y: 0, opacity: 1, transition: spring.gentle }}
+          exit={{ y: 32, opacity: 0, transition: { duration: 0.18 } }}
+          className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-3xl pb-safe sm:inset-x-6 sm:bottom-6"
         >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex-1">
-              <p className="font-medium text-foreground">
+          <div className="glass-strong flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:gap-5 sm:p-6">
+            <div
+              aria-hidden
+              className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent sm:flex"
+            >
+              <CookieIcon className="size-5" />
+            </div>
+
+            <div className="flex-1 text-sm">
+              <p className="font-semibold text-foreground">
                 Cookie tecnici essenziali
               </p>
-              <p className="mt-1 text-muted-foreground">
+              <p className="mt-1 text-pretty leading-relaxed text-muted-foreground">
                 Quotal utilizza solo cookie tecnici necessari al
-                funzionamento del servizio (sessione di accesso, sicurezza,
-                pagamenti). Non profiliamo gli utenti né condividiamo dati a
-                fini di marketing.{' '}
+                funzionamento del servizio (sessione, sicurezza, pagamenti).
+                Non profiliamo gli utenti.{' '}
                 <Link
                   href="/cookie-policy"
-                  className="underline-offset-4 hover:underline"
+                  className="font-medium text-foreground underline-offset-4 hover:underline"
                 >
                   Maggiori informazioni
                 </Link>
                 .
               </p>
             </div>
-            <Button onClick={dismiss} size="sm" className="shrink-0">
-              Ho capito
-            </Button>
+
+            <div className="flex shrink-0 gap-2">
+              <Button
+                onClick={dismiss}
+                size="sm"
+                variant="accent"
+                className="w-full sm:w-auto"
+              >
+                Ho capito
+              </Button>
+            </div>
           </div>
         </motion.div>
       ) : null}

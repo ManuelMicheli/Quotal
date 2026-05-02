@@ -5,13 +5,31 @@
  * transaction list ordered by time, and a "Chiudi cassa" button that
  * generates the daily-report PDF.
  */
-import { DownloadIcon, ReceiptIcon } from 'lucide-react'
+import {
+  CheckCircle2Icon,
+  CreditCardIcon,
+  DownloadIcon,
+  EuroIcon,
+  LandmarkIcon,
+  ReceiptIcon,
+  TrendingUpIcon,
+} from 'lucide-react'
 import Link from 'next/link'
 
 import { CashPaymentDialog } from '@/components/owner/cash-payment-dialog'
 import { CloseCashButton } from '@/components/owner/close-cash-button'
-import { EmptyState } from '@/components/owner/empty-state'
 import { PaymentMethodBadge } from '@/components/owner/payment-method-badge'
+import { EmptyState } from '@/components/shared/empty-state'
+import {
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
+import { StatCard } from '@/components/shared/stat-card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -49,39 +67,38 @@ export default async function CassaPage({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">Contabilità</p>
-          <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">
-            Cassa giornaliera
-          </h1>
-          <p className="text-sm text-muted-foreground">
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Contabilità</PageHeaderEyebrow>
+          <PageHeaderHeading>Cassa giornaliera</PageHeaderHeading>
+          <PageHeaderDescription>
             {formatDate(day.closeDate, 'full')}
             {!isToday ? ' · giornata storica' : ''}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+          </PageHeaderDescription>
+        </PageHeaderContent>
+        <PageHeaderActions>
           <CashPaymentDialog plans={plans} mode={{ kind: 'picker' }} />
           <CloseCashButton
             closeDate={day.closeDate}
             alreadyClosed={day.alreadyClosedAt !== null}
           />
-        </div>
-      </header>
+        </PageHeaderActions>
+      </PageHeader>
 
       {day.alreadyClosedAt ? (
-        <Card className="border-success/30 bg-success/5">
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+        <Alert variant="success">
+          <CheckCircle2Icon className="size-4" />
+          <AlertTitle>Cassa chiusa</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>
-              Cassa già chiusa il{' '}
-              <strong>
+              Chiusa il{' '}
+              <strong className="text-foreground">
                 {new Date(day.alreadyClosedAt).toLocaleString('it-IT', {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </strong>
-              . Tutti i pagamenti successivi appariranno qui ma non sono nel
-              report.
+              . I pagamenti successivi compaiono qui ma non rientrano nel report.
             </span>
             {day.alreadyClosedPdfPath ? (
               <Button asChild size="sm" variant="outline">
@@ -95,51 +112,72 @@ export default async function CassaPage({
                 </a>
               </Button>
             ) : null}
-          </CardContent>
-        </Card>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiTile label="Incassato oggi" value={day.totalCents} emphasize />
-        <KpiTile label="Contanti" value={day.cashCents} />
-        <KpiTile label="Carta + SEPA" value={day.cardCents + day.sepaCents} />
-        <KpiTile label="Bonifico" value={day.bankTransferCents} />
-      </section>
-
-      <section className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Mese corrente
+      {/* Hero card with today's totals */}
+      <Card variant="hero" className="relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="bg-aurora pointer-events-none absolute inset-0 opacity-60"
+        />
+        <CardContent className="relative grid gap-6 px-6 py-6 md:grid-cols-2 md:px-8 md:py-8">
+          <div className="flex flex-col gap-2">
+            <p className="eyebrow">Incassato oggi</p>
+            <p className="number font-display text-5xl tracking-tight md:text-6xl">
+              {formatCurrency(day.totalCents)}
             </p>
-            <p className="font-display text-2xl tabular-nums">
-              {formatCurrency(day.monthCents)}
+            <p className="text-sm text-muted-foreground">
+              {day.transactionsCount}{' '}
+              {day.transactionsCount === 1 ? 'transazione' : 'transazioni'} ·{' '}
+              <span className="font-medium text-foreground">
+                {formatCurrency(day.monthCents)}
+              </span>{' '}
+              questo mese
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Transazioni oggi
-            </p>
-            <p className="font-display text-2xl tabular-nums">
-              {day.transactionsCount}
-            </p>
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
+            <BreakdownTile
+              icon={<EuroIcon />}
+              label="Contanti"
+              value={day.cashCents}
+              tone="warning"
+            />
+            <BreakdownTile
+              icon={<CreditCardIcon />}
+              label="Carta + SEPA"
+              value={day.cardCents + day.sepaCents}
+              tone="accent"
+            />
+            <BreakdownTile
+              icon={<LandmarkIcon />}
+              label="Bonifico"
+              value={day.bankTransferCents}
+              tone="default"
+            />
+            <BreakdownTile
+              icon={<TrendingUpIcon />}
+              label="Mese"
+              value={day.monthCents}
+              tone="default"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {day.payments.length === 0 ? (
         <EmptyState
-          icon={ReceiptIcon}
+          variant="bordered"
+          icon={<ReceiptIcon />}
           title="Nessuna transazione"
           description="Le ricevute generate oggi appariranno qui."
         />
       ) : (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-1)]">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead>Ora</TableHead>
                 <TableHead>Membro</TableHead>
                 <TableHead className="text-right">Importo</TableHead>
@@ -151,7 +189,7 @@ export default async function CassaPage({
             <TableBody>
               {day.payments.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="text-sm tabular-nums">
+                  <TableCell className="tabular text-[0.8125rem]">
                     {p.paid_at
                       ? new Date(p.paid_at).toLocaleTimeString('it-IT', {
                           hour: '2-digit',
@@ -162,18 +200,20 @@ export default async function CassaPage({
                   <TableCell>
                     <Link
                       href={`/dashboard/membri/${p.member_id}`}
-                      className="font-medium hover:underline"
+                      className="font-semibold tracking-tight transition-colors hover:text-accent"
                     >
                       {p.member?.full_name ?? '—'}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {formatCurrency(p.amount_cents)}
+                  <TableCell className="text-right">
+                    <span className="number font-semibold">
+                      {formatCurrency(p.amount_cents)}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <PaymentMethodBadge method={p.payment_method} />
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {p.receipt_number ?? '—'}
                   </TableCell>
                   <TableCell className="text-right">
@@ -200,31 +240,24 @@ export default async function CassaPage({
   )
 }
 
-function KpiTile({
+function BreakdownTile({
+  icon,
   label,
   value,
-  emphasize,
+  tone,
 }: {
+  icon: React.ReactNode
   label: string
   value: number
-  emphasize?: boolean
+  tone: 'default' | 'accent' | 'warning'
 }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-1 p-5">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <p
-          className={
-            emphasize
-              ? 'font-display text-3xl tabular-nums'
-              : 'font-display text-2xl tabular-nums'
-          }
-        >
-          {formatCurrency(value)}
-        </p>
-      </CardContent>
-    </Card>
+    <StatCard
+      icon={icon}
+      label={label}
+      value={formatCurrency(value)}
+      tone={tone === 'default' ? 'default' : tone}
+      className="bg-card/80 backdrop-blur-sm"
+    />
   )
 }

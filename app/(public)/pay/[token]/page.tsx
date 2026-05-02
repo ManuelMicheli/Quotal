@@ -5,10 +5,19 @@
  * service-role admin client; shows either the active form, a confirmation
  * screen if already completed, or an error if expired/invalid.
  */
+import { LinkIcon, LockIcon, ShieldCheckIcon } from 'lucide-react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { PaymentForm } from '@/components/payment/payment-form'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -69,52 +78,54 @@ export default async function PayPage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <div
-          className="size-10 rounded-md"
-          style={{ backgroundColor: gym.brand_color ?? 'var(--accent)' }}
-          aria-hidden
-        />
-        <div>
-          <p className="text-xs text-muted-foreground">Pagamento abbonamento</p>
-          <h1 className="font-display text-2xl">{gym.name}</h1>
-        </div>
-      </div>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
+      <PaymentHero
+        amountCents={session.amount_cents}
+        gymName={gym.name}
+        gymBrandColor={gym.brand_color}
+        planName={plan.name}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Riepilogo</CardTitle>
+      <Card variant="glass" className="overflow-hidden gap-0 py-0">
+        <CardHeader className="gap-1 px-7 pt-7">
+          <p className="eyebrow">Riepilogo</p>
+          <CardTitle className="text-lg">Dettagli abbonamento</CardTitle>
+          <CardDescription>
+            Verifica i dettagli prima di procedere.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col gap-1 text-sm">
+        <CardContent className="px-7 pb-7 pt-5">
+          <dl className="flex flex-col divide-y divide-border/60">
             <Row label="Membro" value={member.full_name} />
-            <Row label="Email" value={member.email} />
+            <Row label="Email" value={member.email} mono />
             <Row label="Piano" value={plan.name} />
-            <Row
-              label="Durata"
-              value={`${plan.duration_days} giorni`}
-            />
+            <Row label="Durata" value={`${plan.duration_days} giorni`} />
             <Row
               label="Scadenza link"
               value={formatDate(session.expires_at, 'long')}
             />
-          </div>
-          <Separator />
+          </dl>
+          <Separator className="my-5" />
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Totale</span>
-            <span className="font-display text-2xl">
+            <span className="text-sm font-medium text-muted-foreground">
+              Totale
+            </span>
+            <span className="number heading-display text-2xl">
               {formatCurrency(session.amount_cents)}
             </span>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Metodo di pagamento</CardTitle>
+      <Card variant="glass" className="overflow-hidden gap-0 py-0">
+        <CardHeader className="gap-1 px-7 pt-7">
+          <p className="eyebrow">Pagamento</p>
+          <CardTitle className="text-lg">Metodo di pagamento</CardTitle>
+          <CardDescription>
+            Carta di credito o addebito SEPA. Elaborato da Stripe.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-7 pb-7 pt-5">
           <PaymentForm
             token={token}
             amountCents={session.amount_cents}
@@ -124,30 +135,119 @@ export default async function PayPage({
           />
         </CardContent>
       </Card>
-    </main>
+
+      <TrustBadges />
+    </div>
   )
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function PaymentHero({
+  amountCents,
+  gymName,
+  gymBrandColor,
+  planName,
+}: {
+  amountCents: number
+  gymName: string
+  gymBrandColor: string | null
+  planName: string
+}) {
   return (
-    <div className="flex justify-between gap-2">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium">{value}</span>
+    <header className="flex flex-col items-center gap-5 text-center">
+      <div className="flex items-center gap-3">
+        <div
+          aria-hidden
+          className="size-10 rounded-lg ring-soft"
+          style={{ backgroundColor: gymBrandColor ?? 'var(--accent)' }}
+        />
+        <div className="text-left">
+          <p className="eyebrow">Pagamento abbonamento</p>
+          <p className="text-sm font-medium leading-tight text-foreground">
+            {gymName}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-2">
+        <h1 className="heading-display number text-5xl text-foreground sm:text-6xl">
+          {formatCurrency(amountCents)}
+        </h1>
+        <p className="text-sm text-muted-foreground text-pretty">
+          {planName}
+        </p>
+      </div>
+    </header>
+  )
+}
+
+function TrustBadges() {
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <LockIcon className="size-3.5" />
+          Connessione cifrata
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <ShieldCheckIcon className="size-3.5" />
+          PCI DSS · Stripe
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <LinkIcon className="size-3.5" />
+          Link unico monouso
+        </span>
+      </div>
+      <p className="max-w-md text-pretty text-xs text-muted-foreground">
+        I tuoi dati bancari non vengono mai memorizzati su Quotal. Tutti i
+        pagamenti sono elaborati da Stripe Payments Europe Ltd.
+      </p>
+    </div>
+  )
+}
+
+function Row({
+  label,
+  value,
+  mono,
+}: {
+  label: string
+  value: string
+  mono?: boolean
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-2.5 text-sm">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd
+        className={
+          mono
+            ? 'truncate text-right font-medium text-foreground'
+            : 'truncate text-right font-medium text-foreground'
+        }
+      >
+        {value}
+      </dd>
     </div>
   )
 }
 
 function ExpiredCard({ reason }: { reason: string }) {
   return (
-    <main className="mx-auto flex w-full max-w-md">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Link non disponibile</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
+    <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6 text-center">
+      <div className="flex flex-col items-center gap-3">
+        <div
+          aria-hidden
+          className="flex size-14 items-center justify-center rounded-full bg-warning-soft text-warning"
+        >
+          <LinkIcon className="size-6" />
+        </div>
+        <h1 className="heading-display text-3xl">Link non disponibile</h1>
+        <p className="max-w-sm text-pretty text-sm text-muted-foreground">
           {reason} Contatta la palestra per ricevere un nuovo link.
-        </CardContent>
-      </Card>
-    </main>
+        </p>
+      </div>
+      <Button asChild variant="outline" size="sm">
+        <Link href="/">Torna alla home</Link>
+      </Button>
+    </div>
   )
 }

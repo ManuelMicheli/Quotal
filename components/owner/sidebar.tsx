@@ -109,13 +109,20 @@ function DesktopSidebar({
 }) {
   const pathname = usePathname()
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-sidebar-border/70 bg-sidebar/80 text-sidebar-foreground backdrop-blur-xl md:flex lg:w-72">
-      <div className="px-7 py-7">
-        <Link href="/dashboard" className="inline-block">
+    <aside className="sticky top-0 z-30 hidden h-screen w-64 shrink-0 flex-col border-r border-sidebar-border/60 bg-sidebar/85 text-sidebar-foreground backdrop-blur-2xl md:flex lg:w-[17rem]">
+      <div className="px-6 pt-7 pb-5">
+        <Link
+          href="/dashboard"
+          className="tap-shrink inline-flex items-center rounded-md focus-glow"
+        >
           <Logo size="sm" />
         </Link>
       </div>
-      <nav className="flex flex-1 flex-col gap-0.5 px-3">
+      <nav
+        aria-label="Navigazione principale"
+        className="flex flex-1 flex-col gap-0.5 px-3"
+      >
+        <p className="eyebrow px-3 pb-2 pt-2">Generale</p>
         {PRIMARY_NAV.map((item) => {
           const Icon = item.icon
           const active = isActive(item, pathname)
@@ -125,38 +132,44 @@ function DesktopSidebar({
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'tap-shrink group relative flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors',
+                'group/navitem tap-shrink relative flex items-center gap-3 rounded-md px-3 py-2 text-[0.8125rem] font-medium transition-colors duration-200',
                 active
-                  ? 'bg-foreground text-background'
+                  ? 'bg-foreground text-background shadow-[var(--shadow-1)]'
                   : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
               )}
             >
               <Icon
-                className={cn('size-4 shrink-0', active && 'text-background')}
+                className={cn(
+                  'size-[1.0625rem] shrink-0 transition-colors',
+                  active
+                    ? 'text-background'
+                    : 'text-sidebar-foreground/55 group-hover/navitem:text-sidebar-foreground',
+                )}
                 strokeWidth={active ? 2.25 : 1.75}
               />
               <span className="flex-1 truncate">{item.label}</span>
               {active ? (
                 <span
                   aria-hidden="true"
-                  className="size-1.5 rounded-full bg-background/80"
+                  className="size-1.5 shrink-0 rounded-full bg-background/85"
                 />
               ) : null}
             </Link>
           )
         })}
         <div className="mt-auto" />
+        <div className="mb-1 mt-3 border-t border-sidebar-border/60" />
         <Link
           href={SETTINGS_NAV.href}
           aria-current={isActive(SETTINGS_NAV, pathname) ? 'page' : undefined}
           className={cn(
-            'tap-shrink mb-3 flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors',
+            'tap-shrink mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-[0.8125rem] font-medium transition-colors duration-200',
             isActive(SETTINGS_NAV, pathname)
-              ? 'bg-foreground text-background'
+              ? 'bg-foreground text-background shadow-[var(--shadow-1)]'
               : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
           )}
         >
-          <SettingsIcon className="size-4" strokeWidth={1.75} />
+          <SettingsIcon className="size-[1.0625rem]" strokeWidth={1.75} />
           Impostazioni
         </Link>
       </nav>
@@ -168,19 +181,19 @@ function DesktopSidebar({
       >
         <button
           type="button"
-          className="tap-shrink m-3 flex items-center gap-3 rounded-2xl border border-sidebar-border/70 bg-card p-3 text-left transition-colors hover:bg-sidebar-accent"
+          className="tap-shrink mx-3 mb-3 flex items-center gap-3 rounded-lg border border-sidebar-border/70 bg-card/70 p-2.5 text-left transition-all hover:border-border-strong hover:bg-card hover:shadow-[var(--shadow-1)]"
         >
-          <Avatar className="size-9">
+          <Avatar className="size-9 shrink-0 ring-1 ring-border/60">
             {ownerAvatarUrl ? <AvatarImage src={ownerAvatarUrl} alt={ownerName} /> : null}
-            <AvatarFallback className="bg-muted text-xs">
+            <AvatarFallback className="bg-muted text-xs font-semibold">
               {initialsFor(ownerName)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-sidebar-foreground">
+            <p className="truncate text-[0.8125rem] font-semibold tracking-tight text-sidebar-foreground">
               {ownerName}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{ownerEmail}</p>
+            <p className="truncate text-[0.6875rem] text-muted-foreground">{ownerEmail}</p>
           </div>
         </button>
       </ProfileDropdown>
@@ -192,8 +205,8 @@ function MobileBottomNav() {
   const pathname = usePathname()
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 md:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      aria-label="Navigazione mobile"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 md:hidden pb-safe"
     >
       <ul className="grid grid-cols-7">
         {PRIMARY_NAV.map((item) => {
@@ -212,7 +225,7 @@ function MobileBottomNav() {
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'absolute -top-px h-0.5 w-7 rounded-b-full bg-foreground transition-opacity',
+                    'absolute -top-px h-0.5 w-7 rounded-b-full bg-foreground transition-opacity duration-200',
                     active ? 'opacity-100' : 'opacity-0',
                   )}
                 />
@@ -248,15 +261,15 @@ export function ProfileDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-60">
-        <DropdownMenuLabel className="flex items-center gap-2">
-          <Avatar className="size-7">
+        <DropdownMenuLabel className="flex items-center gap-2.5">
+          <Avatar className="size-8">
             {ownerAvatarUrl ? <AvatarImage src={ownerAvatarUrl} alt={ownerName} /> : null}
-            <AvatarFallback className="bg-muted text-xs">
+            <AvatarFallback className="bg-muted text-xs font-semibold">
               {initialsFor(ownerName)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{ownerName}</p>
+            <p className="truncate text-sm font-semibold tracking-tight">{ownerName}</p>
             <p className="truncate text-xs font-normal text-muted-foreground">
               {ownerEmail}
             </p>

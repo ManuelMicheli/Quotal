@@ -7,7 +7,14 @@
  */
 import { DoorOpenIcon } from 'lucide-react'
 
-import { EmptyState } from '@/components/owner/empty-state'
+import { EmptyState } from '@/components/shared/empty-state'
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderHeading,
+} from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -50,26 +57,29 @@ export default async function AccessLogsPage({
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <header className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">Operazioni</p>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl lg:text-5xl">Ingressi</h1>
-        <p className="text-sm text-muted-foreground">
-          Storico degli accessi dal tornello e dal tablet kiosk. Ogni
-          tentativo è registrato — riuscito o negato.
-        </p>
-      </header>
+      <PageHeader>
+        <PageHeaderContent>
+          <PageHeaderEyebrow>Operazioni</PageHeaderEyebrow>
+          <PageHeaderHeading>Ingressi</PageHeaderHeading>
+          <PageHeaderDescription>
+            Storico degli accessi dal tornello e dal tablet kiosk. Ogni
+            tentativo è registrato — riuscito o negato.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+      </PageHeader>
 
       {result.logs.length === 0 ? (
         <EmptyState
-          icon={DoorOpenIcon}
+          variant="bordered"
+          icon={<DoorOpenIcon />}
           title="Nessun ingresso registrato"
           description="Quando il tornello sarà connesso, vedrai qui ogni accesso al locale."
         />
       ) : (
-        <div className="rounded-lg border border-border bg-card">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-1)]">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead>Data e ora</TableHead>
                 <TableHead>Membro</TableHead>
                 <TableHead>Badge</TableHead>
@@ -80,37 +90,29 @@ export default async function AccessLogsPage({
             <TableBody>
               {result.logs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell className="text-sm">
+                  <TableCell className="tabular text-[0.8125rem]">
                     {formatDate(log.accessed_at, 'short')}{' '}
-                    {new Date(log.accessed_at).toLocaleTimeString('it-IT', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    <span className="text-muted-foreground">
+                      {new Date(log.accessed_at).toLocaleTimeString('it-IT', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="font-semibold">
                     {log.member?.full_name ?? '—'}
                   </TableCell>
-                  <TableCell className="font-mono text-xs">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     {log.badge_uid ?? '—'}
                   </TableCell>
                   <TableCell>
                     {log.granted ? (
-                      <Badge
-                        variant="outline"
-                        className="bg-success/10 text-success border-success/20"
-                      >
-                        Consentito
-                      </Badge>
+                      <Badge variant="success">Consentito</Badge>
                     ) : (
-                      <Badge
-                        variant="outline"
-                        className="bg-destructive/10 text-destructive border-destructive/20"
-                      >
-                        Negato
-                      </Badge>
+                      <Badge variant="destructive">Negato</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-[0.8125rem] text-muted-foreground">
                     {log.denial_reason
                       ? (DENIAL_LABEL_IT[log.denial_reason] ?? log.denial_reason)
                       : '—'}

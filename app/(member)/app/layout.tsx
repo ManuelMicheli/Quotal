@@ -49,20 +49,17 @@ export default async function MemberAppLayout({
     <div className="relative min-h-dvh overflow-x-hidden bg-background text-foreground">
       <div
         aria-hidden="true"
-        className="bg-aurora pointer-events-none fixed inset-x-0 top-0 h-[60vh]"
+        className="bg-aurora-soft pointer-events-none fixed inset-x-0 top-0 h-[70vh]"
       />
       <div
         aria-hidden="true"
-        className="bg-grain pointer-events-none fixed inset-0 opacity-40 mix-blend-multiply"
+        className="bg-grain pointer-events-none fixed inset-0 opacity-[0.35] mix-blend-multiply dark:mix-blend-screen dark:opacity-20"
       />
 
       <ServiceWorkerRegister />
       <OnlineBanner />
       <MemberTopBar />
-      <MemberSidebar
-        fullName={profile.full_name}
-        email={profile.email}
-      />
+      <MemberSidebar fullName={profile.full_name} email={profile.email} />
 
       <main
         className="relative w-full max-w-md mx-auto px-5 pb-32 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:max-w-none md:px-8 md:pb-16 md:pt-8 lg:ml-72 lg:mr-0 lg:max-w-[calc(100vw-18rem)] lg:px-10 lg:pt-10 xl:px-14 2xl:px-20"

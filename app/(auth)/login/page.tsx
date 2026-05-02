@@ -1,9 +1,9 @@
 /**
- * Login page — premium dark redesign.
+ * Login page — premium auth shell + glass card.
  *
- * Renders the silky shell, the Q logo card, OAuth buttons, an "or" divider,
- * and the email/password form. Both the form and the OAuth button group
- * read the optional `next` param so we can resume an interrupted route.
+ * Renders the aurora/mesh shell, the Q logo card, OAuth buttons, an "or"
+ * divider, and the email/password form. Both the form and the OAuth button
+ * group read the optional `next` param so we can resume an interrupted route.
  */
 import Link from 'next/link'
 
@@ -41,35 +41,35 @@ export default async function LoginPage({
   const isOwnerCopy = role === 'owner'
 
   return (
-    <AuthShell>
-      <div className="w-full">
+    <AuthShell width="md">
+      <div className="glass-strong w-full rounded-2xl p-7 md:p-9">
         <QuotalLogoCard />
 
-        <div className="space-y-2 text-center">
-          <h1 className="font-display text-[28px] font-medium leading-tight text-white md:text-[32px]">
+        <div className="space-y-3 text-center">
+          <h1 className="heading-display text-foreground text-balance text-4xl md:text-[2.75rem]">
             {isOwnerCopy ? 'Accedi come titolare' : 'Bentornato'}
           </h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-muted-foreground text-sm">
             Hai una palestra?{' '}
             <Link
               href="/onboarding-titolare"
-              className="font-medium text-zinc-100 transition-colors hover:text-teal-400"
+              className="text-foreground hover:text-accent font-medium transition-colors"
             >
               Registrala
             </Link>
           </p>
         </div>
 
-        <div className="mt-10 space-y-6">
+        <div className="mt-8 space-y-6">
           <OAuthButtons next={next} />
           <AuthDivider label="oppure" />
           <LoginForm initialError={initialError} />
         </div>
-
-        <p className="mt-8 text-center text-xs leading-relaxed text-zinc-500">
-          Sei un iscritto? Usa il link di iscrizione condiviso dalla tua palestra.
-        </p>
       </div>
+
+      <p className="text-muted-foreground mt-6 text-balance text-center text-xs leading-relaxed">
+        Sei un iscritto? Usa il link di iscrizione condiviso dalla tua palestra.
+      </p>
     </AuthShell>
   )
 }

@@ -1,6 +1,5 @@
 /**
- * Card wrapper used by every auth screen (login, signup, reset-password,
- * update-password, owner onboarding).
+ * Card wrapper used by the owner onboarding flow.
  *
  * Server component. The form itself is supplied by the caller as a client
  * component child — keeps the heavy `useForm` machinery out of this scope.
@@ -21,24 +20,21 @@ export function AuthForm({
   className?: string
 }) {
   return (
-    <section
-      className={cn(
-        'ring-elevated rounded-[28px] bg-card/95 p-6 backdrop-blur-sm md:p-8',
-        className,
-      )}
-    >
-      <header className="space-y-2">
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl">
+    <section className={cn('flex flex-col gap-8', className)}>
+      <header className="space-y-3 text-center">
+        <h1 className="heading-display text-foreground text-balance text-4xl md:text-5xl">
           {title}
         </h1>
         {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground text-pretty mx-auto max-w-md text-base leading-relaxed">
+            {description}
+          </p>
         ) : null}
       </header>
-      <div className="mt-6 flex flex-col gap-6">
+      <div className="flex flex-col gap-6">
         {children}
         {footer ? (
-          <div className="text-sm text-muted-foreground">{footer}</div>
+          <div className="text-muted-foreground text-sm">{footer}</div>
         ) : null}
       </div>
     </section>

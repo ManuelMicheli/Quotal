@@ -1,11 +1,11 @@
 'use client'
 
 /**
- * Sticky offline banner shown above the bottom nav.
+ * Sticky offline banner shown above the app shell.
  *
- * Reads `useOnlineStatus()` and reserves vertical space only when the
- * user is offline so the layout doesn't shift on transition. Friendly
- * copy reassures the member that the QR still works locally.
+ * Reads `useOnlineStatus()` and is hidden entirely when online so the
+ * layout doesn't shift on transitions. Friendly copy reassures the
+ * member that the QR still works locally.
  */
 import { WifiOffIcon } from 'lucide-react'
 
@@ -18,7 +18,7 @@ export function OnlineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 top-0 z-40 border-b border-warning/30 bg-warning/10 text-warning"
+      className="bg-warning-soft text-warning fixed inset-x-0 top-0 z-40 border-b border-warning/30 backdrop-blur-xl"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="mx-auto flex max-w-md items-center justify-center gap-2 px-4 py-2 text-xs font-medium">
