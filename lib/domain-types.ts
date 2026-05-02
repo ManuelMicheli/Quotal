@@ -32,6 +32,31 @@ export type NotificationPreferences =
   Database['public']['Tables']['notification_preferences']['Row']
 export type OwnerNotification =
   Database['public']['Tables']['owner_notifications']['Row']
+export type WorkoutPlan = Database['public']['Tables']['workout_plans']['Row']
+
+/** Structured exercise row stored inside `workout_plans.days[].exercises` JSONB. */
+export type WorkoutExercise = {
+  name: string
+  sets?: number
+  reps?: string
+  rest_seconds?: number
+  notes?: string
+}
+
+/** One training day inside a weekly split. */
+export type WorkoutDay = {
+  /** Local id used as React key. */
+  id: string
+  /** Trainer label, e.g. "Lunedì - Petto e Tricipiti" or "Giorno A". */
+  label: string
+  /** ISO weekday 1=Mon..7=Sun. Optional — only set when the trainer pins
+   *  the day to a specific calendar day. */
+  day_of_week?: number
+  notes?: string
+  exercises: WorkoutExercise[]
+}
+
+export type WorkoutPlanWithMember = WorkoutPlan & { member: Profile }
 
 // -----------------------------------------------------------------------------
 // Composed types — convenient shapes for joined queries.

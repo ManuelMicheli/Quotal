@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
 import { useState, useTransition } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 
 import { signupAction } from '@/app/actions/auth'
 import { AuthInput } from '@/components/auth/auth-input'
@@ -37,7 +37,7 @@ export function SignupForm({
     initialError ?? null,
   )
   const [confirmationSent, setConfirmationSent] = useState<string | null>(null)
-  const password = form.watch('password')
+  const password = useWatch({ control: form.control, name: 'password' })
 
   function onSubmit(values: SignupInput) {
     setServerError(null)

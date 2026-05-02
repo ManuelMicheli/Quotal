@@ -15,6 +15,7 @@ import type {
   Profile,
   SepaMandate,
   SubscriptionWithPlan,
+  WorkoutPlan,
 } from '@/lib/domain-types'
 import { createClient } from '@/lib/supabase/server'
 
@@ -339,4 +340,51 @@ export async function getMemberActiveSuspension(
 
   if (error || !data) return null
   return { reason: data.reason, suspended_at: data.suspended_at }
+}
+
+// ---------------------------------------------------------------------------
+// Workout plans (schede allenamento)
+// ---------------------------------------------------------------------------
+
+/** Workout plans assigned to the member. Active plans first, then by recency. */
+export async function getMemberWorkoutPlans(
+  memberId: string,
+): Promise<WorkoutPlan[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*')
+    .eq('member_id', memberId)
+    .order('is_active', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  if (error || !data) {
+    if (error)
+      console.error(
+        '[queries/member] getMemberWorkoutPlans failed:',
+        error.message,
+      )
+    return []
+  }
+  return data
+}
+
+/** Single workout plan owned by the member. Returns null if not found. */
+export async function getMemberWorkoutPlan(
+  memberId: string,
+  planId: string,
+): Promise<WorkoutPlan | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*')
+    .eq('id', planId)
+    .eq('member_id', memberId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[queries/member] getMemberWorkoutPlan failed:', error.message)
+    return null
+  }
+  return data
 }

@@ -10,7 +10,7 @@ import { OwnerSidebar } from '@/components/owner/sidebar'
 import { OwnerTopbar } from '@/components/owner/topbar'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { requireOwnerOrStaff } from '@/lib/auth'
+import { requireOwnerOrStaff, requireUser } from '@/lib/auth'
 import { getOwnerNotifications } from '@/lib/queries/notifications'
 
 export default async function OwnerDashboardLayout({
@@ -18,8 +18,15 @@ export default async function OwnerDashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const profile = await requireOwnerOrStaff()
-  const { notifications, unread } = await getOwnerNotifications(profile.id, 20)
+  // Fan out: once we know the auth user.id we can run the profile fetch
+  // and the notifications query in parallel instead of one-after-the-other.
+  // Both `requireUser` and `requireOwnerOrStaff` are wrapped in
+  // `react.cache`, so the second call reuses the first's result.
+  const user = await requireUser()
+  const [profile, { notifications, unread }] = await Promise.all([
+    requireOwnerOrStaff(),
+    getOwnerNotifications(user.id, 20),
+  ])
 
   return (
     <TooltipProvider>

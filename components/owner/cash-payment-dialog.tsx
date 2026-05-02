@@ -17,7 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckIcon, PlusIcon, ReceiptIcon, SearchIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
-import { useForm, type Resolver } from 'react-hook-form'
+import { useForm, useWatch, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
 
 import { registerCashPaymentAction } from '@/app/actions/payments'
@@ -266,9 +266,15 @@ function PaymentForm({
     },
   })
 
-  const watchedPlanId = form.watch('plan_id')
-  const watchedAmount = form.watch('amount_cents')
-  const emitInvoice = form.watch('emit_invoice')
+  const watchedPlanId = useWatch({ control: form.control, name: 'plan_id' })
+  const watchedAmount = useWatch({
+    control: form.control,
+    name: 'amount_cents',
+  })
+  const emitInvoice = useWatch({
+    control: form.control,
+    name: 'emit_invoice',
+  })
 
   // When the user changes plan, sync the amount field to the plan price (only
   // if the user hasn't manually edited it).

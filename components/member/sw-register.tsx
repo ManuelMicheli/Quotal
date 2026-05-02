@@ -17,16 +17,27 @@ export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!('serviceWorker' in navigator)) return
-    // Only register on secure contexts. localhost is treated as secure
-    // by browsers, so this still works in dev.
     if (!window.isSecureContext) return
+
+    const isDev =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.endsWith('.local')
 
     const controller = new AbortController()
     void (async () => {
       try {
+        if (isDev) {
+          const regs = await navigator.serviceWorker.getRegistrations()
+          await Promise.all(regs.map((r) => r.unregister()))
+          if ('caches' in window) {
+            const keys = await caches.keys()
+            await Promise.all(keys.map((k) => caches.delete(k)))
+          }
+          return
+        }
         await navigator.serviceWorker.register('/sw.js', { scope: '/' })
       } catch (err) {
-        // Non-fatal — log but never throw to the user.
         console.warn('[sw] registration failed:', err)
       }
     })()

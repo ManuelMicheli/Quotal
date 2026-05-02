@@ -7,11 +7,19 @@
  */
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 
 import { env } from '@/lib/env'
 import type { Database } from '@/lib/supabase/types'
 
-export async function createClient() {
+/**
+ * Build a Supabase server client.
+ *
+ * Wrapped in `react.cache` so a single render that touches multiple query
+ * helpers (layout + page + server actions) reuses one client + cookie-store
+ * instance instead of allocating a fresh one each time.
+ */
+export const createClient = cache(async () => {
   const cookieStore = await cookies()
 
   return createServerClient<Database>(
@@ -36,4 +44,4 @@ export async function createClient() {
       },
     },
   )
-}
+})

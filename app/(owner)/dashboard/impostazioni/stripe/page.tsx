@@ -49,7 +49,7 @@ export default async function StripeSettingsPage() {
           Stripe
         </h1>
         <p className="text-sm text-muted-foreground">
-          Stato dell'account Stripe collegato. Tutti i dati anagrafici, IBAN
+          Stato dell&apos;account Stripe collegato. Tutti i dati anagrafici, IBAN
           per i payout e verifica identità si gestiscono direttamente sulla
           dashboard Stripe.
         </p>

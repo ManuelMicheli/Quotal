@@ -8,6 +8,7 @@
  * area is honoured via env(safe-area-inset-bottom).
  */
 import {
+  ClipboardListIcon,
   CreditCardIcon,
   HomeIcon,
   ReceiptIcon,
@@ -28,6 +29,7 @@ type Tab = {
 const TABS: ReadonlyArray<Tab> = [
   { href: '/app', label: 'Home', icon: HomeIcon },
   { href: '/app/abbonamento', label: 'Abbonamento', icon: CreditCardIcon },
+  { href: '/app/schede', label: 'Schede', icon: ClipboardListIcon },
   { href: '/app/pagamenti', label: 'Pagamenti', icon: ReceiptIcon },
   { href: '/app/profilo', label: 'Profilo', icon: UserIcon },
 ]

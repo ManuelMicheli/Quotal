@@ -21,6 +21,8 @@ import type {
   Subscription,
   SubscriptionPlan,
   SubscriptionWithPlan,
+  WorkoutPlan,
+  WorkoutPlanWithMember,
 } from '@/lib/domain-types'
 import { createClient } from '@/lib/supabase/server'
 
@@ -858,4 +860,69 @@ export async function getCashRegisterDay(
     alreadyClosedAt: closedRes.data?.closed_at ?? null,
     alreadyClosedPdfPath: closedRes.data?.pdf_path ?? null,
   }
+}
+
+// ---------------------------------------------------------------------------
+// Workout plans (schede allenamento)
+// ---------------------------------------------------------------------------
+
+export type WorkoutPlanRow = WorkoutPlanWithMember
+
+/**
+ * All workout plans in the gym, joined with the assigned member, ordered by
+ * recency. Used by the owner-side /dashboard/schede index.
+ */
+export async function getWorkoutPlansList(): Promise<WorkoutPlanRow[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*, member:profiles!workout_plans_member_id_fkey(*)')
+    .order('created_at', { ascending: false })
+
+  if (error || !data) {
+    if (error)
+      console.error('[queries/owner] getWorkoutPlansList failed:', error.message)
+    return []
+  }
+  return data as WorkoutPlanRow[]
+}
+
+/** All workout plans for one member (owner view), newest first. */
+export async function getWorkoutPlansForMember(
+  memberId: string,
+): Promise<WorkoutPlan[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*')
+    .eq('member_id', memberId)
+    .order('created_at', { ascending: false })
+
+  if (error || !data) {
+    if (error)
+      console.error(
+        '[queries/owner] getWorkoutPlansForMember failed:',
+        error.message,
+      )
+    return []
+  }
+  return data
+}
+
+/** Single plan by id. Returns null if not found / RLS-denied. */
+export async function getWorkoutPlanById(
+  id: string,
+): Promise<WorkoutPlanWithMember | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*, member:profiles!workout_plans_member_id_fkey(*)')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[queries/owner] getWorkoutPlanById failed:', error.message)
+    return null
+  }
+  return (data as WorkoutPlanWithMember | null) ?? null
 }

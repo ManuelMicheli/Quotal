@@ -1015,6 +1015,70 @@ export type Database = {
           },
         ]
       }
+      workout_plans: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          days: Json
+          gym_id: string
+          id: string
+          is_active: boolean
+          member_id: string
+          notes: string | null
+          split: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          days?: Json
+          gym_id: string
+          id?: string
+          is_active?: boolean
+          member_id: string
+          notes?: string | null
+          split?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          days?: Json
+          gym_id?: string
+          id?: string
+          is_active?: boolean
+          member_id?: string
+          notes?: string | null
+          split?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_plans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_plans_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_plans_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_suspensions: {
         Row: {
           created_at: string

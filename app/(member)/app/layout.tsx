@@ -6,13 +6,15 @@
  *
  * Responsive shape:
  *   - Phone: single column (max-w-md), bottom dock for nav, install prompt.
- *   - Tablet+: glass top bar with full nav, container expands to max-w-6xl,
- *     bottom dock hides.
+ *   - Tablet (md): glass top bar with full nav, fluid container.
+ *   - Desktop (lg+): persistent left sidebar with nav + profile, fluid
+ *     content fills the remaining horizontal space (capped at 2xl).
  */
 import type { Metadata, Viewport } from 'next'
 
 import { BottomNav } from '@/components/member/bottom-nav'
 import { InstallPrompt } from '@/components/member/install-prompt'
+import { MemberSidebar } from '@/components/member/sidebar'
 import { OnlineBanner } from '@/components/member/online-banner'
 import { ServiceWorkerRegister } from '@/components/member/sw-register'
 import { MemberTopBar } from '@/components/member/top-bar'
@@ -41,7 +43,7 @@ export default async function MemberAppLayout({
 }: {
   children: React.ReactNode
 }) {
-  await requireMember()
+  const profile = await requireMember()
 
   return (
     <div className="relative min-h-dvh overflow-x-hidden bg-background text-foreground">
@@ -57,9 +59,17 @@ export default async function MemberAppLayout({
       <ServiceWorkerRegister />
       <OnlineBanner />
       <MemberTopBar />
+      <MemberSidebar
+        fullName={profile.full_name}
+        email={profile.email}
+      />
 
-      <main className="relative mx-auto w-full max-w-md px-5 pb-32 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:max-w-none md:px-10 md:pb-16 md:pt-10 lg:px-16 lg:pt-12 xl:px-24 2xl:px-32">
-        {children}
+      <main
+        className="relative w-full max-w-md mx-auto px-5 pb-32 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:max-w-none md:px-8 md:pb-16 md:pt-8 lg:ml-72 lg:mr-0 lg:max-w-[calc(100vw-18rem)] lg:px-10 lg:pt-10 xl:px-14 2xl:px-20"
+      >
+        <div className="mx-auto w-full lg:max-w-[1400px] 2xl:max-w-[1600px]">
+          {children}
+        </div>
       </main>
 
       <InstallPrompt />

@@ -21,10 +21,34 @@
  */
 /* global self, caches, fetch, Response, URL */
 
-const VERSION = 'quotal-v1'
+const VERSION = 'quotal-v3'
 const STATIC_CACHE = `${VERSION}-static`
 const RUNTIME_CACHE = `${VERSION}-runtime`
 const QR_CACHE = `${VERSION}-qr`
+
+const IS_LOCALHOST =
+  self.location.hostname === 'localhost' ||
+  self.location.hostname === '127.0.0.1' ||
+  self.location.hostname.endsWith('.local')
+
+// Dev: never let an old SW serve a cached offline shell when the dev server
+// is just slow to compile. Wipe caches, unregister, and let every fetch go
+// straight to the network. Prod listeners below are guarded with an early
+// return so they no-op on localhost.
+if (IS_LOCALHOST) {
+  self.addEventListener('install', () => self.skipWaiting())
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      (async () => {
+        const keys = await caches.keys()
+        await Promise.all(keys.map((k) => caches.delete(k)))
+        await self.registration.unregister()
+        const all = await self.clients.matchAll({ type: 'window' })
+        for (const client of all) client.navigate(client.url)
+      })(),
+    )
+  })
+}
 
 // Pre-cache the bare-minimum offline shell. Keep this list short — every
 // asset here adds install time and storage pressure on low-end phones.
@@ -37,6 +61,7 @@ const PRECACHE_URLS = [
 ]
 
 self.addEventListener('install', (event) => {
+  if (IS_LOCALHOST) return
   event.waitUntil(
     (async () => {
       const cache = await caches.open(STATIC_CACHE)
@@ -49,6 +74,7 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
+  if (IS_LOCALHOST) return
   event.waitUntil(
     (async () => {
       const keys = await caches.keys()
@@ -80,6 +106,7 @@ async function fetchWithTimeout(request, ms) {
 }
 
 self.addEventListener('fetch', (event) => {
+  if (IS_LOCALHOST) return
   const req = event.request
   if (req.method !== 'GET') return
 

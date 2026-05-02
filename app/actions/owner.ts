@@ -29,6 +29,8 @@ import {
   resumeSubscriptionSchema,
   suspendSubscriptionSchema,
   updateMemberSchema,
+  updateWorkoutPlanSchema,
+  workoutPlanSchema,
   type CreateMemberInput,
   type GymRulesInput,
   type GymSettingsInput,
@@ -37,6 +39,8 @@ import {
   type ResumeSubscriptionInput,
   type SuspendSubscriptionInput,
   type UpdateMemberInput,
+  type UpdateWorkoutPlanInput,
+  type WorkoutPlanInput,
 } from '@/lib/validations/owner'
 
 export type ActionResult<T = undefined> =
@@ -750,4 +754,97 @@ export async function sendPasswordResetForOwnerAction(): Promise<ActionResult> {
     return { ok: false, error: `Invio email non riuscito: ${error.message}` }
   }
   return { ok: true, message: 'Email inviata. Controlla la posta.' }
+}
+
+// ---------------------------------------------------------------------------
+// Workout plans (schede allenamento)
+// ---------------------------------------------------------------------------
+
+export async function createWorkoutPlanAction(
+  input: WorkoutPlanInput,
+): Promise<ActionResult<{ id: string }>> {
+  const owner = await requireOwnerOrStaff()
+  const parsed = workoutPlanSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? 'Controlla i dati inseriti.',
+      fieldErrors: zodToFieldErrors(parsed.error.issues),
+    }
+  }
+
+  const supabase = await createClient()
+  const { data: created, error } = await supabase
+    .from('workout_plans')
+    .insert({
+      gym_id: owner.gym_id,
+      member_id: parsed.data.member_id,
+      created_by: owner.id,
+      title: parsed.data.title,
+      split: parsed.data.split ?? null,
+      notes: parsed.data.notes ?? null,
+      days: parsed.data.days,
+      is_active: parsed.data.is_active ?? true,
+    })
+    .select('id')
+    .single()
+
+  if (error || !created) {
+    return {
+      ok: false,
+      error: `Creazione scheda non riuscita: ${error?.message ?? 'errore'}`,
+    }
+  }
+
+  revalidatePath('/dashboard/schede')
+  return { ok: true, data: { id: created.id }, message: 'Scheda creata.' }
+}
+
+export async function updateWorkoutPlanAction(
+  id: string,
+  input: UpdateWorkoutPlanInput,
+): Promise<ActionResult> {
+  await requireOwnerOrStaff()
+  const parsed = updateWorkoutPlanSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? 'Controlla i dati inseriti.',
+      fieldErrors: zodToFieldErrors(parsed.error.issues),
+    }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('workout_plans')
+    .update({
+      title: parsed.data.title,
+      split: parsed.data.split ?? null,
+      notes: parsed.data.notes ?? null,
+      days: parsed.data.days,
+      is_active: parsed.data.is_active ?? true,
+    })
+    .eq('id', id)
+
+  if (error) {
+    return { ok: false, error: `Aggiornamento non riuscito: ${error.message}` }
+  }
+
+  revalidatePath('/dashboard/schede')
+  revalidatePath(`/dashboard/schede/${id}`)
+  return { ok: true, message: 'Scheda aggiornata.' }
+}
+
+export async function deleteWorkoutPlanAction(
+  id: string,
+): Promise<ActionResult> {
+  await requireOwnerOrStaff()
+  const supabase = await createClient()
+  const { error } = await supabase.from('workout_plans').delete().eq('id', id)
+  if (error) {
+    return { ok: false, error: `Eliminazione non riuscita: ${error.message}` }
+  }
+
+  revalidatePath('/dashboard/schede')
+  return { ok: true, message: 'Scheda eliminata.' }
 }

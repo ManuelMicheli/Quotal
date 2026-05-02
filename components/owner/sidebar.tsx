@@ -14,6 +14,7 @@
  */
 import {
   BanknoteIcon,
+  ClipboardListIcon,
   CreditCardIcon,
   DoorOpenIcon,
   LayoutDashboardIcon,
@@ -54,6 +55,7 @@ const PRIMARY_NAV: NavItem[] = [
   { href: '/dashboard', label: 'Home', icon: LayoutDashboardIcon, exact: true },
   { href: '/dashboard/membri', label: 'Membri', icon: UsersIcon },
   { href: '/dashboard/abbonamenti', label: 'Abbonamenti', icon: CreditCardIcon },
+  { href: '/dashboard/schede', label: 'Schede', icon: ClipboardListIcon },
   { href: '/dashboard/pagamenti', label: 'Pagamenti', icon: ReceiptIcon },
   { href: '/dashboard/cassa', label: 'Cassa', icon: BanknoteIcon },
   { href: '/dashboard/ingressi', label: 'Ingressi', icon: DoorOpenIcon },
@@ -193,7 +195,7 @@ function MobileBottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/65 md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul className="grid grid-cols-6">
+      <ul className="grid grid-cols-7">
         {PRIMARY_NAV.map((item) => {
           const Icon = item.icon
           const active = isActive(item, pathname)

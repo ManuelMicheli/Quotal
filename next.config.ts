@@ -100,6 +100,20 @@ const baseSecurityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Tree-shake barrel imports for heavy UI libs. lucide-react in particular
+  // pulls in ~1k icon components per import without this; date-fns and
+  // radix-ui have similar shapes. Cuts the client bundle by hundreds of KB
+  // and shortens TTI on slower connections.
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'radix-ui',
+      '@radix-ui/react-icons',
+      'recharts',
+      'framer-motion',
+    ],
+  },
   async headers() {
     return [
       {

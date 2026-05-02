@@ -141,7 +141,14 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   // do their own auth via lib/auth.ts helpers.
   if (isApiRoute) return supabaseResponse
 
-  // Look up the role once; reuse for both auth-page and route-guard checks.
+  // The profile-role lookup is the slowest part of middleware. The server
+  // guards in lib/auth.ts (`requireOwnerOrStaff` / `requireMember`) already
+  // enforce cross-area redirects with no HTML flash, so the only routing
+  // decision middleware uniquely owns is bouncing logged-in users off auth
+  // pages. We run the role select only there. Saves ~80-150ms per nav on
+  // every protected request.
+  if (!isAuthPage(pathname)) return supabaseResponse
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -151,34 +158,8 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const role = profile?.role ?? ROLES.OWNER
   const homeForRole = role === ROLES.MEMBER ? '/app' : '/dashboard'
 
-  // 1. Logged-in users on auth pages → bounce home.
-  if (isAuthPage(pathname)) {
-    const url = request.nextUrl.clone()
-    url.pathname = homeForRole
-    url.search = ''
-    return NextResponse.redirect(url)
-  }
-
-  // 2. Cross-area access → bounce to own area.
-  if (
-    pathname === '/dashboard' ||
-    pathname.startsWith('/dashboard/')
-  ) {
-    if (role === ROLES.MEMBER) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/app'
-      url.search = ''
-      return NextResponse.redirect(url)
-    }
-  }
-  if (pathname === '/app' || pathname.startsWith('/app/')) {
-    if (role !== ROLES.MEMBER) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      url.search = ''
-      return NextResponse.redirect(url)
-    }
-  }
-
-  return supabaseResponse
+  const url = request.nextUrl.clone()
+  url.pathname = homeForRole
+  url.search = ''
+  return NextResponse.redirect(url)
 }

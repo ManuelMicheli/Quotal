@@ -159,6 +159,53 @@ export const gymSettingsSchema = z.object({
 })
 export type GymSettingsInput = z.infer<typeof gymSettingsSchema>
 
+// ---------------------------------------------------------------------------
+// Workout plans
+// ---------------------------------------------------------------------------
+
+export const workoutExerciseSchema = z.object({
+  name: z.string().trim().min(1, 'Inserisci il nome dell’esercizio'),
+  sets: z
+    .number({ message: 'Numero serie non valido' })
+    .int()
+    .min(1)
+    .max(99)
+    .optional(),
+  reps: z.string().trim().min(1).optional(),
+  rest_seconds: z
+    .number({ message: 'Riposo non valido' })
+    .int()
+    .min(0)
+    .max(3600)
+    .optional(),
+  notes: z.string().trim().min(1).optional(),
+})
+export type WorkoutExerciseInput = z.infer<typeof workoutExerciseSchema>
+
+export const workoutDaySchema = z.object({
+  id: z.string().min(1),
+  label: z.string().trim().min(1, 'Inserisci un’etichetta per il giorno'),
+  day_of_week: z.number().int().min(1).max(7).optional(),
+  notes: z.string().trim().min(1).optional(),
+  exercises: z.array(workoutExerciseSchema).default([]),
+})
+export type WorkoutDayInput = z.infer<typeof workoutDaySchema>
+
+export const workoutPlanSchema = z.object({
+  member_id: z.string().uuid('ID membro non valido'),
+  title: z.string().trim().min(2, 'Inserisci un titolo'),
+  split: optionalString,
+  notes: optionalString,
+  days: z.array(workoutDaySchema).default([]),
+  is_active: z.boolean().optional().default(true),
+})
+export type WorkoutPlanInput = z.infer<typeof workoutPlanSchema>
+
+export const updateWorkoutPlanSchema = workoutPlanSchema.omit({
+  member_id: true,
+})
+export type UpdateWorkoutPlanInput = z.infer<typeof updateWorkoutPlanSchema>
+
 export const gymRulesSchema = z.object({
   gracePeriodDays: z
     .number({ message: 'Inserisci un numero' })

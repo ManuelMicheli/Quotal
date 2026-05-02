@@ -70,8 +70,8 @@ export default async function MemberSubscriptionPage() {
 
         <TabsContent value="current" className="mt-2 space-y-4">
           {data.subscription ? (
-            <>
-              <section className="ring-elevated relative overflow-hidden rounded-[28px] bg-card p-6 md:p-10 lg:p-12">
+            <div className="grid gap-5 lg:grid-cols-12 lg:gap-6">
+              <section className="ring-elevated relative overflow-hidden rounded-[28px] bg-card p-6 md:p-10 lg:col-span-8 lg:p-12">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground md:text-xs">
@@ -112,9 +112,19 @@ export default async function MemberSubscriptionPage() {
                     />
                   ) : null}
                 </dl>
+              </section>
 
-                <div className="mt-6 flex flex-col gap-2 md:mt-10 md:flex-row md:gap-3">
-                  <Button asChild size="lg" className="rounded-full md:flex-1">
+              <aside className="ring-soft flex flex-col gap-4 rounded-3xl bg-card p-6 md:p-7 lg:col-span-4">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground md:text-xs">
+                    Azioni rapide
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Rinnova o gestisci il metodo di pagamento.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button asChild size="lg" className="w-full rounded-full">
                     <Link href="/app/abbonamento/rinnova">
                       Rinnova ora
                       <ArrowUpRightIcon size={16} />
@@ -125,7 +135,7 @@ export default async function MemberSubscriptionPage() {
                       asChild
                       variant="outline"
                       size="lg"
-                      className="rounded-full md:flex-1"
+                      className="w-full rounded-full"
                     >
                       <Link href="/app/pagamenti/portal">
                         <CreditCardIcon size={16} />
@@ -134,8 +144,16 @@ export default async function MemberSubscriptionPage() {
                     </Button>
                   ) : null}
                 </div>
-              </section>
-            </>
+                {data.sepaMandate ? (
+                  <div className="rounded-2xl bg-muted/40 p-4 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground">SEPA attivo</p>
+                    <p className="tabular mt-1">
+                      IBAN ****{data.sepaMandate.iban_last4}
+                    </p>
+                  </div>
+                ) : null}
+              </aside>
+            </div>
           ) : (
             <EmptyState>
               Nessun abbonamento attivo. Contatta la palestra per attivarne uno.

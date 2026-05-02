@@ -28,7 +28,7 @@ export default async function MemberNotificationPreferencesPage() {
   const vapidPublic = env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 md:gap-6">
       <PageHeader title="Notifiche" subtitle={profile.email} showBack />
 
       <Link
@@ -38,23 +38,25 @@ export default async function MemberNotificationPreferencesPage() {
         <ChevronLeftIcon size={14} /> Profilo
       </Link>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Notifiche push</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EnablePushButton vapidPublicKey={vapidPublic} />
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-12">
+        <Card className="lg:col-span-5 lg:self-start">
+          <CardHeader>
+            <CardTitle className="text-base">Notifiche push</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EnablePushButton vapidPublicKey={vapidPublic} />
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Cosa vuoi ricevere</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <NotificationPreferencesForm initial={prefs} />
-        </CardContent>
-      </Card>
+        <Card className="lg:col-span-7">
+          <CardHeader>
+            <CardTitle className="text-base">Cosa vuoi ricevere</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <NotificationPreferencesForm initial={prefs} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

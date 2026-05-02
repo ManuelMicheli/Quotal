@@ -58,14 +58,23 @@ export function QrCodeCard({
   isAccessAllowed: boolean
 }) {
   const online = useOnlineStatus()
-  const [qr, setQr] = useState<QrResponse | null>(() => readCached())
-  const [loading, setLoading] = useState<boolean>(() => readCached() === null)
+  // State must match SSR output (no localStorage on server). The cached
+  // QR is hydrated in a post-mount effect to avoid hydration mismatch.
+  const [qr, setQr] = useState<QrResponse | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [stale, setStale] = useState<boolean>(() => {
-    const c = readCached()
-    return c !== null && c.expiresAt < Date.now()
-  })
+  const [stale, setStale] = useState<boolean>(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const cached = readCached()
+    if (!cached) return
+    // Hydrating from localStorage on mount — runs once, not a cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQr(cached)
+    setLoading(false)
+    setStale(cached.expiresAt < Date.now())
+  }, [])
 
   const fetchQr = useCallback(async () => {
     setError(null)

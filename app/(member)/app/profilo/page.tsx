@@ -73,22 +73,14 @@ export default async function MemberProfilePage() {
         </div>
       </section>
 
-      <div className="grid gap-5 md:grid-cols-2 md:gap-6">
-        <div className="flex flex-col gap-5 md:gap-6">
+      <div className="grid gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-5 md:gap-6 lg:col-span-1">
           <Section title="I tuoi dati">
             <ProfileForm profile={profile} />
           </Section>
-
-          <Section title="Aspetto">
-            <ThemeToggle variant="segmented" />
-          </Section>
-
-          <Section title="Privacy e dati">
-            <PrivacyActions />
-          </Section>
         </div>
 
-        <div className="flex flex-col gap-5 md:gap-6">
+        <div className="flex flex-col gap-5 md:gap-6 lg:col-span-1">
           <Section title="Notifiche e sicurezza" padded={false}>
             <RowLink href="/app/profilo/notifiche" icon={BellIcon}>
               Email e push
@@ -104,6 +96,16 @@ export default async function MemberProfilePage() {
               <LogOutIcon size={16} aria-hidden="true" />
               Esci dall&apos;account
             </LogoutButton>
+          </Section>
+
+          <Section title="Aspetto">
+            <ThemeToggle variant="segmented" />
+          </Section>
+        </div>
+
+        <div className="flex flex-col gap-5 md:gap-6 md:col-span-2 lg:col-span-1">
+          <Section title="Privacy e dati">
+            <PrivacyActions />
           </Section>
 
           <Section title="Documenti legali" padded={false}>
